@@ -149,30 +149,43 @@
 
 @layer base {
   html {
-    @apply font-[Gilroy];
+    font-family: var(--font-sans);
+    color: var(--color-text-main);
   }
 }
 
 @theme {
+  /* 1. Đặt Gilroy làm font mặc định (font-sans) */
+  --font-sans: "Gilroy", ui-sans-serif, system-ui, sans-serif;
+
+  /* 2. Hoặc tạo class riêng (font-gilroy) nếu không muốn ghi đè mặc định */
+  --font-gilroy: "Gilroy", sans-serif;
+
+  /* 3. Font viết tay Brushwell (font-brush) */
+  --font-brush: "Brushwell", cursive;
+
+  /* 4. Thêm độ đậm 950 (Heavy) vì Tailwind mặc định chỉ có đến 900 */
+  --font-weight-heavy: 950;
+
   /* --- MÀU CHỦ ĐẠO (Primary) --- */
   /* Dùng cho nút bấm chính, logo */
-  --color-primary: #1D4ED8;       
+  --color-primary: #1d4ed8;
   /* Dùng khi hover vào nút chính, hoặc làm điểm nhấn sáng */
-  --color-primary-light: #2F73F2; 
+  --color-primary-light: #2f73f2;
 
   /* --- MÀU PHỤ / MÀU THÔNG TIN (Info/Accent) --- */
   /* Dùng cho icon, thông báo, hoặc nút phụ */
-  --color-info: #35B4F6;          
+  --color-info: #35b4f6;
   /* Dùng cho nền của thông báo (badge background) */
-  --color-info-bg: #D1F2FF;       
+  --color-info-bg: #d1f2ff;
 
   /* --- MÀU NỀN & VIỀN (Surface/Background) --- */
   /* Nền tổng thể, rất nhạt */
-  --color-surface: #F3F9FD;       
+  --color-surface: #f3f9fd;
   /* Nền phụ, hoặc màu viền (border) */
-  --color-surface-dim: #DFEBFC;   
+  --color-surface-dim: #dfebfc;
 
   /* --- MÀU VĂN BẢN (Text) --- */
   /* Màu xanh rất đậm, dùng thay cho màu đen cho text */
-  --color-text-main: #163858;     
+  --color-text-main: #163858;
 }

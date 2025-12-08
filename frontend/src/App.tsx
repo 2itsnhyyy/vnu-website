@@ -1,23 +1,14 @@
 import { useState } from 'react'
+import { useRoutes } from 'react-router-dom'
+import routes from './features/users/routers'
+import { MainProvider } from './features/users/context/MainContext'
 
 function App() {
-  const [count, setCount] = useState(0)
-
+  const element = useRoutes(routes);
   return (
-    <>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs bg-primary">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <MainProvider>
+      {element}
+    </MainProvider>
   )
 }
 
