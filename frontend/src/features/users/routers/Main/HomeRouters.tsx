@@ -1,8 +1,8 @@
-import Home from '../../pages/Main/Home';
+import Home from "../../pages/Main/Home";
 
 const HomeRouters = [
   {
-    path: '/',
+    path: "",
     element: <Home />,
     // Nếu sau này muốn tách các route con, có thể dùng cấu trúc children như bên dưới:
     // children: [

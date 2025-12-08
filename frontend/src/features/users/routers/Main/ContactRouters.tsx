@@ -1,8 +1,8 @@
-import Contact from '../../pages/Main/Contact';
+import Contact from "../../pages/Main/Contact";
 
 const ContactRouters = [
   {
-    path: '/contact',
+    path: "contact",
     element: <Contact />,
     // Nếu sau này muốn tách các route con, có thể dùng cấu trúc children như bên dưới:
     // children: [

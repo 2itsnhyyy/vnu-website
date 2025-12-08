@@ -1,8 +1,8 @@
-import News from '../../pages/Main/News/News';
+import News from "../../pages/Main/News/News";
 
 const NewsRouters = [
   {
-    path: '/news',
+    path: "news",
     element: <News />,
     // Nếu sau này muốn tách các route con, có thể dùng cấu trúc children như bên dưới:
     // children: [
@@ -12,4 +12,4 @@ const NewsRouters = [
   },
 ];
 
-export default NewsRouters
+export default NewsRouters;
