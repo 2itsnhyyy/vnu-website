@@ -1,8 +1,9 @@
-import Users from "../../pages/Main/Users";
-const UsersRouters = [
+import { Locations } from "../../pages/Main/Locations";
+
+const LocationsRouters = [
   {
-    path: "users",
-    element: <Users />,
+    path: "locations",
+    element: <Locations />,
     // Nếu sau này muốn tách các route con, có thể dùng cấu trúc children như bên dưới:
     // children: [
     //   { path: '', element: <List /> },
@@ -11,4 +12,4 @@ const UsersRouters = [
   },
 ];
 
-export default UsersRouters;
+export default LocationsRouters;
