@@ -1,9 +1,9 @@
-import Users from "../../pages/Main/Users";
+import News from "../../pages/Main/News";
 
-const UsersRouters = [
+const NewsRoutes = [
   {
-    path: "users",
-    element: <Users />,
+    path: "news",
+    element: <News />,
     // Nếu sau này muốn tách các route con, có thể dùng cấu trúc children như bên dưới:
     // children: [
     //   { path: '', element: <List /> },
@@ -12,4 +12,4 @@ const UsersRouters = [
   },
 ];
 
-export default UsersRouters;
+export default NewsRoutes;
