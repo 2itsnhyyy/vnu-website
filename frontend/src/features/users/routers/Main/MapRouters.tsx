@@ -1,8 +1,8 @@
-import Map from '../../pages/Main/Maps/Map';
+import Map from "../../pages/Main/Maps/Map";
 
 const MapRouters = [
   {
-    path: '/maps',
+    path: "maps",
     element: <Map />,
     // Nếu sau này muốn tách các route con, có thể dùng cấu trúc children như bên dưới:
     // children: [

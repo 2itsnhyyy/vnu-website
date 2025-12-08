@@ -1,9 +1,9 @@
-import Forum from "../../pages/Main/Forum/Forum";
+import Users from "../../pages/Main/Users";
 
-const ForumRouters = [
+const UsersRoutes = [
   {
-    path: "forum",
-    element: <Forum />,
+    path: "users",
+    element: <Users />,
     // Nếu sau này muốn tách các route con, có thể dùng cấu trúc children như bên dưới:
     // children: [
     //   { path: '', element: <List /> },
@@ -12,4 +12,4 @@ const ForumRouters = [
   },
 ];
 
-export default ForumRouters;
+export default UsersRoutes;
