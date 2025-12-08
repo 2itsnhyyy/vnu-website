@@ -82,6 +82,7 @@ const Sidebar: React.FC = () => {
         fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 
         bg-white text-gray-900 h-screen 
         transition-all border-r border-gray-200 z-50
+        items-center
         ${
           isExpanded || isMobileOpen
             ? "w-[250px]"
@@ -101,7 +102,7 @@ const Sidebar: React.FC = () => {
         }`}
       >
         <Link to={basePath}>
-          <img src={logo} alt="logo" className="w-[70%]" />
+          <img src={logo} alt="logo" className="w-[70%] ml-7" />
         </Link>
       </div>
 
