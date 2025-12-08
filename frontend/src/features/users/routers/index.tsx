@@ -1,19 +1,15 @@
-// File: src/features/users/routers/index.tsx
-
 import { Outlet } from 'react-router-dom';
-import MainLayout from "../layouts/MainLayout"; // Import Layout vào đây
-import MainRouters from "./Main/index"; // Import cái mảng bạn vừa sửa ở Bước 1
-import AuthRouters from "./Auth/index"; // Các trang Login/Register
+import MainLayout from "../layouts/MainLayout";
+import MainRouters from "./Main/index";
+import AuthRouters from "./Auth/index";
 
 const routes = [
   {
-    // Cấu hình Route CHA
     path: "/",
-    element: <MainLayout />, // Layout chỉ khai báo 1 lần duy nhất ở đây
-    children: MainRouters,   // Nhét toàn bộ các trang con vào lòng Layout
+    element: <MainLayout />,
+    children: MainRouters,
   },
   
-  // Các trang Auth nằm ngoài Layout chính
   ...AuthRouters,
 ];
 

@@ -5,22 +5,9 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [token, setToken] = useState(false);
 
-  // --- CẬP NHẬT PHẦN STYLE NÀY ---
   const getNavLinkClass = ({ isActive }) => {
-    // Base styles: Thêm border-transparent để tránh bị nhảy layout khi hover/active
     const baseClasses = "py-1 transition-all duration-200 border-b-2";
-
-    // KHI ACTIVE (Đang chọn):
-    // - text-text-main: Màu đen xanh (theo theme của bạn)
-    // - font-bold: In đậm (Hoặc dùng font-heavy nếu muốn đậm hơn nữa)
-    // - border-text-main: Gạch chân màu đen (cho đồng bộ)
     const activeClasses = "text-primary font-bold border-primary";
-
-    // KHI INACTIVE (Bình thường):
-    // - text-text-main: Vẫn là màu đen (như bạn yêu cầu lúc trước)
-    // - font-medium: Độ đậm vừa phải
-    // - border-transparent: Ẩn gạch chân
-    // - hover:text-primary: Rê chuột vào thì đổi màu xanh cho sinh động
     const inactiveClasses = "text-text-main font-medium border-transparent hover:text-primary";
 
     return `${baseClasses} ${isActive ? activeClasses : inactiveClasses}`;
