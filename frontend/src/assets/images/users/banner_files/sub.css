@@ -1,0 +1,299 @@
+@font-face {
+	font-family: "sf";
+	src: url(fonts/SF-Regular.otf);
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "sf";
+	src: url(fonts/SF-Medium.otf);
+	font-weight: 700;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "sf";
+	src: url(fonts/SF-Bold.otf);
+	font-weight: 900;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "sf";
+	src: url(fonts/SF-RegularItalic.otf);
+	font-weight: normal;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: "sf";
+	src: url(fonts/SF-MediumItalic.otf);
+	font-weight: 700;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: "sf";
+	src: url(fonts/SF-BoldItalic.otf);
+	font-weight: 900;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: "osc";
+	src: url(fonts/OSC-Regular.ttf);
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "osc";
+	src: url(fonts/OSC-Medium.ttf);
+	font-weight: 700;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "osc";
+	src: url(fonts/OSC-SemiBold.ttf);
+	font-weight: 900;
+	font-style: normal;
+}
+
+html {
+	font-size: 15px;
+	color: #151515;
+	background-color: #fff;
+	text-rendering: optimizeLegibility;
+}
+
+body {
+	font-family: "sf";
+	padding: 0px;
+	font-weight: 400;
+	color: #424242;
+	background-color: #fff;
+}
+
+body.modal-open {
+	overflow: hidden;
+}
+
+img {
+	object-fit: cover !important;
+	object-position: center !important;
+}
+
+textarea {
+	color: #424242 !important;
+	border-radius: .2rem !important;
+}
+
+input, select {
+	display: inline-block !important;
+	color: #424242 !important;
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+select.form-control {
+	font-size: inherit;
+}
+
+select:invalid {
+	color: gray !important;
+}
+
+button.dropdown-item:active > span
+{
+	color: #fff !important;
+}
+
+a {
+	cursor: pointer;
+	text-decoration: none !important;
+	outline: 0 !important;
+	color: inherit;
+}
+
+div[contenteditable] {
+	outline: 0px solid transparent;
+}
+
+.navbar {
+	height: 48px;
+}
+
+.navbar-dark, .navbar-nav, .nav-link, .navbar-text {
+	color: #ffffff !important;
+	font-weight: 500;
+}
+
+.navbar-brand {
+	font-size: 18px;
+	font-weight: 700;
+}
+
+.btn-disabled {
+	cursor: default !important;
+	color: #bbb !important;
+}
+
+.btn-disabled:hover {
+	opacity: 1.0 !important;
+	color: #bbb !important;
+}
+
+.dropdown-item {
+	font-size: 13px;
+	color:  #424242;
+}
+
+.tooltip-inner {
+    max-width: 500px !important;
+}
+
+.tooltip.show {
+	opacity: 1;
+	z-index: 2501;
+}
+
+.tooltip-inner {
+	opacity:1;
+	background-color: #0984e3;
+	color: #fff;
+	text-align: left;
+	font-size: 12px;
+	font-weight: bold;
+}
+
+.tooltip.bs-tooltip-top .tooltip-arrow::before {
+	border-top-color: #0984e3;
+}
+
+.tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+	border-bottom-color: #0984e3;
+}
+
+.tooltip.bs-tooltip-start .tooltip-arrow::before {
+	border-left-color: #0984e3;
+}
+
+.tooltip.bs-tooltip-end .tooltip-arrow::before {
+	border-right-color: #0984e3;
+}
+
+.popover {
+	z-index: 2550;
+	font-size: 19px;
+}
+
+.popover-body {
+	padding: 9px 9px 9px 2px;
+}
+
+.popover-body > a {
+	margin-left: 7px;
+}
+
+.fade {
+	transition: opacity .1s linear;
+}
+
+.toast {
+	z-index: 3000;
+	background-color: #fff;
+	border: 0 !important;
+	box-shadow: 0.25rem 0.25rem 1rem rgba(0,0,0,.35);
+	font-size: 13px;
+}
+
+.dropdown:hover .dropdown-menu {
+	display: block;
+}
+
+.dropdown:hover .dropdown-menu {
+	margin-top: 0;
+	right: auto;
+	left: 50%;
+	-webkit-transform: translate(-50%, 0);
+	-o-transform: translate(-50%, 0);
+	transform: translate(-50%, 0);
+	border-radius: 5px;
+	border-top: 3px solid #e77500;
+}
+
+.dm-search {
+	padding: 7px;
+	-webkit-transform: translate(-90%, 0) !important;
+	-o-transform: translate(-90%, 0) !important;
+	transform: translate(-90%, 0) !important;
+	background-color: #0000;
+	border: none !important;
+}
+
+.dm-search input {
+	border-top: 2px solid #e77500;
+}
+
+.dropdown-item {
+	padding: .5rem 1.8rem;
+	font-size: 14px;
+}
+
+.dropdown-item:hover {
+	background-color: #e4e7ea;
+}
+
+.wp-element-caption {
+	font-size: 15px;
+	font-style: italic;
+	/* text-align: end; update 27-08-2025 */
+	text-align: center;
+	margin-bottom: 15px;
+}
+
+.wp-block-embed {
+	display: none;
+}
+
+.has-text-align-center{
+  text-align:center;
+}
+
+.has-text-align-left{
+  text-align:left;
+}
+
+.has-text-align-right{
+  text-align:right;
+}
+
+.box-info {
+  background-color: #E6F7FF; /* xanh nhạt nhất từ ảnh */
+  border: 1px solid #b3e5fc;
+  border-left: 6px solid #039be5;
+  border-radius: 12px;
+  padding: 18px 20px;
+  line-height: 1.65;
+  color: #000000; /* text màu đen */
+  max-width: 900px;
+  margin: 0 auto 20px auto;
+}
+
+/* Responsive cho di động */
+@media (max-width: 600px) {
+  .box-info {
+    padding: 14px 16px;
+    font-size: 15px;
+  }
+}
+
+body{
+	margin: 0 !important;
+}
+
+.aligncenter{
+	text-align: center;
+}

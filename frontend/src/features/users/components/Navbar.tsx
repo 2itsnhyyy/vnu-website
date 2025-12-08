@@ -15,11 +15,11 @@ const Navbar = () => {
   };
 
   return (
-    <div className="bg-white flex justify-between items-center py-2 text-sm sticky top-0 z-50 shadow-sm border-b border-surface-dim">
+    <div className="bg-white flex justify-between items-center py-2 text-sm sticky top-0 z-150 shadow-sm border-b border-surface-dim">
 
       {/* Logo */}
       <img
-        className="w-15 cursor-pointer ml-10"
+        className="w-40 cursor-pointer ml-10"
         src="/src/assets/logos/LogoChu.svg"
         alt="logo"
         onClick={() => navigate("/users")}

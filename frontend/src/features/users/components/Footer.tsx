@@ -147,7 +147,7 @@ const Footer = () => {
           </div>
         </div>
         
-        <div className="mt-12 pt-8 border-t border-gray-700 text-center text-sm text-gray-400">
+        <div className="mt-3 pt-4 border-t border-gray-700 text-center text-sm text-gray-400">
             &copy; {new Date().getFullYear()} Heart2Heart. All rights reserved.
         </div>
       </div>

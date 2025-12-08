@@ -1,9 +1,11 @@
-import React from 'react'
-
+import React from "react";
+import All from "../../../components/News/All";
 const News = () => {
   return (
-    <div>News</div>
+    <div>
+      <All/>
+    </div>
   )
-}
-
-export default News
+};
+export default News;
+  
