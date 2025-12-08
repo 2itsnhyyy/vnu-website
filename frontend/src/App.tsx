@@ -1,4 +1,3 @@
-import Dashboard from "./features/admin/pages/Dashboard";
 import { useState } from "react";
 import { useRoutes } from "react-router-dom";
 import routes from "./features/shared/routes";
