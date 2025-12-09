@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import forgotpw from "../../../../assets/images/users/forgotpw.jpg";
+import LogoKhongChu from "../../../../assets/logos/LogoKhongChu.svg";
 
 type Step = "request" | "confirm" | "reset";
 
@@ -80,40 +80,6 @@ export default function ForgotPassword() {
       setOtp(["", "", "", "", "", ""]);
       setIsLoading(false);
     }, 1000);
-
-    /* Original API call - uncomment when backend is ready
-    try {
-      const response = await fetch("http://localhost:3000/api/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || `Lỗi server: ${response.status}`);
-      }
-
-      setStatus({
-        success: true,
-        message: "Mã OTP đã được gửi tới email của bạn!",
-      });
-      setStep("confirm");
-      setOtpTimer(60 * 60);
-      setOtp(["", "", "", "", "", ""]);
-    } catch (err) {
-      console.error("Lỗi yêu cầu OTP:", err);
-      setStatus({
-        success: false,
-        message: err instanceof Error && err.message.includes("không tồn tại")
-          ? "Email không tồn tại trong hệ thống."
-          : "Có lỗi xảy ra, vui lòng thử lại.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-    */
   };
 
   const handleConfirmOtp = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -126,10 +92,8 @@ export default function ForgotPassword() {
 
     setIsLoading(true);
 
-    // Simulate API call
     setTimeout(() => {
       const otpString = otp.join("");
-      // Demo mode: accept "123456" as valid OTP
       if (otpString === "123456") {
         setStatus({
           success: true,
@@ -144,41 +108,6 @@ export default function ForgotPassword() {
       }
       setIsLoading(false);
     }, 1000);
-
-    /* Original API call - uncomment when backend is ready
-    try {
-      const response = await fetch("http://localhost:3000/api/auth/confirm-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), otp: otp.join("") }),
-      });
-
-      const data = await response.json();
-      console.log("Phản hồi từ confirm-otp:", JSON.stringify(data, null, 2));
-
-      if (!response.ok) {
-        throw new Error(data.message || `Lỗi server: ${response.status}`);
-      }
-
-      setStatus({
-        success: true,
-        message: "Xác nhận OTP thành công! Vui lòng nhập mật khẩu mới.",
-      });
-      setStep("reset");
-    } catch (err) {
-      console.error("Lỗi xác nhận OTP:", err);
-      setStatus({
-        success: false,
-        message: err instanceof Error && err.message.includes("không đúng")
-          ? "Mã OTP không đúng."
-          : err instanceof Error && err.message.includes("hết hạn")
-          ? "Mã OTP đã hết hạn."
-          : "Có lỗi xảy ra, vui lòng thử lại.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-    */
   };
 
   const handleResetPassword = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -191,59 +120,16 @@ export default function ForgotPassword() {
 
     setIsLoading(true);
 
-    // Simulate API call
     setTimeout(() => {
       setStatus({
         success: true,
         message: "Mật khẩu đã được đặt lại thành công! (Demo mode)",
       });
       setTimeout(() => {
-        navigate("/login");
+        navigate("/users/login");
       }, 2000);
       setIsLoading(false);
     }, 1000);
-
-    /* Original API call - uncomment when backend is ready
-    const otpString = otp.join("");
-    console.log("OTP gửi đi:", otpString);
-
-    try {
-      const response = await fetch("http://localhost:3000/api/auth/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), otp: otp.join(""), newPassword }),
-      });
-
-      const data = await response.json();
-      console.log("Phản hồi từ reset-password:", JSON.stringify(data, null, 2));
-
-      if (!response.ok) {
-        throw new Error(data.message || `Lỗi server: ${response.status}`);
-      }
-
-      setStatus({
-        success: true,
-        message: "Mật khẩu đã được đặt lại thành công!",
-      });
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
-    } catch (err) {
-      console.error("Lỗi đặt lại mật khẩu:", err);
-      setStatus({
-        success: false,
-        message: err instanceof Error && err.message.includes("không tồn tại")
-          ? "Người dùng không tồn tại."
-          : err instanceof Error && err.message.includes("hết hạn")
-          ? "Mã OTP đã hết hạn."
-          : err instanceof Error && err.message.includes("không đúng")
-          ? "Mã OTP không đúng."
-          : "Có lỗi xảy ra, vui lòng thử lại.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-    */
   };
 
   const handleOtpChange = (index: number, value: string): void => {
@@ -300,53 +186,15 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-10 relative">
-      <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-primary)] via-[var(--color-primary-light)] to-[var(--color-primary)] animate-gradient opacity-60"></div>
-      <style>
-        {`
-          @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-          .animate-gradient {
-            background-size: 200% 200%;
-            animation: gradient 20s ease infinite;
-          }
-          .input-focus {
-            transition: all 0.3s ease;
-          }
-          .input-focus:focus {
-            transform: scale(1.02);
-            box-shadow: 0 0 10px rgba(29, 78, 216, 0.5);
-          }
-          .button-hover {
-            transition: all 0.3s ease;
-          }
-          .button-hover:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-          }
-          .fade-in {
-            animation: fadeIn 0.5s ease-in;
-          }
-          @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-        `}
-      </style>
-      <div className="w-full max-w-4xl flex rounded-lg shadow-lg overflow-hidden relative z-10">
-        {/* Left Half: Volunteer Image */}
-        <div className="w-1/2 hidden md:block bg-cover bg-center" style={{
-          backgroundImage: `url(${forgotpw})`
+<div className="min-h-screen flex items-center justify-center relative">
+      <div className="w-full flex z-10">
+        {/* Left Half: Image */}
+        <div className="w-2/3 hidden md:block bg-contain bg-center bg-no-repeat bg-bg h-screen" style={{
+          backgroundImage: `url(${LogoKhongChu})`
         }}>
         </div>
-        {/* Right Half: Form */}
-        <div className="w-full md:w-1/2 bg-white p-8 fade-in">
-          <div className="flex justify-center mb-4">
-            <img className="w-24 transform transition-transform duration-300 hover:scale-110" src="/src/assets/logos/LogoChu.svg" alt="logo" />
-          </div>
+        {/* Right Half: Login Form */}
+        <div className="w-full md:w-1/2 bg-white p-20 fade-in flex flex-col justify-center h-screen">
           <h2 className="text-2xl font-bold text-[var(--color-text-main)] text-center mb-6">
             {step === "request" && "Quên mật khẩu"}
             {step === "confirm" && "Xác nhận OTP"}
@@ -379,7 +227,7 @@ export default function ForgotPassword() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className={`w-full bg-[var(--color-primary)] text-white py-2 rounded-md font-medium transition-all duration-300 ${isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-[var(--color-primary-light)]"}`}
+                  className={`w-full bg-[var(--color-primary)] text-white cursor-pointer py-2 rounded-md font-medium transition-all duration-300 ${isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-[var(--color-primary-light)]"}`}
                 >
                   {isLoading ? "Đang gửi..." : "Gửi OTP"}
                 </button>
@@ -417,7 +265,7 @@ export default function ForgotPassword() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className={`w-full bg-yellow-500 text-white py-2 rounded-lg font-bold transition-all duration-300 button-hover ${isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-yellow-600"
+                  className={`w-full bg-primary-light cursor-pointer text-white py-2 rounded-lg font-bold transition-all duration-300 button-hover ${isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-yellow-600"
                     }`}
                 >
                   {isLoading ? "Đang xác nhận..." : "Xác nhận OTP"}
@@ -433,7 +281,7 @@ export default function ForgotPassword() {
                     }
                   }}
                   disabled={isLoading}
-                  className="mt-2 text-sm text-red-500 hover:underline w-full text-center"
+                  className="mt-2 text-sm text-red-500 hover:underline w-full text-center cursor-pointer"
                 >
                   Gửi lại OTP
                 </button>
@@ -484,7 +332,7 @@ export default function ForgotPassword() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className={`w-full bg-yellow-500 text-white py-2 rounded-lg font-bold transition-all duration-300 button-hover ${isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-yellow-600"
+                  className={`w-full bg-primary-light cursor-pointer text-white py-2 rounded-lg font-bold transition-all duration-300 button-hover ${isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-yellow-600"
                     }`}
                 >
                   {isLoading ? "Đang cập nhật..." : "Đặt lại mật khẩu"}
@@ -500,7 +348,7 @@ export default function ForgotPassword() {
           )}
 
           <div className="mt-6 text-center">
-            <Link to="/login" className="text-[var(--color-primary)] font-medium hover:underline">
+            <Link to="/users/login" className="text-[var(--color-primary)] font-medium hover:underline cursor-pointer">
               Quay lại đăng nhập
             </Link>
           </div>

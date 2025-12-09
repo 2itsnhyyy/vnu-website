@@ -1,6 +1,6 @@
 import React, { useState, useEffect, type FormEvent, type ChangeEvent } from "react"
 import { NavLink, useNavigate } from "react-router-dom"
-import registerImg from "../../../../assets/images/users/login.jpg";
+import LogoKhongChu from "../../../../assets/logos/LogoKhongChu.svg";
 
 interface LoginErrors {
   email?: string
@@ -65,10 +65,6 @@ const Login: React.FC = () => {
     try {
       console.log("Đang đăng nhập với email:", trimmedEmail)
 
-      // =================================================================
-      // MOCK API 
-      // =================================================================
-
       // Giả lập delay network
       await new Promise(resolve => setTimeout(resolve, 1000))
 
@@ -86,28 +82,6 @@ const Login: React.FC = () => {
       }
 
       const data = mockResponse
-
-      // =================================================================
-      // KHI CÓ API THẬT, UNCOMMENT ĐOẠN NÀY VÀ XÓA MOCK Ở TRÊN
-      // =================================================================
-      /*
-      const res = await fetch("http://localhost:3000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: trimmedEmail,
-          password: loginPassword,
-        }),
-      })
-
-      if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.message || `Lỗi server: ${res.status}`)
-      }
-
-      const data: LoginResponse = await res.json()
-      */
-
       console.log("Phản hồi từ server:", JSON.stringify(data, null, 2))
 
       // Kiểm tra dữ liệu trả về
@@ -191,54 +165,16 @@ const Login: React.FC = () => {
   }, [navigate, initialCheckDone])
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-10 relative">
-      <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-primary)] via-[var(--color-primary-light)] to-[var(--color-primary)] animate-gradient opacity-60"></div>
-      <style>
-        {`
-          @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-          .animate-gradient {
-            background-size: 200% 200%;
-            animation: gradient 20s ease infinite;
-          }
-          .input-focus {
-            transition: all 0.3s ease;
-          }
-          .input-focus:focus {
-            transform: scale(1.02);
-            box-shadow: 0 0 10px rgba(29, 78, 216, 0.5);
-          }
-          .button-hover {
-            transition: all 0.3s ease;
-          }
-          .button-hover:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-          }
-          .fade-in {
-            animation: fadeIn 0.5s ease-in;
-          }
-          @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-        `}
-      </style>
-      <div className="w-full max-w-6xl flex rounded-lg shadow-lg overflow-hidden relative z-10">
+    <div className="min-h-screen flex items-center justify-center relative">
+      <div className="w-full flex z-10">
         {/* Left Half: Image */}
-        <div className="w-1/2 hidden md:block bg-cover bg-center" style={{
-          backgroundImage: `url(${registerImg})`
+        <div className="w-2/3 hidden md:block bg-contain bg-center bg-no-repeat bg-bg h-screen" style={{
+          backgroundImage: `url(${LogoKhongChu})`
         }}>
         </div>
         {/* Right Half: Login Form */}
-        <div className="w-full md:w-1/2 bg-white p-8 fade-in">
-          <div className="flex justify-center mb-6">
-            <img className="w-70 pb-10 pt-10" src="/src/assets/logos/LogoChu.svg" alt="logo" />
-          </div>
-          <h2 className="text-2xl md:text-3xl font-bold text-center text-[var(--color-text-main)] mb-6">Đăng nhập</h2>
+        <div className="w-full md:w-1/2 bg-white p-20 fade-in flex flex-col justify-center h-screen">
+          <h2 className="text-7xl md:text-3xl font-bold text-center text-[var(--color-text-main)] mb-6">ĐĂNG NHẬP</h2>
           <div className="text-center text-gray-600 mb-8">
             <p>Chào mừng bạn trở lại với MyVNU!</p>
           </div>
@@ -288,7 +224,7 @@ const Login: React.FC = () => {
               {errors.password && <p className="text-[var(--color-primary)] text-sm mt-1">{errors.password}</p>}
               <div className="text-right mt-2">
                 <NavLink
-                  to="/forgot-password"
+                  to="/users/forgot-password"
                   className="text-sm text-[var(--color-primary)] hover:underline"
                 >
                   Quên mật khẩu?
@@ -298,7 +234,7 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full bg-[var(--color-primary)] text-white py-2 rounded-lg font-bold transition-all duration-300 button-hover ${isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-[var(--color-primary-light)]" }`}
+              className={`w-full bg-[var(--color-primary)] cursor-pointer text-white py-2 rounded-lg font-bold transition-all duration-300 button-hover ${isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-[var(--color-primary-light)]" }`}
             >
               {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>
@@ -317,7 +253,7 @@ const Login: React.FC = () => {
             <p className="text-sm text-gray-600">
               Chưa có tài khoản?{" "}
               <NavLink
-                to="/register/common"
+                to="/users/register/common"
                 className="text-[var(--color-primary)] font-medium hover:underline"
               >
                 Đăng ký ngay
