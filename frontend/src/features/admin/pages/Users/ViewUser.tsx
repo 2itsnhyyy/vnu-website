@@ -68,10 +68,10 @@ const ViewUser = () => {
               <img
                 src={user.avatar}
                 alt=""
-                className="absolute left-10 bottom-[-70px] w-[150px] h-[150px] rounded-full border-4 border-white shadow-md"
+                className="absolute left-10 bottom-[-90px] w-[150px] h-[150px] rounded-full border-4 border-white shadow-md"
               />
 
-              <h2 className="absolute left-[220px] bottom-[-40px] text-xl font-semibold">
+              <h2 className="absolute left-[220px] bottom-[-55px] text-2xl font-semibold">
                 {user.name}
               </h2>
             </div>
