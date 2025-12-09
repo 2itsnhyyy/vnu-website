@@ -1,4 +1,4 @@
-import Problems from "../../pages/Main/Problems";
+import Problems from "../../pages/Problems";
 
 const ProblemsRouters = [
   {

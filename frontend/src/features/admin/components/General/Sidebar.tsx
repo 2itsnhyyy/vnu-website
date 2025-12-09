@@ -1,137 +1,135 @@
-//ĐÂY LÀ SIDEBAR TƯỢNG TRƯNG, ĐỢI PNKI CODE XONG GẮN VÔ HIHI        /
-//                                                                  /
-//                                                                 /
-////////////////////////////////////////////////////////////////////
-import React, { useState } from "react";
+import { useCallback } from "react";
+import { Link, useLocation } from "react-router";
 import {
-  Home,
-  Users,
-  Calendar,
-  Settings,
-  LogOut,
-  Menu,
-  ChevronLeft,
-} from "lucide-react";
+  MdOutlineDashboard,
+  MdLocationPin,
+  MdOutlineForum,
+  MdOutlineLogout,
+} from "react-icons/md";
+import { FaRegBuilding, FaRegNewspaper } from "react-icons/fa6";
+import { IoWarningOutline } from "react-icons/io5";
+import { LuUsersRound } from "react-icons/lu";
+import logo from "../../../../assets/logos/LogoChu.svg";
+import { useSidebar } from "../../contexts/SidebarContext";
 
 type NavItem = {
-  id: string;
-  label: string;
+  name: string;
   icon: React.ReactNode;
-  badge?: number;
+  path?: string;
 };
 
-const navItems: NavItem[] = [
-  { id: "home", label: "Dashboard", icon: <Home size={18} /> },
-  { id: "team", label: "Team", icon: <Users size={18} /> },
-  { id: "calendar", label: "Calendar", icon: <Calendar size={18} />, badge: 3 },
-  { id: "settings", label: "Settings", icon: <Settings size={18} /> },
-];
+const Sidebar: React.FC = () => {
+  const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const location = useLocation();
 
-export default function Sidebar({}: {}) {
-  const [active, setActive] = useState<string>("home");
-  const [collapsed, setCollapsed] = useState<boolean>(false);
+  const basePath = "/admin";
+
+  const navItems: NavItem[] = [
+    {
+      icon: <MdOutlineDashboard />,
+      name: "Tổng quan",
+      path: `${basePath}/`,
+    },
+    {
+      icon: <MdLocationPin />,
+      name: "Quản lý địa điểm",
+      path: `${basePath}/locations`,
+    },
+    {
+      icon: <FaRegBuilding />,
+      name: "Quản lý tòa nhà",
+      path: `${basePath}/buildings`,
+    },
+    {
+      icon: <MdOutlineForum />,
+      name: "Quản lý Forum",
+      path: `${basePath}/forum`,
+    },
+    {
+      icon: <IoWarningOutline />,
+      name: "Quản lý sự cố",
+      path: `${basePath}/problems`,
+    },
+    {
+      icon: <FaRegNewspaper />,
+      name: "Quản lý tin tức",
+      path: `${basePath}/news`,
+    },
+    {
+      icon: <LuUsersRound />,
+      name: "Quản lý người dùng",
+      path: `${basePath}/users`,
+    },
+    {
+      icon: <MdOutlineLogout />,
+      name: "Đăng xuất",
+      path: `${basePath}/logout`,
+    },
+  ];
+
+  const isActive = useCallback(
+    (path: string) => {
+      return (
+        location.pathname === path || location.pathname.startsWith(path + "/")
+      );
+    },
+    [location.pathname]
+  );
 
   return (
     <aside
-      className={`flex flex-col h-screen bg-white border-r transition-width duration-200 ease-in-out shadow-sm ${
-        collapsed ? "w-20" : "w-64"
-      }`}
+      className={`
+        fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 
+        bg-white text-gray-900 h-screen 
+        transition-all border-r border-gray-200 z-50
+        items-center
+        ${
+          isExpanded || isMobileOpen
+            ? "w-[250px]"
+            : isHovered
+            ? "w-[250px]"
+            : "w-[90px]"
+        }
+        ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
+        lg:translate-x-0
+      `}
+      onMouseEnter={() => !isExpanded && setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Header / Logo */}
-      <div className="flex items-center justify-between px-4 py-3 border-b">
-        <div className="flex items-center gap-3">
-          <div
-            className={`flex items-center justify-center rounded-md font-bold text-lg p-2 text-white transition-all ${
-              collapsed ? "w-8 h-8" : "w-10 h-10"
-            } bg-gradient-to-br from-indigo-500 to-violet-500`}
+      <div
+        className={`py-8 flex ${
+          !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
+        }`}
+      >
+        <Link to={basePath}>
+          <img src={logo} alt="logo" className="w-[70%] ml-7" />
+        </Link>
+      </div>
+
+      <nav className="flex flex-col gap-4">
+        {navItems.map((item) => (
+          <Link
+            key={item.name}
+            to={item.path!}
+            className={`
+              flex items-center gap-4 p-2 rounded-md
+              ${
+                isActive(item.path!)
+                  ? "bg-[#1D4ED8] text-white"
+                  : "text-gray-700"
+              }
+              transition-colors
+            `}
           >
-            {/* simple logo mark */}
-            <span className="select-none">ST</span>
-          </div>
-          {!collapsed && <span className="text-sm font-semibold">Sidebar</span>}
-        </div>
-
-        <button
-          onClick={() => setCollapsed((s) => !s)}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="p-1 rounded hover:bg-gray-100"
-        >
-          {collapsed ? <Menu size={18} /> : <ChevronLeft size={18} />}
-        </button>
-      </div>
-
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-1 py-3">
-        <ul className="space-y-1">
-          {navItems.map((item) => {
-            const isActive = item.id === active;
-            return (
-              <li key={item.id}>
-                <button
-                  onClick={() => setActive(item.id)}
-                  className={`flex items-center w-full gap-3 px-3 py-2 rounded-md text-sm transition-colors duration-150 focus:outline-none ${
-                    isActive
-                      ? "bg-indigo-50 text-indigo-700"
-                      : "text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  <span className="flex items-center justify-center min-w-[28px]">
-                    {item.icon}
-                  </span>
-                  {!collapsed && (
-                    <>
-                      <span className="flex-1 text-left">{item.label}</span>
-                      {typeof item.badge === "number" && (
-                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-700">
-                          {item.badge}
-                        </span>
-                      )}
-                    </>
-                  )}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-
-        {/* Divider */}
-        <div className="my-4 h-px bg-gray-100" />
-
-        {/* Secondary area - example groups */}
-        {!collapsed && (
-          <div className="px-3 text-xs text-gray-400 uppercase tracking-wide mb-2">Projects</div>
-        )}
-        <ul className="px-1 space-y-2">
-          <li>
-            <a className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-50 text-gray-600 text-sm" href="#">
-              <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
-              {!collapsed && <span>Project Aurora</span>}
-            </a>
-          </li>
-          <li>
-            <a className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-50 text-gray-600 text-sm" href="#">
-              <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
-              {!collapsed && <span>Design System</span>}
-            </a>
-          </li>
-        </ul>
+            <span>{item.icon}</span>
+            {(isExpanded || isHovered || isMobileOpen) && (
+              <span>{item.name}</span>
+            )}
+          </Link>
+        ))}
       </nav>
-
-      {/* Footer / Profile */}
-      <div className="px-3 py-3 border-t">
-        <div className="flex items-center gap-3">
-          <div className="rounded-full w-10 h-10 bg-gray-100 flex items-center justify-center text-sm font-medium text-gray-700">NT</div>
-          {!collapsed && (
-            <div className="flex-1">
-              <div className="text-sm font-medium">Nhật Trường</div>
-              <div className="text-xs text-gray-400">Developer</div>
-            </div>
-          )}
-          <button className="p-2 rounded hover:bg-gray-100" aria-label="Logout">
-            <LogOut size={16} />
-          </button>
-        </div>
-      </div>
     </aside>
   );
-}
+};
+
+export default Sidebar;

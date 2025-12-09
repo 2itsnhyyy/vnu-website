@@ -1,4 +1,4 @@
-import Forum from "../../pages/Main/Forum";
+import Forum from "../../pages/Forum";
 
 const ForumRouters = [
   {

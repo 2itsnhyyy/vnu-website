@@ -1,4 +1,4 @@
-import { Locations } from "../../pages/Main/Locations";
+import { Locations } from "../../pages/Locations";
 
 const LocationsRouters = [
   {
