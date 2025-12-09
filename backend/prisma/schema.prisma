@@ -1,0 +1,359 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_URL")
+}
+
+model Place {
+  placeId      Int       @id @default(autoincrement()) @map("place_id")
+  name         String    @unique
+  description  String?
+  address      String?
+  image        String?
+  openTime     String?   @map("open_time")
+  closeTime    String?   @map("close_time")
+  phone        String?
+  boundaryGeom Unsupported("geometry(Polygon,4326)") @map("boundary_geom")
+
+  buildings    Building[] 
+  incidents    Incident[]
+  entrances    Entrance[]
+
+  @@map("place")
+}
+
+model Building {
+  buildingId  Int     @id @default(autoincrement()) @map("building_id")
+  name        String
+  description String?
+  floors      Int?
+  image       String?
+  placeId     Int     @map("place_id")
+
+  place       Place     @relation(fields: [placeId], references: [placeId])
+  objects3d   Object3D[]
+
+  @@map("building")
+}
+
+model Incident {
+  incidentId Int       @id @default(autoincrement()) @map("incident_id")
+  title      String
+  content    String
+  placeId    Int       @map("place_id")
+  status     Int?
+  createdAt  DateTime? @default(now()) @map("created_at")
+  updatedAt  DateTime? @updatedAt @map("updated_at")
+
+  place      Place     @relation(fields: [placeId], references: [placeId])
+
+  @@map("incident")
+}
+
+model Entrance {
+  entranceId      Int     @id @default(autoincrement()) @map("entrance_id")
+  name            String
+  nearestJunction Int     @map("nearest_junction")
+  placeId         Int     @map("place_id")
+  geom            Unsupported("geometry(Point,4326)")
+
+  place              Place           @relation(fields: [placeId], references: [placeId])
+  nearestJunctionRef RoutingJunction @relation("Entrance_nearestJunction", fields: [nearestJunction], references: [junctionId])
+
+  @@map("entrance")
+}
+
+model RoutingJunction {
+  junctionId Int     @id @default(autoincrement()) @map("junction_id")
+  geom       Unsupported("geometry(Point,4326)")
+
+  startSegments RoutingSegment[] @relation("Segment_startNode")
+  endSegments   RoutingSegment[] @relation("Segment_endNode")
+  entrances     Entrance[]       @relation("Entrance_nearestJunction")
+
+  @@map("routing_junction")
+}
+
+model RoutingSegment {
+  segmentId   Int     @id @default(autoincrement()) @map("segment_id")
+  startNode   Int     @map("start_node")
+  endNode     Int     @map("end_node")
+  cost        Float
+  reverseCost Float   @map("reverse_cost")
+  geom        Unsupported("geometry(LineString,4326)")
+  roadId      Int     @map("road_id")
+
+  startNodeRef RoutingJunction @relation("Segment_startNode", fields: [startNode], references: [junctionId])
+  endNodeRef   RoutingJunction @relation("Segment_endNode", fields: [endNode], references: [junctionId])
+  road         Road            @relation(fields: [roadId], references: [roadId])
+
+  @@map("routing_segment")
+}
+
+model Road {
+  roadId   Int     @id @default(autoincrement()) @map("road_id")
+  name     String
+
+  segments RoutingSegment[]
+
+  @@map("road")
+}
+
+model User {
+  userId   Int      @id @default(autoincrement()) @map("user_id")
+  name     String
+  avatar   String?
+  email    String
+  birthday DateTime
+  password String
+  role     Int?
+
+  posts        Post[]
+  comments     Comment[]
+  likePosts    LikePost[]
+  likeComments LikeComment[]
+
+  @@map("user")
+}
+
+model Post {
+  postId          Int       @id @default(autoincrement()) @map("post_id")
+  title           String
+  contentMarkdown String    @map("content_markdown")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  author          Int
+
+  authorUser User      @relation(fields: [author], references: [userId])
+  comments   Comment[]
+  likes      LikePost[]
+
+  @@map("post")
+}
+
+model Comment {
+  commentId Int       @id @default(autoincrement()) @map("comment_id")
+  content   String?
+  parent    Int? 
+  postId    Int?      @map("post_id")
+  author    Int?
+  createdAt DateTime? @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  post          Post?        @relation(fields: [postId], references: [postId])
+  authorUser    User?        @relation(fields: [author], references: [userId])
+  parentComment Comment?     @relation("Comment_children", fields: [parent], references: [commentId])
+  children      Comment[]    @relation("Comment_children")
+  likes         LikeComment[]
+
+  @@map("comment")
+}
+
+model LikePost {
+  postId    Int       @map("post_id")
+  userId    Int       @map("user_id")
+  createdAt DateTime? @default(now()) @map("created_at")
+
+  post Post @relation(fields: [postId], references: [postId])
+  user User @relation(fields: [userId], references: [userId])
+
+  @@id([postId, userId])
+  @@map("like_post")
+}
+
+model LikeComment {
+  commentId Int       @map("comment_id")
+  userId    Int       @map("user_id")
+  createdAt DateTime? @default(now()) @map("created_at")
+
+  comment Comment @relation(fields: [commentId], references: [commentId])
+  user    User    @relation(fields: [userId], references: [userId])
+
+  @@id([commentId, userId])
+  @@map("like_comment")
+}
+
+model News {
+  newsId          Int       @id @default(autoincrement()) @map("news_id")
+  title           String
+  contentMarkdown String    @map("content_markdown")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("news")
+}
+
+model Object3D {
+  objectId   Int     @id @default(autoincrement()) @map("object_id")
+  buildingId Int     @map("building_id")
+  objectType Int?    @map("object_type")
+
+  building Building      @relation(fields: [buildingId], references: [buildingId])
+  bodies   Body[]
+  meshes   MeshObject[]
+
+  @@map("object3d")
+}
+
+model MeshObject {
+  meshId   Int     @id @default(autoincrement()) @map("mesh_id")
+  meshUrl  String  @map("mesh_url")
+  pointId  Int?    @map("point_id")
+  rotate   Float?
+  scale    Float?
+  objectId Int     @map("object_id")
+
+  object Object3D @relation(fields: [objectId], references: [objectId])
+  point  Point?   @relation(fields: [pointId], references: [pointId])
+
+  @@map("mesh_object")
+}
+
+model Body {
+  bodyId   Int     @id @default(autoincrement()) @map("body_id")
+  name     String
+  objectId Int     @map("object_id")
+
+  object    Object3D    @relation(fields: [objectId], references: [objectId])
+  comps     BodyComp[]
+  frustums  Frustum[]
+  prisms    Prism[]
+  pyramids  Pyramid[]
+  cones     Cone[]
+  cylinders Cylinder[]
+
+  @@map("body")
+}
+
+model Face {
+  faceId Int @id @default(autoincrement()) @map("face_id")
+  geom   Unsupported("geometry(PolygonZ,4326)")
+
+  bodyComps    BodyComp[]
+  frustumBase  Frustum[] @relation("Frustum_baseFace")
+  frustumTop   Frustum[] @relation("Frustum_topFace")
+  prismBase    Prism[]
+  pyramidBase  Pyramid[]
+  surface      Surface[]
+
+  @@map("face")
+}
+
+model Point {
+  pointId Int @id @default(autoincrement()) @map("point_id")
+  geom    Unsupported("geometry(PointZ,4326)")
+
+  node        Node[]
+  meshObjects MeshObject[]
+
+  @@map("point")
+}
+
+model Node {
+  nodeId  Int @id @default(autoincrement()) @map("node_id")
+  pointId Int @map("point_id")
+
+  point         Point     @relation(fields: [pointId], references: [pointId])
+  pyramids      Pyramid[] @relation("Pyramid_apex")
+  conesAsCenter Cone[]    @relation("Cone_center")
+  conesAsApex   Cone[]    @relation("Cone_apex")
+  cylinders     Cylinder[] @relation("Cylinder_center")
+
+  @@map("node")
+}
+
+model Line {
+  lineId Int @id @default(autoincrement()) @map("line_id")
+  geom   Unsupported("geometry(LineStringZ,4326)")
+
+  @@map("line")
+}
+
+model BodyComp {
+  bodyCompId Int @id @default(autoincrement()) @map("body_comp_id")
+  faceId     Int @map("face_id")
+  bodyId     Int @map("body_id")
+
+  face Face @relation(fields: [faceId], references: [faceId])
+  body Body @relation(fields: [bodyId], references: [bodyId])
+
+  @@map("body_comp")
+}
+
+model Frustum {
+  frustumId Int  @id @default(autoincrement()) @map("frustum_id")
+  baseFace  Int  @map("base_face")
+  topFace   Int? @map("top_face")
+  bodyId    Int  @map("body_id")
+
+  baseFaceRef Face  @relation("Frustum_baseFace", fields: [baseFace], references: [faceId])
+  topFaceRef  Face? @relation("Frustum_topFace", fields: [topFace], references: [faceId])
+  body        Body  @relation(fields: [bodyId], references: [bodyId])
+
+  @@map("frustum")
+}
+
+model Prism {
+  prismId  Int   @id @default(autoincrement()) @map("prism_id")
+  baseFace Int   @map("base_face")
+  height   Float
+  bodyId   Int   @map("body_id")
+
+  baseFaceRef Face @relation(fields: [baseFace], references: [faceId])
+  body        Body @relation(fields: [bodyId], references: [bodyId])
+
+  @@map("prism")
+}
+
+model Pyramid {
+  pyramidId Int @id @default(autoincrement()) @map("pyramid_id")
+  baseFace  Int @map("base_face")
+  apex      Int
+  bodyId    Int @map("body_id")
+
+  baseFaceRef Face @relation(fields: [baseFace], references: [faceId])
+  apexNode    Node @relation("Pyramid_apex", fields: [apex], references: [nodeId])
+  body        Body @relation(fields: [bodyId], references: [bodyId])
+
+  @@map("pyramid")
+}
+
+model Cone {
+  coneId Int   @id @default(autoincrement()) @map("cone_id")
+  center Int
+  radius Float
+  apex   Int
+  bodyId Int   @map("body_id")
+
+  centerNode Node @relation("Cone_center", fields: [center], references: [nodeId])
+  apexNode   Node @relation("Cone_apex", fields: [apex], references: [nodeId])
+  body       Body @relation(fields: [bodyId], references: [bodyId])
+
+  @@map("cone")
+}
+
+model Cylinder {
+  cylinderId Int   @id @default(autoincrement()) @map("cylinder_id")
+  center     Int
+  radius     Float
+  height     Float
+  bodyId     Int   @map("body_id")
+
+  centerNode Node @relation("Cylinder_center", fields: [center], references: [nodeId])
+  body       Body @relation(fields: [bodyId], references: [bodyId])
+
+  @@map("cylinder")
+}
+
+model Surface {
+  surfaceId Int @id @default(autoincrement()) @map("surface_id")
+  faceId    Int @map("face_id")
+
+  face Face @relation(fields: [faceId], references: [faceId])
+
+  @@map("surface")
+}
