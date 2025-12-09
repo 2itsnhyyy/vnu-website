@@ -214,25 +214,25 @@ export default function IncidentTable() {
                   <span
                     className={`px-2 py-1 rounded text-xs font-medium
                     ${
-                      incident.status === 1
+                      incident.status === 0
                         ? "text-[#FFB836] border-2 border-[#FFB836] rounded-2xl"
                         : " text-[#34C759] border-2 border-[#34C759] rounded-2xl"
                     }
                     `}
                   >
-                    {incident.status === 1 ? "Mới" : "Đã giải quyết"}
+                    {incident.status === 0 ? "Mới" : "Đã giải quyết"}
                   </span>
                 </TableCell>
                 <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                   <div className="flex gap-2">
                     <button onClick={() => handleView(incident.incidentId)}>
-                      <MdRemoveRedEye className="w-5 h-5" />
+                      <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleEdit(incident.incidentId)}>
-                      <MdEdit className="w-5 h-5 " />
+                      <MdEdit className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleDelete(incident.incidentId)}>
-                      <MdDeleteOutline className="w-5 h-5 " />
+                      <MdDeleteOutline className="w-5 h-5 cursor-pointer" />
                     </button>
                   </div>
                 </TableCell>
