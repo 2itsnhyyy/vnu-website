@@ -1,9 +1,9 @@
-import Problems from "../../pages/Problems";
+import Incidents from "../../pages/Incidents";
 
-const ProblemsRouters = [
+const IncidentsRouters = [
   {
-    path: "problems",
-    element: <Problems />,
+    path: "incidents",
+    element: <Incidents />,
     // Nếu sau này muốn tách các route con, có thể dùng cấu trúc children như bên dưới:
     // children: [
     //   { path: '', element: <List /> },
@@ -12,4 +12,4 @@ const ProblemsRouters = [
   },
 ];
 
-export default ProblemsRouters;
+export default IncidentsRouters;
