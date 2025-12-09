@@ -1,5 +1,5 @@
 import React, { useState, type FormEvent, type ChangeEvent } from 'react';
-import registerImg from "../../../../../assets/images/users/regis.jpg";
+import LogoKhongChu from "../../../../../assets/logos/LogoKhongChu.svg";
 
 interface VolunteerData {
   fullName?: string;
@@ -129,61 +129,15 @@ const RegisterDetails: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-10 relative">
-
-      {/* BLUE GRADIENT */}
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400 animate-gradient opacity-60"></div>
-
-      <style>
-        {`
-          @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-          .animate-gradient {
-            background-size: 200% 200%;
-            animation: gradient 20s ease infinite;
-          }
-
-          /* BLUE INPUT FOCUS */
-          .input-focus {
-            transition: all 0.3s ease;
-          }
-          .input-focus:focus {
-            transform: scale(1.02);
-            box-shadow: 0 0 10px rgba(29, 78, 216, 0.4);
-          }
-
-          /* BUTTON ANIMATION */
-          .button-hover {
-            transition: all 0.3s ease;
-          }
-          .button-hover:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-          }
-
-          .fade-in {
-            animation: fadeIn 0.5s ease-in;
-          }
-          @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-        `}
-      </style>
-
-      <div className="w-full max-w-6xl flex rounded-lg shadow-lg overflow-hidden relative z-10">
-        <div className="w-1/2 hidden md:block bg-cover bg-center" style={{
-          backgroundImage: `url(${registerImg})`
-        }}></div>
-
-        <div className="w-full md:w-1/2 bg-white p-8 fade-in overflow-y-auto max-h-screen">
-          <div className="flex justify-center mb-6">
-            <img className="w-70 pb-10 pt-10" src="/src/assets/logos/LogoChu.svg" alt="logo" />
-          </div>
-
+<div className="min-h-screen flex items-center justify-center relative">
+      <div className="w-full flex z-10">
+        {/* Left Half: Image */}
+        <div className="w-2/3 hidden md:block bg-contain bg-center bg-no-repeat bg-bg h-screen" style={{
+          backgroundImage: `url(${LogoKhongChu})`
+        }}>
+        </div>
+        {/* Right Half: Login Form */}
+        <div className="w-full md:w-1/2 bg-white p-20 fade-in flex flex-col justify-center h-screen">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-black mb-6">
             Đăng ký tài khoản
           </h2>
@@ -270,7 +224,7 @@ const RegisterDetails: React.FC = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`w-full bg-[var(--color-primary)] text-white py-2 rounded-lg font-bold transition-all duration-300 button-hover ${isSubmitting ? "opacity-50 cursor-not-allowed" : "hover:bg-[var(--color-primary-light)]"
+              className={`w-full bg-[var(--color-primary)] cursor-pointer text-white py-2 rounded-lg font-bold transition-all duration-300 button-hover ${isSubmitting ? "opacity-50 cursor-not-allowed" : "hover:bg-[var(--color-primary-light)]"
                 }`}
             >
               {isSubmitting ? 'Đang xử lý...' : 'Gửi đăng ký'}
@@ -285,7 +239,7 @@ const RegisterDetails: React.FC = () => {
 
             {/* BACK */}
             <div className="mt-6 text-center">
-              <button type="button" className="text-blue-600 font-medium hover:underline">
+              <button type="button" className="text-blue-600 font-medium hover:underline cursor-pointer">
                 Quay lại
               </button>
             </div>

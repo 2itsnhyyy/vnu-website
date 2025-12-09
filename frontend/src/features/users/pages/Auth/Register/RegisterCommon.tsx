@@ -1,6 +1,11 @@
-import React, { useState, type FormEvent, type ChangeEvent, type FocusEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
-import registerImg from "../../../../../assets/images/users/regis.jpg";
+import React, {
+  useState,
+  type FormEvent,
+  type ChangeEvent,
+  type FocusEvent,
+} from "react";
+import { useNavigate } from "react-router-dom";
+import LogoKhongChu from "../../../../../assets/logos/LogoKhongChu.svg";
 
 interface FormData {
   username: string;
@@ -17,9 +22,9 @@ interface FormErrors {
 
 const RegisterCommon: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
-    username: '',
-    email: '',
-    password: '',
+    username: "",
+    email: "",
+    password: "",
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -28,26 +33,24 @@ const RegisterCommon: React.FC = () => {
   const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value.trim() }));
-    setErrors((prev) => ({ ...prev, [name]: '' }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleBlur = (e: FocusEvent<HTMLInputElement>): void => {
-    // Tạm thời bỏ check duplicate vì chưa có API
-    // const { name, value } = e.target;
-    // checkDuplicate(name, value.trim());
-  };
+  const handleBlur = (e: FocusEvent<HTMLInputElement>): void => {};
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
-    if (!formData.username) newErrors.username = 'Vui lòng nhập username.';
+    if (!formData.username) newErrors.username = "Vui lòng nhập username.";
 
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    if (!emailRegex.test(formData.email.trim())) newErrors.email = 'Email không hợp lệ.';
+    if (!emailRegex.test(formData.email.trim()))
+      newErrors.email = "Email không hợp lệ.";
 
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
     if (!passwordRegex.test(formData.password))
       newErrors.password =
-        'Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.';
+        "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.";
 
     setErrors((prev) => ({ ...prev, ...newErrors }));
     return Object.keys(newErrors).length === 0;
@@ -56,7 +59,7 @@ const RegisterCommon: React.FC = () => {
   const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
 
-    console.log('Đăng ký với mật khẩu:', formData.password);
+    console.log("Đăng ký với mật khẩu:", formData.password);
 
     const dataToSubmit = {
       ...formData,
@@ -64,65 +67,28 @@ const RegisterCommon: React.FC = () => {
       username: formData.username.trim(),
     };
 
-    console.log('Dữ liệu đăng ký:', dataToSubmit);
+    console.log("Dữ liệu đăng ký:", dataToSubmit);
 
     if (validateForm()) {
-      console.log('Form hợp lệ, sẵn sàng gửi:', dataToSubmit);
-      navigate('/register/details');
+      console.log("Form hợp lệ, sẵn sàng gửi:", dataToSubmit);
+      navigate("/users/register/details");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-10 relative">
-      <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-primary)] via-[var(--color-primary-light)] to-[var(--color-primary)] animate-gradient opacity-60"></div>
-
-      <style>
-        {`
-      @keyframes gradient {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-      }
-      .animate-gradient {
-        background-size: 200% 200%;
-        animation: gradient 20s ease infinite;
-      }
-      .input-focus {
-        transition: all 0.3s ease;
-      }
-      .input-focus:focus {
-        transform: scale(1.02);
-        box-shadow: 0 0 10px rgba(53, 180, 246, 0.5); /* glow xanh nhạt */
-      }
-      .button-hover {
-        transition: all 0.3s ease;
-      }
-      .button-hover:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      }
-      .fade-in {
-        animation: fadeIn 0.5s ease-in;
-      }
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-    `}
-      </style>
-
-      <div className="w-full max-w-6xl flex rounded-lg shadow-lg overflow-hidden relative z-10">
-        <div className="w-1/2 hidden md:block bg-cover bg-center"
-          style={{ backgroundImage: `url(${registerImg})` }}
-        />
-
-        <div className="w-full md:w-1/2 bg-[var(--color-surface)] p-8 fade-in">
-          <div className="flex justify-center mb-6">
-            <img className="w-70 pb-10 pt-10" src="/src/assets/logos/LogoChu.svg" alt="logo" />
-          </div>
-
+    <div className="min-h-screen flex items-center justify-center relative">
+      <div className="w-full flex z-10">
+        {/* Left Half: Image */}
+        <div
+          className="w-2/3 hidden md:block bg-contain bg-center bg-no-repeat bg-bg h-screen"
+          style={{
+            backgroundImage: `url(${LogoKhongChu})`,
+          }}
+        ></div>
+        {/* Right Half: Login Form */}
+        <div className="w-full md:w-1/2 bg-white p-20 fade-in flex flex-col justify-center h-screen">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-[var(--color-text-main)] mb-6">
-            Đăng ký tài khoản - Thông tin chung
+            ĐĂNG KÝ TÀI KHOẢN - THÔNG TIN CHUNG
           </h2>
 
           <div className="text-center text-[var(--color-text-main)] opacity-70 mb-8">
@@ -132,7 +98,6 @@ const RegisterCommon: React.FC = () => {
           <div className="w-3/4 mx-auto h-px bg-[var(--color-surface-dim)] mb-8"></div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-
             {/* USERNAME */}
             <div>
               <label className="block text-sm font-medium text-[var(--color-text-main)]">
@@ -193,7 +158,8 @@ const RegisterCommon: React.FC = () => {
                 <p className="text-red-500 text-sm mt-1">{errors.password}</p>
               )}
               <p className="text-xs text-[var(--color-text-main)] opacity-60 mt-1">
-                Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.
+                Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường,
+                số và ký tự đặc biệt.
               </p>
             </div>
 
@@ -201,7 +167,7 @@ const RegisterCommon: React.FC = () => {
             <button
               type="submit"
               className="w-full bg-[var(--color-primary)] text-white py-2 rounded-lg font-bold
-                      hover:bg-[var(--color-primary-light)] transition-all duration-300 button-hover"
+                      hover:bg-[var(--color-primary-light)] transition-all duration-300 button-hover cursor-pointer"
             >
               Tiếp tục
             </button>
@@ -209,11 +175,11 @@ const RegisterCommon: React.FC = () => {
             {/* LINK TO LOGIN */}
             <div className="mt-6 text-center">
               <p className="text-sm text-[var(--color-text-main)] opacity-70">
-                Đã có tài khoản?{' '}
+                Đã có tài khoản?{" "}
                 <button
                   type="button"
-                  onClick={() => navigate('/login')}
-                  className="text-[var(--color-info)] font-medium hover:underline"
+                  onClick={() => navigate("/users/login")}
+                  className="text-[var(--color-primary)] font-medium hover:underline cursor-pointer"
                 >
                   Đăng nhập
                 </button>
