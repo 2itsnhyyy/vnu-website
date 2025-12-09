@@ -1,5 +1,6 @@
 import Forum from "../../pages/Forum";
 import EditPost from "../../pages/Forum/EditPost";
+import ViewPost from "../../pages/Forum/ViewPost";
 
 const ForumRouters = [
   {
@@ -15,6 +16,10 @@ const ForumRouters = [
   {
     path: "forum/edit/:id",
     element: <EditPost />,
+  },
+  {
+    path: "forum/:id",
+    element: <ViewPost />,
   },
 ];
 
