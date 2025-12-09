@@ -48,7 +48,7 @@ const Sidebar: React.FC = () => {
     {
       icon: <IoWarningOutline />,
       name: "Quản lý sự cố",
-      path: `${basePath}/problems`,
+      path: `${basePath}/incidents`,
     },
     {
       icon: <FaRegNewspaper />,

@@ -1,17 +1,17 @@
 import UsersRouters from "./UsersRouters";
 import LocationsRouters from "./LocationsRouters";
-import NewsRouters from "../../../users/routers/Main/NewsRouters";
-import ProblemsRouters from "./ProblemsRouters";
 import BuildingsRouters from "./BuildingsRouters";
+import NewsRouters from "./NewsRouters";
 import ForumRouters from "./ForumRouters";
 import DashboardRouters from "./DashboardRouters";
+import IncidentsRouters from "./IncidentsRouters";
 
 const MainRouters = [
   ...DashboardRouters,
   ...UsersRouters,
   ...LocationsRouters,
   ...NewsRouters,
-  ...ProblemsRouters,
+  ...IncidentsRouters,
   ...BuildingsRouters,
   ...ForumRouters,
 ];

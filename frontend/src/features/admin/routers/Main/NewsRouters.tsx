@@ -1,6 +1,6 @@
 import News from "../../pages/News";
 
-const NewsRoutes = [
+const NewsRouters = [
   {
     path: "news",
     element: <News />,
@@ -12,4 +12,4 @@ const NewsRoutes = [
   },
 ];
 
-export default NewsRoutes;
+export default NewsRouters;

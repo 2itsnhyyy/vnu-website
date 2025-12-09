@@ -1,20 +1,20 @@
 import PageMeta from "../../components/Common/PageMeta";
-import NewsTable from "../../components/News/NewsTable";
+import IncidentTable from "../../components/Incident/IncidentTable";
 
-const News = () => {
+const Forum = () => {
   return (
     <div>
       <PageMeta
-        title="News | Admin Dashboard"
-        description="This is News Dashboard"
+        title="Incident | Admin Dashboard"
+        description="This is Incident Dashboard"
       />
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <div className="col-span-12 xl:col-span-7">
-          <NewsTable />
+          <IncidentTable />
         </div>
       </div>
     </div>
   );
 };
 
-export default News;
+export default Forum;
