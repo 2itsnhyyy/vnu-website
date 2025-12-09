@@ -11,10 +11,10 @@ import {
   TableHeader,
   TableRow,
 } from "../UI/Table";
-
 import Pagination from "../Common/Pagination";
 import SearchInput from "../Common/SearchInput";
 import { mockIncidents } from "../../types/incident";
+import { FaPlus } from "react-icons/fa6";
 
 const PAGE_SIZE = 10;
 
@@ -59,6 +59,10 @@ export default function IncidentTable() {
 
   function handleEdit(incidentId: number) {
     navigate(`/admin/incidents/edit/${incidentId}`);
+  }
+
+  function handleAdd() {
+    navigate("/admin/incidents/add");
   }
 
   function handleDelete(incidentId: number) {
@@ -146,6 +150,14 @@ export default function IncidentTable() {
             </svg>
             Tìm kiếm
           </button>
+
+          <button
+            onClick={handleAdd}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-[#1D4ED8] px-4 py-2.5 text-theme-sm font-medium text-white shadow-theme-xs hover:bg-[rgba(29,78,216,0.9)] cursor-pointer"
+          >
+            <FaPlus className="my-auto" />
+            Tạo sự cố
+          </button>
         </div>
       </div>
       {loading ? (
@@ -214,25 +226,25 @@ export default function IncidentTable() {
                   <span
                     className={`px-2 py-1 rounded text-xs font-medium
                     ${
-                      incident.status === 1
+                      incident.status === 0
                         ? "text-[#FFB836] border-2 border-[#FFB836] rounded-2xl"
                         : " text-[#34C759] border-2 border-[#34C759] rounded-2xl"
                     }
                     `}
                   >
-                    {incident.status === 1 ? "Mới" : "Đã giải quyết"}
+                    {incident.status === 0 ? "Mới" : "Đã giải quyết"}
                   </span>
                 </TableCell>
                 <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                   <div className="flex gap-2">
                     <button onClick={() => handleView(incident.incidentId)}>
-                      <MdRemoveRedEye className="w-5 h-5" />
+                      <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleEdit(incident.incidentId)}>
-                      <MdEdit className="w-5 h-5 " />
+                      <MdEdit className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleDelete(incident.incidentId)}>
-                      <MdDeleteOutline className="w-5 h-5 " />
+                      <MdDeleteOutline className="w-5 h-5 cursor-pointer" />
                     </button>
                   </div>
                 </TableCell>

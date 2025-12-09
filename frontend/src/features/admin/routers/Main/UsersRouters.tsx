@@ -1,4 +1,6 @@
 import Users from "../../pages/Users";
+import ViewUser from "../../pages/Users/ViewUser";
+
 const UsersRouters = [
   {
     path: "users",
@@ -8,6 +10,10 @@ const UsersRouters = [
     //   { path: '', element: <List /> },
     //   { path: 'create', element: <Create /> },
     // ],
+  },
+  {
+    path: "users/:id",
+    element: <ViewUser />,
   },
 ];
 

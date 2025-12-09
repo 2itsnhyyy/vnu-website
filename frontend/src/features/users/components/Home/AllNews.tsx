@@ -6,7 +6,7 @@ const AllNews = () => {
   const navigate = useNavigate();
 
   const handleSeeAllClick = () => {
-    navigate("/news");
+    navigate("/users/news");
   };
 
   return (

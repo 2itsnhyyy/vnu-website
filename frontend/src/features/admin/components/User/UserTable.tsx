@@ -229,13 +229,13 @@ export default function UserTable() {
                 <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400 px-6">
                   <div className="flex gap-2">
                     <button onClick={() => handleView(user.userId)}>
-                      <MdRemoveRedEye className="w-5 h-5" />
+                      <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleEdit(user.userId)}>
-                      <MdEdit className="w-5 h-5 " />
+                      <MdEdit className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleDelete(user.userId)}>
-                      <MdDeleteOutline className="w-5 h-5 " />
+                      <MdDeleteOutline className="w-5 h-5 cursor-pointer" />
                     </button>
                   </div>
                 </TableCell>
