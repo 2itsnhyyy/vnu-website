@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import type { Post } from "../../types/post";
+import type { User } from "../../types/user";
 import { MdDeleteOutline } from "react-icons/md";
 import { MdEdit } from "react-icons/md";
 import { MdRemoveRedEye } from "react-icons/md";
@@ -14,29 +14,29 @@ import {
 
 import Pagination from "../Common/Pagination";
 import SearchInput from "../Common/SearchInput";
-import { posts as mockPosts } from "../../types/post";
+import { mockUsers } from "../../types/user";
 
 const PAGE_SIZE = 10;
 
-export default function PostTable() {
-  const [posts, setPosts] = useState<Post[]>([]);
+export default function UserTable() {
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
   const [isModalOpen, setModalOpen] = useState(false);
-  const [postToDelete, setPostToDelete] = useState<number | null>(null);
+  const [userToDelete, setUserToDelete] = useState<number | null>(null);
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadPosts();
+    loadUsers();
   }, []);
 
-  function loadPosts() {
+  function loadUsers() {
     setLoading(true);
     setTimeout(() => {
-      setPosts(mockPosts);
+      setUsers(mockUsers);
       setLoading(false);
     }, 300);
   }
@@ -44,38 +44,38 @@ export default function PostTable() {
   function handleSearch() {
     setLoading(true);
     setTimeout(() => {
-      const filtered = mockPosts.filter((p) =>
-        p.title.toLowerCase().includes(searchTerm.toLowerCase())
+      const filtered = mockUsers.filter((u) =>
+        u.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      setPosts(filtered);
+      setUsers(filtered);
       setCurrentPage(1);
       setLoading(false);
     }, 200);
   }
 
-  function handleView(postId: number) {
-    navigate(`/admin/forum/${postId}`);
+  function handleView(userId: number) {
+    navigate(`/admin/users/${userId}`);
   }
 
-  function handleEdit(postId: number) {
-    navigate(`/admin/forum/edit/${postId}`);
+  function handleEdit(userId: number) {
+    navigate(`/admin/users/edit/${userId}`);
   }
 
-  function handleDelete(postId: number) {
-    setPostToDelete(postId);
+  function handleDelete(userId: number) {
+    setUserToDelete(userId);
     setModalOpen(true);
   }
 
   function handleConfirmDelete() {
-    if (!postToDelete) return;
-    setPosts((prev) => prev.filter((p) => p.postId !== postToDelete));
+    if (!userToDelete) return;
+    setUsers((prev) => prev.filter((u) => u.userId !== userToDelete));
     setModalOpen(false);
   }
 
-  const totalItems = posts.length;
+  const totalItems = users.length;
   const totalPages = Math.ceil(totalItems / PAGE_SIZE);
 
-  const paginatedData = posts.slice(
+  const paginatedData = users.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE
   );
@@ -85,15 +85,15 @@ export default function PostTable() {
       <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex justify-start items-center pt-5">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">
-            Danh sách bài đăng
+            Danh sách người dùng
           </h2>
           <span className="ml-5 text-sm bg-[#D1F2FF] text-[#2F73F2] py-1 px-4 rounded-full font-medium">
-            {totalItems} bài đăng
+            {totalItems} người dùng
           </span>
         </div>
         <div className="flex items-center gap-3">
           <SearchInput
-            placeholder="Tìm kiếm bài đăng..."
+            placeholder="Tìm kiếm người dùng..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyPress={(e) => {
@@ -162,29 +162,29 @@ export default function PostTable() {
                 isHeader
                 className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
               >
-                Tiêu đề
+                Họ tên
               </TableCell>
               <TableCell
                 isHeader
                 className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
               >
-                Tác giả
+                Email
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400 mx-2"
+                className="py-3 font-medium text-gray-500 text-center text-theme-sm dark:text-gray-400 px-6"
               >
-                Ngày đăng
+                Ngày sinh
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                className="py-3 font-medium text-gray-500 text-center text-theme-sm dark:text-gray-400 px-6"
               >
-                Nội dung
+                Vai trò
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400 px-6"
               >
                 Thao tác
               </TableCell>
@@ -192,32 +192,49 @@ export default function PostTable() {
           </TableHeader>
 
           <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
-            {paginatedData.map((post) => (
-              <TableRow key={post.postId}>
+            {paginatedData.map((user) => (
+              <TableRow key={user.userId}>
                 <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  {post.postId}
-                </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  <div className="max-w-[350px] truncate">{post.title}</div>
-                </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  {post.author}
-                </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400 mx-2">
-                  {post.createdAt}
-                </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  <div className="max-w-[300px] truncate">{post.content}</div>
+                  {user.userId}
                 </TableCell>
                 <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                   <div className="flex gap-2">
-                    <button onClick={() => handleView(post.postId)}>
+                    <img
+                      src={user.avatar}
+                      alt=""
+                      className="w-8 h-8 rounded-full"
+                    />
+                    <div className="my-auto ml-2">{user.name}</div>
+                  </div>
+                </TableCell>
+                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                  {user.email}
+                </TableCell>
+                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400 text-center px-6">
+                  {user.birthday}
+                </TableCell>
+                <TableCell className="text-center px-6">
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium
+                    ${
+                      user.role === 1
+                        ? "text-[#FFB836] border-2 border-[#FFB836] rounded-2xl"
+                        : " text-[#34C759] border-2 border-[#34C759] rounded-2xl"
+                    }
+                    `}
+                  >
+                    {user.role === 1 ? "Người dùng" : "Quản trị viên"}
+                  </span>
+                </TableCell>
+                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400 px-6">
+                  <div className="flex gap-2">
+                    <button onClick={() => handleView(user.userId)}>
                       <MdRemoveRedEye className="w-5 h-5" />
                     </button>
-                    <button onClick={() => handleEdit(post.postId)}>
+                    <button onClick={() => handleEdit(user.userId)}>
                       <MdEdit className="w-5 h-5 " />
                     </button>
-                    <button onClick={() => handleDelete(post.postId)}>
+                    <button onClick={() => handleDelete(user.userId)}>
                       <MdDeleteOutline className="w-5 h-5 " />
                     </button>
                   </div>
