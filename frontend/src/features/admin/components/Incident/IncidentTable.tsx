@@ -11,10 +11,10 @@ import {
   TableHeader,
   TableRow,
 } from "../UI/Table";
-
 import Pagination from "../Common/Pagination";
 import SearchInput from "../Common/SearchInput";
 import { mockIncidents } from "../../types/incident";
+import { FaPlus } from "react-icons/fa6";
 
 const PAGE_SIZE = 10;
 
@@ -59,6 +59,10 @@ export default function IncidentTable() {
 
   function handleEdit(incidentId: number) {
     navigate(`/admin/incidents/edit/${incidentId}`);
+  }
+
+  function handleAdd() {
+    navigate("/admin/incidents/add");
   }
 
   function handleDelete(incidentId: number) {
@@ -145,6 +149,14 @@ export default function IncidentTable() {
               />
             </svg>
             Tìm kiếm
+          </button>
+
+          <button
+            onClick={handleAdd}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-[#1D4ED8] px-4 py-2.5 text-theme-sm font-medium text-white shadow-theme-xs hover:bg-[rgba(29,78,216,0.9)] cursor-pointer"
+          >
+            <FaPlus className="my-auto" />
+            Tạo sự cố
           </button>
         </div>
       </div>

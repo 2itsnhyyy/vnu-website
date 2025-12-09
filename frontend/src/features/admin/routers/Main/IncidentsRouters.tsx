@@ -1,6 +1,7 @@
 import Incidents from "../../pages/Incidents";
 import EditIncident from "../../pages/Incidents/EditIncident";
 import ViewIncident from "../../pages/Incidents/ViewIncident";
+import CreateIncident from "../../pages/Incidents/CreateIncident";
 
 const IncidentsRouters = [
   {
@@ -19,6 +20,10 @@ const IncidentsRouters = [
   {
     path: "incidents/:id",
     element: <ViewIncident />,
+  },
+  {
+    path: "incidents/add",
+    element: <CreateIncident />,
   },
 ];
 
