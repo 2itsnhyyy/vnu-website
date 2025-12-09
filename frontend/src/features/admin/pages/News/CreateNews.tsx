@@ -1,17 +1,17 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import type { IncidentUpdateRequest } from "../../types/incident";
+import type { NewsUpdateRequest } from "../../types/news";
 import PageMeta from "../../components/Common/PageMeta";
 import { Save } from "lucide-react";
 import JoditEditor from "jodit-react";
 import { Link } from "react-router-dom";
 import { GrFormPrevious } from "react-icons/gr";
 
-export default function CreateIncident() {
+export default function CreateNews() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<IncidentUpdateRequest>({});
+  const [formData, setFormData] = useState<NewsUpdateRequest>({});
   const editor = useRef(null);
 
   const numberFields = ["status"];
@@ -34,12 +34,12 @@ export default function CreateIncident() {
 
     try {
       setLoading(true);
-      console.log("Created Incident:", formData);
+      console.log("Created News:", formData);
 
-      navigate("/admin/incidents");
+      navigate("/admin/news");
     } catch (error) {
-      console.error("Error creating incident:", error);
-      alert("Có lỗi xảy ra khi tạo sự cố");
+      console.error("Error creating news:", error);
+      alert("Có lỗi xảy ra khi tạo tin tức");
     } finally {
       setLoading(false);
     }
@@ -48,8 +48,8 @@ export default function CreateIncident() {
   return (
     <div>
       <PageMeta
-        title="Tạo sự cố mới | Admin Dashboard"
-        description="Tạo mới sự cố"
+        title="Tạo tin tức | Admin Dashboard"
+        description="Tạo mới tin tức"
       />
 
       <div className="mb-6 flex items-center cursor-pointer">
@@ -57,7 +57,7 @@ export default function CreateIncident() {
           <GrFormPrevious className="w-6 h-6 mr-2 my-auto" />
         </Link>
         <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90 ">
-          Tạo sự cố mới
+          Tạo tin tức mới
         </h2>
       </div>
       <div className="bg-white rounded-2xl border border-gray-200 p-6 dark:border-gray-800">
@@ -69,29 +69,12 @@ export default function CreateIncident() {
             <input
               type="text"
               name="title"
-              placeholder="Cúp điện..."
+              placeholder="Thông báo khẩn cấp..."
               value={formData.title || ""}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 outline-none"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Tình trạng <span className="text-red-500">*</span>
-            </label>
-            <select
-              name="status"
-              value={String(formData.status ?? "")}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 outline-none"
-            >
-              <option value="">Chọn tình trạng</option>
-              <option value="0">Mới</option>
-              <option value="1">Đã giải quyết</option>
-            </select>
           </div>
 
           <div>
@@ -112,7 +95,7 @@ export default function CreateIncident() {
           <div className="flex gap-4 justify-end">
             <button
               type="button"
-              onClick={() => navigate("/admin/incidents")}
+              onClick={() => navigate("/admin/news")}
               className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 cursor-pointer"
             >
               Hủy

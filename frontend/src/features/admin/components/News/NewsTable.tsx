@@ -11,10 +11,10 @@ import {
   TableHeader,
   TableRow,
 } from "../UI/Table";
-
 import Pagination from "../Common/Pagination";
 import SearchInput from "../Common/SearchInput";
 import { mockNews } from "../../types/news";
+import { FaPlus } from "react-icons/fa6";
 
 const PAGE_SIZE = 10;
 
@@ -59,6 +59,10 @@ export default function NewsTable() {
 
   function handleEdit(newsId: number) {
     navigate(`/admin/news/edit/${newsId}`);
+  }
+
+  function handleAdd() {
+    navigate("/admin/news/add");
   }
 
   function handleDelete(newsId: number) {
@@ -143,6 +147,14 @@ export default function NewsTable() {
               />
             </svg>
             Tìm kiếm
+          </button>
+
+          <button
+            onClick={handleAdd}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-[#1D4ED8] px-4 py-2.5 text-theme-sm font-medium text-white shadow-theme-xs hover:bg-[rgba(29,78,216,0.9)] cursor-pointer"
+          >
+            <FaPlus className="my-auto" />
+            Tạo tin tức
           </button>
         </div>
       </div>
