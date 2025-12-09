@@ -2,7 +2,7 @@ import { Bell, ChevronRight } from "lucide-react";
 
 export default function Header() {
   return (
-    <header className="bg-white shadow-sm">
+    <header className="bg-white shadow-sm sticky top-0 z-30">
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
         
         {/* Avatar + Info */}

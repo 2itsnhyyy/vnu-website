@@ -1,4 +1,4 @@
-import Buildings from "../../pages/Main/Buildings";
+import Buildings from "../../pages/Buildings";
 
 const BuildingsRouters = [
   {

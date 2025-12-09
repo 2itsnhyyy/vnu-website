@@ -1,4 +1,4 @@
-import Dashboard from "../../pages/Main/Dashboard";
+import Dashboard from "../../pages/Dashboard";
 
 const DashboardRouters = [
   {

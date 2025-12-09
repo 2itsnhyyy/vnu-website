@@ -58,34 +58,9 @@ const Dashboard: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img
-              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
-              alt="Avatar"
-              className="w-12 h-12 rounded-full"
-            />
-            <div>
-              <p className="text-sm text-gray-600">
-                Đại học Quốc Gia Thành phố Hồ Chí Minh
-              </p>
-              <div className="flex items-center gap-2">
-                <h1 className="font-semibold text-gray-800">Quản trị viên</h1>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-              </div>
-            </div>
-          </div>
-          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <Bell className="w-6 h-6 text-gray-600" />
-          </button>
-        </div>
-      </header>
-
+    <div className="min-h-screen">
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-7xl mx-auto">
         {/* Welcome Section */}
         <div className="mb-6 flex flex-col-2 justify-between">
             <div>

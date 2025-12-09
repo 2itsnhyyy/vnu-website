@@ -7,27 +7,27 @@ import VerifyOtp from '../../pages/Auth/VerifyOTP';
 
 const AuthRouters = [
   {
-    path: '/login',
+    path: '/users/login',
     element: <Login />,
   },
   {
-    path: '/register/common',
+    path: '/users/register/common',
     element: <RegisterCommon />,
   },
   {
-    path: '/register/details',
+    path: '/users/register/details',
     element: <RegisterDetails />,
   },
   {
-    path: '/forgot-password',
+    path: '/users/forgot-password',
     element: <ForgotPassword />,
   },
   {
-    path: '/reset-password/:token',
+    path: '/users/reset-password/:token',
     element: <ResetPassword />,
   },
   {
-    path: '/verify-otp',
+    path: '/users/verify-otp',
     element: <VerifyOtp />,
   }
 ];

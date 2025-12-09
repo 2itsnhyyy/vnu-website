@@ -1,4 +1,4 @@
-import News from "../../pages/Main/News";
+import News from "../../pages/News";
 
 const NewsRoutes = [
   {

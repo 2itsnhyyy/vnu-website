@@ -1,4 +1,4 @@
-import Users from "../../pages/Main/Users";
+import Users from "../../pages/Users";
 const UsersRouters = [
   {
     path: "users",

@@ -179,6 +179,8 @@
   /* Dùng cho nền của thông báo (badge background) */
   --color-info-bg: #d1f2ff;
 
+  --color-bg: #F5FBFF;
+
   /* --- MÀU NỀN & VIỀN (Surface/Background) --- */
   /* Nền tổng thể, rất nhạt */
   --color-surface: #f3f9fd;
