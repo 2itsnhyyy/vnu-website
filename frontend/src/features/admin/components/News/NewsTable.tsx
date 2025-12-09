@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import type { Post } from "../../types/post";
+import type { News } from "../../types/news";
 import { MdDeleteOutline } from "react-icons/md";
 import { MdEdit } from "react-icons/md";
 import { MdRemoveRedEye } from "react-icons/md";
@@ -14,29 +14,29 @@ import {
 
 import Pagination from "../Common/Pagination";
 import SearchInput from "../Common/SearchInput";
-import { posts as mockPosts } from "../../types/post";
+import { mockNews } from "../../types/news";
 
 const PAGE_SIZE = 10;
 
-export default function PostTable() {
-  const [posts, setPosts] = useState<Post[]>([]);
+export default function NewsTable() {
+  const [news, setNews] = useState<News[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
   const [isModalOpen, setModalOpen] = useState(false);
-  const [postToDelete, setPostToDelete] = useState<number | null>(null);
+  const [newsToDelete, setNewsToDelete] = useState<number | null>(null);
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadPosts();
+    loadNews();
   }, []);
 
-  function loadPosts() {
+  function loadNews() {
     setLoading(true);
     setTimeout(() => {
-      setPosts(mockPosts);
+      setNews(mockNews);
       setLoading(false);
     }, 300);
   }
@@ -44,38 +44,38 @@ export default function PostTable() {
   function handleSearch() {
     setLoading(true);
     setTimeout(() => {
-      const filtered = mockPosts.filter((p) =>
-        p.title.toLowerCase().includes(searchTerm.toLowerCase())
+      const filtered = mockNews.filter((n) =>
+        n.title.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      setPosts(filtered);
+      setNews(filtered);
       setCurrentPage(1);
       setLoading(false);
     }, 200);
   }
 
-  function handleView(postId: number) {
-    navigate(`/admin/forum/${postId}`);
+  function handleView(newsId: number) {
+    navigate(`/admin/news/${newsId}`);
   }
 
-  function handleEdit(postId: number) {
-    navigate(`/admin/forum/edit/${postId}`);
+  function handleEdit(newsId: number) {
+    navigate(`/admin/news/edit/${newsId}`);
   }
 
-  function handleDelete(postId: number) {
-    setPostToDelete(postId);
+  function handleDelete(newsId: number) {
+    setNewsToDelete(newsId);
     setModalOpen(true);
   }
 
   function handleConfirmDelete() {
-    if (!postToDelete) return;
-    setPosts((prev) => prev.filter((p) => p.postId !== postToDelete));
+    if (!newsToDelete) return;
+    setNews((prev) => prev.filter((n) => n.newsId !== newsToDelete));
     setModalOpen(false);
   }
 
-  const totalItems = posts.length;
+  const totalItems = news.length;
   const totalPages = Math.ceil(totalItems / PAGE_SIZE);
 
-  const paginatedData = posts.slice(
+  const paginatedData = news.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE
   );
@@ -85,15 +85,15 @@ export default function PostTable() {
       <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex justify-start items-center pt-5">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">
-            Danh sách bài đăng
+            Danh sách tin tức
           </h2>
           <span className="ml-5 text-sm bg-[#D1F2FF] text-[#2F73F2] py-1 px-4 rounded-full font-medium">
-            {totalItems} bài đăng
+            {totalItems} tin tức
           </span>
         </div>
         <div className="flex items-center gap-3">
           <SearchInput
-            placeholder="Tìm kiếm bài đăng..."
+            placeholder="Tìm kiếm tin tức..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyPress={(e) => {
@@ -168,23 +168,17 @@ export default function PostTable() {
                 isHeader
                 className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
               >
-                Tác giả
-              </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400 mx-2"
-              >
-                Ngày đăng
-              </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
-              >
                 Nội dung
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                className="py-3 font-medium text-gray-500 text-center text-theme-sm dark:text-gray-400 pr-8"
+              >
+                Ngày tạo
+              </TableCell>
+              <TableCell
+                isHeader
+                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400 px-8"
               >
                 Thao tác
               </TableCell>
@@ -192,32 +186,29 @@ export default function PostTable() {
           </TableHeader>
 
           <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
-            {paginatedData.map((post) => (
-              <TableRow key={post.postId}>
+            {paginatedData.map((news) => (
+              <TableRow key={news.newsId}>
                 <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  {post.postId}
+                  {news.newsId}
                 </TableCell>
                 <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  <div className="max-w-[350px] truncate">{post.title}</div>
+                  <div className="max-w-[300px] truncate">{news.title}</div>
                 </TableCell>
                 <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  {post.author}
+                  <div className="max-w-[400px] truncate">{news.content}</div>
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400 mx-2">
-                  {post.createdAt}
+                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400 text-center pr-8">
+                  {news.createdAt}
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  <div className="max-w-[300px] truncate">{post.content}</div>
-                </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400 px-8">
                   <div className="flex gap-2">
-                    <button onClick={() => handleView(post.postId)}>
+                    <button onClick={() => handleView(news.newsId)}>
                       <MdRemoveRedEye className="w-5 h-5" />
                     </button>
-                    <button onClick={() => handleEdit(post.postId)}>
+                    <button onClick={() => handleEdit(news.newsId)}>
                       <MdEdit className="w-5 h-5 " />
                     </button>
-                    <button onClick={() => handleDelete(post.postId)}>
+                    <button onClick={() => handleDelete(news.newsId)}>
                       <MdDeleteOutline className="w-5 h-5 " />
                     </button>
                   </div>

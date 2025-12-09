@@ -6,6 +6,12 @@ export type Post = {
   content: string;
 };
 
+export type PostUpdateRequest = {
+  title?: string;
+  author?: string;
+  content?: string;
+};
+
 export const posts: Post[] = [
   {
     postId: 1,
@@ -32,7 +38,7 @@ export const posts: Post[] = [
       "Thiền giúp cải thiện sự tập trung và giảm lo âu. Đây là hướng dẫn cơ bản dành cho người mới...",
   },
   {
-    postId: 3,
+    postId: 4,
     title: "Hướng dẫn thiền cơ bản dành cho người mới bắt đầu",
     author: "Trần Đỗ Phương Nhi",
     createdAt: "2025-01-08",
@@ -40,7 +46,7 @@ export const posts: Post[] = [
       "Thiền giúp cải thiện sự tập trung và giảm lo âu. Đây là hướng dẫn cơ bản dành cho người mới...",
   },
   {
-    postId: 3,
+    postId: 5,
     title: "Hướng dẫn thiền cơ bản dành cho người mới bắt đầu",
     author: "Trần Đỗ Phương Nhi",
     createdAt: "2025-01-08",
@@ -48,7 +54,7 @@ export const posts: Post[] = [
       "Thiền giúp cải thiện sự tập trung và giảm lo âu. Đây là hướng dẫn cơ bản dành cho người mới...",
   },
   {
-    postId: 3,
+    postId: 6,
     title: "Hướng dẫn thiền cơ bản dành cho người mới bắt đầu",
     author: "Trần Đỗ Phương Nhi",
     createdAt: "2025-01-08",
@@ -56,7 +62,7 @@ export const posts: Post[] = [
       "Thiền giúp cải thiện sự tập trung và giảm lo âu. Đây là hướng dẫn cơ bản dành cho người mới...",
   },
   {
-    postId: 3,
+    postId: 7,
     title: "Hướng dẫn thiền cơ bản dành cho người mới bắt đầu",
     author: "Trần Đỗ Phương Nhi",
     createdAt: "2025-01-08",
@@ -64,7 +70,7 @@ export const posts: Post[] = [
       "Thiền giúp cải thiện sự tập trung và giảm lo âu. Đây là hướng dẫn cơ bản dành cho người mới...",
   },
   {
-    postId: 3,
+    postId: 8,
     title: "Hướng dẫn thiền cơ bản dành cho người mới bắt đầu",
     author: "Trần Đỗ Phương Nhi",
     createdAt: "2025-01-08",
