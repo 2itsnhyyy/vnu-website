@@ -1,5 +1,5 @@
-import PageMeta from "../../../components/Common/PageMeta";
-import PostTable from "../../../components/Forum/PostTable";
+import PageMeta from "../../components/Common/PageMeta";
+import PostTable from "../../components/Forum/PostTable";
 
 const Forum = () => {
   return (
