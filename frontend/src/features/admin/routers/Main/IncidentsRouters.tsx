@@ -1,4 +1,5 @@
 import Incidents from "../../pages/Incidents";
+import EditIncident from "../../pages/Incidents/EditIncident";
 
 const IncidentsRouters = [
   {
@@ -9,6 +10,10 @@ const IncidentsRouters = [
     //   { path: '', element: <List /> },
     //   { path: 'create', element: <Create /> },
     // ],
+  },
+  {
+    path: "incidents/edit/:id",
+    element: <EditIncident />,
   },
 ];
 
