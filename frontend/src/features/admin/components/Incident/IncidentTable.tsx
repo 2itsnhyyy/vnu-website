@@ -226,13 +226,13 @@ export default function IncidentTable() {
                 <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                   <div className="flex gap-2">
                     <button onClick={() => handleView(incident.incidentId)}>
-                      <MdRemoveRedEye className="w-5 h-5" />
+                      <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleEdit(incident.incidentId)}>
-                      <MdEdit className="w-5 h-5 " />
+                      <MdEdit className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleDelete(incident.incidentId)}>
-                      <MdDeleteOutline className="w-5 h-5 " />
+                      <MdDeleteOutline className="w-5 h-5 cursor-pointer" />
                     </button>
                   </div>
                 </TableCell>
