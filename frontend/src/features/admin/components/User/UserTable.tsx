@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import type { User } from "../../types/user";
 import { MdDeleteOutline } from "react-icons/md";
-import { MdEdit } from "react-icons/md";
 import { MdRemoveRedEye } from "react-icons/md";
 import {
   Table,
@@ -55,10 +54,6 @@ export default function UserTable() {
 
   function handleView(userId: number) {
     navigate(`/admin/users/${userId}`);
-  }
-
-  function handleEdit(userId: number) {
-    navigate(`/admin/users/edit/${userId}`);
   }
 
   function handleDelete(userId: number) {
@@ -227,12 +222,9 @@ export default function UserTable() {
                   </span>
                 </TableCell>
                 <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400 px-6">
-                  <div className="flex gap-2">
+                  <div className="flex gap-6">
                     <button onClick={() => handleView(user.userId)}>
                       <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />
-                    </button>
-                    <button onClick={() => handleEdit(user.userId)}>
-                      <MdEdit className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleDelete(user.userId)}>
                       <MdDeleteOutline className="w-5 h-5 cursor-pointer" />
