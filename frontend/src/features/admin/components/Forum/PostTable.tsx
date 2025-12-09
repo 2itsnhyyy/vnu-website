@@ -84,7 +84,7 @@ export default function PostTable() {
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
       <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex justify-start items-center pt-5">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">
             Danh sách bài đăng
           </h2>
           <span className="ml-5 text-sm bg-[#D1F2FF] text-[#2F73F2] py-1 px-4 rounded-full font-medium">
