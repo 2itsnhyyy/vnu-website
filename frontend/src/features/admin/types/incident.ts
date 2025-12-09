@@ -7,13 +7,19 @@ export type Incident = {
   updatedAt: string;
 };
 
+export type IncidentUpdateRequest = {
+  title?: string;
+  content?: string;
+  status?: number;
+};
+
 export const mockIncidents: Incident[] = [
   {
     incidentId: 1,
     title: "Mạng Wi-Fi bị gián đoạn",
     content:
       "Nhân viên tại tầng 5 báo cáo mạng Wi-Fi chập chờn, không thể truy cập hệ thống nội bộ.",
-    status: 1,
+    status: 0,
     createdAt: "2025-01-10",
     updatedAt: "2025-01-10",
   },

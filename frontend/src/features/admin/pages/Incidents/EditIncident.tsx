@@ -1,33 +1,33 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import type { Post, PostUpdateRequest } from "../../types/post";
-import { posts as mockPosts } from "../../types/post";
+import type { Incident, IncidentUpdateRequest } from "../../types/incident";
+import { mockIncidents } from "../../types/incident";
 import PageMeta from "../../components/Common/PageMeta";
 import { Save } from "lucide-react";
 import { GrFormPrevious } from "react-icons/gr";
 import JoditEditor from "jodit-react";
 import { Link } from "react-router-dom";
 
-export default function EditPost() {
+export default function EditIncident() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(false);
-  const [post, setPost] = useState<Post | null>(null);
-  const [formData, setFormData] = useState<PostUpdateRequest>({});
+  const [incident, setIncident] = useState<Incident | null>(null);
+  const [formData, setFormData] = useState<IncidentUpdateRequest>({});
 
   const editor = useRef(null);
 
   useEffect(() => {
-    if (id) loadPost(Number(id));
+    if (id) loadIncident(Number(id));
   }, [id]);
 
-  const loadPost = async (postId: number) => {
+  const loadIncident = async (incidentId: number) => {
     setLoading(true);
-    const found = mockPosts.find((p) => p.postId === postId);
+    const found = mockIncidents.find((i) => i.incidentId === incidentId);
 
     setTimeout(() => {
       if (found) {
-        setPost(found);
+        setIncident(found);
         setFormData(found);
       }
       setLoading(false);
@@ -40,10 +40,10 @@ export default function EditPost() {
 
     try {
       setLoading(true);
-      navigate("/admin/forum");
+      navigate("/admin/incidents");
     } catch (error) {
-      console.error("Error updating post:", error);
-      alert("Có lỗi xảy ra khi cập nhật bài đăng");
+      console.error("Error updating incident:", error);
+      alert("Có lỗi xảy ra khi cập nhật sự cố");
     } finally {
       setLoading(false);
     }
@@ -53,28 +53,33 @@ export default function EditPost() {
     console.log("Draft saved:", formData);
   };
 
+  const numberFields = ["status", "price", "quantity"];
+
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: numberFields.includes(name) ? Number(value) : value,
     }));
   };
 
-  if (loading && !post) {
+  if (loading && !incident) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="text-lg">Đang tải thông tin bài đăng...</div>
+        <div className="text-lg">Đang tải thông tin sự cố...</div>
       </div>
     );
   }
 
-  if (!post) {
+  if (!incident) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="text-lg text-red-600">Không tìm thấy bài đăng</div>
+        <div className="text-lg text-red-600">Không tìm thấy sự cố</div>
       </div>
     );
   }
@@ -82,55 +87,70 @@ export default function EditPost() {
   return (
     <div>
       <PageMeta
-        title={`Chỉnh sửa ${post.title} | Admin Dashboard`}
-        description="Chỉnh sửa thông tin bài đăng"
+        title={`Chỉnh sửa ${incident.title} | Admin Dashboard`}
+        description="Chỉnh sửa thông tin sự cố"
       />
 
-      <div className="mb-6 flex items-center">
-        <Link to="/admin/forum">
+      <div className="mb-6 flex items-center cursor-pointer">
+        <Link to="/admin/incidents">
           <GrFormPrevious className="w-6 h-6 mr-2 my-auto" />
         </Link>
         <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90 ">
-          Chỉnh sửa bài đăng
+          Chỉnh sửa sự cố
         </h2>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-200 p-6 dark:border-gray-800">
         <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Tiêu đề
+              <span className="text-red-500">
+                <span className="text-red-500">*</span>
+              </span>
+            </label>
+            <input
+              type="text"
+              name="title"
+              value={formData.title || ""}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
+            />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Tiêu đề
-                <span className="text-red-500">
-                  <span className="text-red-500">*</span>
-                </span>
+                Ngày tạo
               </label>
               <input
-                type="text"
-                name="title"
-                value={formData.title || ""}
-                onChange={handleChange}
-                required
+                type="date"
+                name="createdAt"
+                value={incident.createdAt || ""}
+                disabled
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Tác giả
-                <span className="text-red-500">
-                  <span className="text-red-500">*</span>
-                </span>
+                Tình trạng <span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
-                name="author"
-                value={formData.author || ""}
+              <select
+                name="status"
+                value={String(formData.status ?? "")}
                 onChange={handleChange}
+                required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
-              />
+              >
+                <option value="">Chọn danh mục</option>
+                <option value="0">Mới</option>
+                <option value="1">Đã giải quyết</option>
+              </select>
             </div>
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Nội dung chi tiết

@@ -6,12 +6,20 @@ export type News = {
   updatedAt: string;
 };
 
+export type NewsUpdateRequest = {
+  title?: string;
+  content?: string;
+};
+
 export const mockNews: News[] = [
   {
     newsId: 1,
     title: "Hệ thống bảo trì định kỳ trong tháng 12",
-    content:
-      "Hệ thống sẽ tiến hành bảo trì định kỳ vào 23:00 ngày 15/12 để nâng cấp hiệu năng và bảo mật. Người dùng có thể bị gián đoạn truy cập trong thời gian này.",
+    content: `Hệ thống sẽ tiến hành bảo trì định kỳ vào 23:00 ngày 15/12 để nâng cấp hiệu năng và bảo mật. 
+      Người dùng có thể bị gián đoạn truy cập trong thời gian này.Hệ thống sẽ tiến hành bảo trì định kỳ vào 23:00 ngày 15/12 để nâng cấp hiệu năng và bảo mật. 
+      Người dùng có thể bị gián đoạn truy cập trong thời gian này. Hệ thống sẽ tiến hành bảo trì định kỳ vào 23:00 ngày 15/12 để nâng cấp hiệu năng và bảo mật. 
+      Người dùng có thể bị gián đoạn truy cập trong thời gian nàyHệ thống sẽ tiến hành bảo trì định kỳ vào 23:00 ngày 15/12 để nâng cấp hiệu năng và bảo mật. 
+      Người dùng có thể bị gián đoạn truy cập trong thời gian nàyHệ thống sẽ tiến hành bảo trì định kỳ vào 23:00 ngày 15/12 để nâng cấp hiệu năng và bảo mật. Người dùng có thể bị gián đoạn truy cập trong thời gian nàyHệ thống sẽ tiến hành bảo trì định kỳ vào 23:00 ngày 15/12 để nâng cấp hiệu năng và bảo mật. Người dùng có thể bị gián đoạn truy cập trong thời gian này `,
     createdAt: "2024-12-01",
     updatedAt: "2024-12-01",
   },
