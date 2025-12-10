@@ -92,6 +92,17 @@ CREATE TABLE "user" (
 );
 
 -- CreateTable
+CREATE TABLE "otp" (
+    "otp_id" SERIAL NOT NULL,
+    "user_id" INTEGER NOT NULL,
+    "code" TEXT NOT NULL,
+    "expire_at" TIMESTAMP(3) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "otp_pkey" PRIMARY KEY ("otp_id")
+);
+
+-- CreateTable
 CREATE TABLE "post" (
     "post_id" SERIAL NOT NULL,
     "title" TEXT NOT NULL,
@@ -279,6 +290,9 @@ CREATE TABLE "surface" (
 -- CreateIndex
 CREATE UNIQUE INDEX "place_name_key" ON "place"("name");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "user_email_key" ON "user"("email");
+
 -- AddForeignKey
 ALTER TABLE "building" ADD CONSTRAINT "building_place_id_fkey" FOREIGN KEY ("place_id") REFERENCES "place"("place_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -299,6 +313,9 @@ ALTER TABLE "routing_segment" ADD CONSTRAINT "routing_segment_end_node_fkey" FOR
 
 -- AddForeignKey
 ALTER TABLE "routing_segment" ADD CONSTRAINT "routing_segment_road_id_fkey" FOREIGN KEY ("road_id") REFERENCES "road"("road_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "otp" ADD CONSTRAINT "otp_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("user_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "post" ADD CONSTRAINT "post_author_fkey" FOREIGN KEY ("author") REFERENCES "user"("user_id") ON DELETE RESTRICT ON UPDATE CASCADE;

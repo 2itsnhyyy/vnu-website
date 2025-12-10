@@ -5,9 +5,11 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JWT_SECRET } from 'src/common/constants/jwt.constant';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
+    EmailModule,
     PrismaModule,
     JwtModule.register({
       secret: JWT_SECRET,

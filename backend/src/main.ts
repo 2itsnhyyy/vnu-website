@@ -12,6 +12,14 @@ async function bootstrap() {
       'API documentation for Vietnam National University, Ho Chi Minh City. This is a RESTful API for the project.',
     )
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+      'jwt',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

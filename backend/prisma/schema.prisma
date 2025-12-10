@@ -106,8 +106,8 @@ model Road {
 model User {
   userId   Int      @id @default(autoincrement()) @map("user_id")
   name     String
-  avatar   String?
-  email    String
+  avatar   String?  
+  email    String   @unique
   birthday DateTime
   password String
   role     Int?
@@ -116,8 +116,21 @@ model User {
   comments     Comment[]
   likePosts    LikePost[]
   likeComments LikeComment[]
+  otps         Otp[]
 
   @@map("user")
+}
+
+model Otp {
+  otpId Int   @id @default(autoincrement()) @map("otp_id")
+  userId Int  @map("user_id")
+  code String
+  expireAt DateTime @map("expire_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("otp")
 }
 
 model Post {
