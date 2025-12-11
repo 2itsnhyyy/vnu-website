@@ -100,7 +100,7 @@ export default function UserTable() {
 
           <button
             onClick={handleSearch}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 cursor-pointer"
           >
             <svg
               className="stroke-current fill-white"
@@ -146,7 +146,7 @@ export default function UserTable() {
       ) : (
         <Table>
           <TableHeader className="border-gray-100 border-y">
-            <TableRow>
+            <TableRow className="bg-gray-50 transition-colors cursor-pointer">
               <TableCell
                 isHeader
                 className="py-3 pr-6 font-medium text-gray-500 text-start text-theme-sm"
@@ -188,7 +188,10 @@ export default function UserTable() {
 
           <TableBody className="divide-y divide-gray-100">
             {paginatedData.map((user) => (
-              <TableRow key={user.userId}>
+              <TableRow
+                key={user.userId}
+                className="hover:bg-gray-50 transition-colors cursor-pointer"
+              >
                 <TableCell className="py-3 text-gray-500 text-theme-sm">
                   {user.userId}
                 </TableCell>

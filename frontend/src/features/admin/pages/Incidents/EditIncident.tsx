@@ -113,7 +113,7 @@ export default function EditIncident() {
               value={formData.title || ""}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
             />
           </div>
 
@@ -127,7 +127,7 @@ export default function EditIncident() {
                 name="createdAt"
                 value={incident.createdAt || ""}
                 disabled
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
               />
             </div>
 
@@ -140,7 +140,7 @@ export default function EditIncident() {
                 value={String(formData.status ?? "")}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
               >
                 <option value="">Chọn danh mục</option>
                 <option value="0">Mới</option>

@@ -13,7 +13,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
   <div className="relative">
     <span className="absolute -translate-y-1/2 pointer-events-none left-4 top-1/2">
       <svg
-        className="fill-gray-500 dark:fill-gray-400"
+        className="fill-gray-500"
         width="20"
         height="20"
         viewBox="0 0 20 20"
@@ -32,7 +32,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
       ref={inputRef}
       type="text"
       placeholder={placeholder}
-      className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pl-12 pr-14 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-base-400 focus:outline-hidden focus:ring-3 focus:ring-base-500/10 dark:border-gray-800 dark:bg-gray-900 dark:bg-white/[0.03] dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-base-800"
+      className="h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pl-12 pr-14 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-0"
       {...props}
     />
   </div>

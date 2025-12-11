@@ -109,7 +109,7 @@ export default function NewsTable() {
 
           <button
             onClick={handleSearch}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 cursor-pointer"
           >
             <svg
               className="stroke-current fill-white"
@@ -163,7 +163,7 @@ export default function NewsTable() {
       ) : (
         <Table>
           <TableHeader className="border-gray-100 border-y">
-            <TableRow>
+            <TableRow className="bg-gray-50 transition-colors cursor-pointer">
               <TableCell
                 isHeader
                 className="py-3 pr-6 font-medium text-gray-500 text-start text-theme-sm"
@@ -199,7 +199,10 @@ export default function NewsTable() {
 
           <TableBody className="divide-y divide-gray-100">
             {paginatedData.map((news) => (
-              <TableRow key={news.newsId}>
+              <TableRow
+                key={news.newsId}
+                className="hover:bg-gray-50 transition-colors cursor-pointer"
+              >
                 <TableCell className="py-3 text-gray-500 text-theme-sm">
                   {news.newsId}
                 </TableCell>
@@ -215,13 +218,13 @@ export default function NewsTable() {
                 <TableCell className="py-3 text-gray-500 text-theme-sm px-8">
                   <div className="flex gap-2">
                     <button onClick={() => handleView(news.newsId)}>
-                      <MdRemoveRedEye className="w-5 h-5" />
+                      <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleEdit(news.newsId)}>
-                      <MdEdit className="w-5 h-5 " />
+                      <MdEdit className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleDelete(news.newsId)}>
-                      <MdDeleteOutline className="w-5 h-5 " />
+                      <MdDeleteOutline className="w-5 h-5 cursor-pointer" />
                     </button>
                   </div>
                 </TableCell>
