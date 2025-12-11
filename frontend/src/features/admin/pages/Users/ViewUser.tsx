@@ -56,7 +56,7 @@ const ViewUser = () => {
         <Link to="/admin/users">
           <GrFormPrevious className="w-6 h-6 mr-2 my-auto" />
         </Link>
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">
+        <h2 className="text-xl font-semibold text-gray-800">
           Xem thông tin cá nhân
         </h2>
       </div>
