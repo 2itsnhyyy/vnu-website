@@ -20,6 +20,10 @@ async function bootstrap() {
       },
       'jwt',
     )
+    .addTag(
+      'Admin Test Account',
+      `**Email:** thieu@gmail.com\n**Password:** 123456`,
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

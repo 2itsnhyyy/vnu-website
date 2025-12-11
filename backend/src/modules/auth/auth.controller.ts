@@ -19,7 +19,6 @@ import { ForgotPasswordDto } from './dto/fotgot-password.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
@@ -78,6 +77,7 @@ export class AuthController {
     schema: {
       example: {
         message: 'OTP verified successfully',
+        resetToken: 'resetToken',
       },
     },
   })
