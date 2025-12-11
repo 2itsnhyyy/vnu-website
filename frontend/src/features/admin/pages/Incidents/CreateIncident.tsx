@@ -56,14 +56,12 @@ export default function CreateIncident() {
         <Link to="/admin/incidents">
           <GrFormPrevious className="w-6 h-6 mr-2 my-auto" />
         </Link>
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90 ">
-          Tạo sự cố mới
-        </h2>
+        <h2 className="text-xl font-semibold text-gray-800">Tạo sự cố mới</h2>
       </div>
-      <div className="bg-white rounded-2xl border border-gray-200 p-6 dark:border-gray-800">
+      <div className="bg-white rounded-2xl border border-gray-200 p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Tiêu đề <span className="text-red-500">*</span>
             </label>
             <input
@@ -78,7 +76,7 @@ export default function CreateIncident() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Tình trạng <span className="text-red-500">*</span>
             </label>
             <select
@@ -95,7 +93,7 @@ export default function CreateIncident() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Nội dung chi tiết <span className="text-red-500">*</span>
             </label>
             <div className="border border-gray-300 rounded-lg p-2">
