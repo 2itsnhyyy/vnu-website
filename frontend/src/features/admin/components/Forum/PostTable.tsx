@@ -81,10 +81,10 @@ export default function PostTable() {
   );
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 sm:px-6">
       <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex justify-start items-center pt-5">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">
+          <h2 className="text-xl font-semibold text-gray-800">
             Danh sách bài đăng
           </h2>
           <span className="ml-5 text-sm bg-[#D1F2FF] text-[#2F73F2] py-1 px-4 rounded-full font-medium">
@@ -105,10 +105,10 @@ export default function PostTable() {
 
           <button
             onClick={handleSearch}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800"
           >
             <svg
-              className="stroke-current fill-white dark:fill-gray-800"
+              className="stroke-current fill-white"
               width="20"
               height="20"
               viewBox="0 0 20 20"
@@ -150,66 +150,66 @@ export default function PostTable() {
         <p>Đang tải...</p>
       ) : (
         <Table>
-          <TableHeader className="border-gray-100 dark:border-gray-800 border-y">
+          <TableHeader className="border-gray-100 border-y">
             <TableRow>
               <TableCell
                 isHeader
-                className="py-3 pr-6 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                className="py-3 pr-6 font-medium text-gray-500 text-start text-theme-sm"
               >
                 Mã
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                className="py-3 font-medium text-gray-500 text-start text-theme-sm"
               >
                 Tiêu đề
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                className="py-3 font-medium text-gray-500 text-start text-theme-sm"
               >
                 Tác giả
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400 mx-2"
+                className="py-3 font-medium text-gray-500 text-start text-theme-sm mx-2"
               >
                 Ngày đăng
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                className="py-3 font-medium text-gray-500 text-start text-theme-sm"
               >
                 Nội dung
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                className="py-3 font-medium text-gray-500 text-start text-theme-sm"
               >
                 Thao tác
               </TableCell>
             </TableRow>
           </TableHeader>
 
-          <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
+          <TableBody className="divide-y divide-gray-100">
             {paginatedData.map((post) => (
               <TableRow key={post.postId}>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                <TableCell className="py-3 text-gray-500 text-theme-sm">
                   {post.postId}
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                <TableCell className="py-3 text-gray-500 text-theme-sm">
                   <div className="max-w-[350px] truncate">{post.title}</div>
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                <TableCell className="py-3 text-gray-500 text-theme-sm">
                   {post.author}
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400 mx-2">
+                <TableCell className="py-3 text-gray-500 text-theme-sm mx-2">
                   {post.createdAt}
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                <TableCell className="py-3 text-gray-500 text-theme-sm">
                   <div className="max-w-[300px] truncate">{post.content}</div>
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                <TableCell className="py-3 text-gray-500 text-theme-sm">
                   <div className="flex gap-2">
                     <button onClick={() => handleView(post.postId)}>
                       <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />
