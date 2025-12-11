@@ -105,7 +105,7 @@ export default function PostTable() {
 
           <button
             onClick={handleSearch}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 cursor-pointer"
           >
             <svg
               className="stroke-current fill-white"
@@ -151,7 +151,7 @@ export default function PostTable() {
       ) : (
         <Table>
           <TableHeader className="border-gray-100 border-y">
-            <TableRow>
+            <TableRow className="bg-gray-50 transition-colors">
               <TableCell
                 isHeader
                 className="py-3 pr-6 font-medium text-gray-500 text-start text-theme-sm"
@@ -193,7 +193,10 @@ export default function PostTable() {
 
           <TableBody className="divide-y divide-gray-100">
             {paginatedData.map((post) => (
-              <TableRow key={post.postId}>
+              <TableRow
+                key={post.postId}
+                className="hover:bg-gray-50 transition-colors cursor-pointer"
+              >
                 <TableCell className="py-3 text-gray-500 text-theme-sm">
                   {post.postId}
                 </TableCell>

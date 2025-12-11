@@ -71,7 +71,7 @@ export default function CreateIncident() {
               value={formData.title || ""}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
             />
           </div>
 
@@ -84,7 +84,7 @@ export default function CreateIncident() {
               value={String(formData.status ?? "")}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
             >
               <option value="">Chọn tình trạng</option>
               <option value="0">Mới</option>
