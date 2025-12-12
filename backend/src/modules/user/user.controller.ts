@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { GetUsersParamDto } from './dto/get-users-param.dto';
 import {
@@ -70,5 +79,50 @@ export class UserController {
   })
   async getUsers(@Query() getUsersParamDto: GetUsersParamDto) {
     return this.userService.getUsers(getUsersParamDto);
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('jwt')
+  @ApiOperation({
+    summary: 'Get current user',
+    description: 'Get current user',
+  })
+  @ApiExtraModels(UserResponseDto)
+  @ApiOkResponse({
+    description: 'User fetched successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        user: {
+          $ref: getSchemaPath(UserResponseDto),
+        },
+      },
+    },
+  })
+  async getCurrentUser(@Req() req: any) {
+    return this.userService.getUser(req.user.userId);
+  }
+
+  @Get(':userId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('jwt')
+  @ApiOperation({
+    summary: 'Get user',
+    description: 'Get user by userId',
+  })
+  @ApiOkResponse({
+    description: 'User fetched successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        user: {
+          $ref: getSchemaPath(UserResponseDto),
+        },
+      },
+    },
+  })
+  async getUser(@Param('userId') userId: number) {
+    return this.userService.getUser(userId);
   }
 }
