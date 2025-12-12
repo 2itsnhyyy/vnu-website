@@ -1,14 +1,13 @@
 import Issues from "../../pages/Main/Issues/Issues";
+import IssueDetails from "../../pages/Main/Issues/IssueDetails";
 
 const IssuesRouters = [
   {
     path: "issues",
-    element: <Issues />,
-    // Nếu sau này muốn tách các route con, có thể dùng cấu trúc children như bên dưới:
-    // children: [
-    //   { path: '', element: <List /> },
-    //   { path: 'create', element: <Create /> },
-    // ],
+    children: [
+      { path: "", element: <Issues /> },          
+      { path: "details", element: <IssueDetails /> }, 
+    ],
   },
 ];
 
