@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -24,6 +25,8 @@ import { Role } from 'src/common/constants/role.constant';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
+import { UpdateUserDtoAdmin, UpdateUserDtoMe } from './dto/update-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Controller('users')
 export class UserController {
@@ -124,5 +127,67 @@ export class UserController {
   })
   async getUser(@Param('userId') userId: number) {
     return this.userService.getUser(userId);
+  }
+
+  @Patch('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('jwt')
+  @ApiOperation({
+    summary: 'Update current user',
+    description: 'Update current user',
+  })
+  @ApiExtraModels(UserResponseDto)
+  @ApiOkResponse({
+    description: 'User updated successfully',
+    schema: {
+      type: 'object',
+      properties: { user: { $ref: getSchemaPath(UserResponseDto) } },
+    },
+  })
+  async updateCurrentUser(
+    @Body() updateUserDto: UpdateUserDtoMe,
+    @Req() req: any,
+  ) {
+    return this.userService.updateProfile(req.user.userId, updateUserDto);
+  }
+
+  @Patch('me/password')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('jwt')
+  @ApiOperation({
+    summary: 'Change password',
+    description: 'Change password for current user',
+  })
+  @ApiOkResponse({
+    description: 'Password changed successfully',
+  })
+  async changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Req() req: any,
+  ) {
+    return this.userService.changePassword(req.user.userId, changePasswordDto);
+  }
+
+  @Patch(':userId')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth('jwt')
+  @ApiOperation({
+    summary: 'Update user. Only admin can access this endpoint',
+    description: 'Update user by userId',
+  })
+  @ApiExtraModels(UserResponseDto)
+  @ApiOkResponse({
+    description: 'User updated successfully',
+    schema: {
+      type: 'object',
+      properties: { user: { $ref: getSchemaPath(UserResponseDto) } },
+    },
+  })
+  async updateUser(
+    @Param('userId') userId: number,
+    @Body() updateUserDto: UpdateUserDtoAdmin,
+  ) {
+    return this.userService.updateUser(userId, updateUserDto);
   }
 }
