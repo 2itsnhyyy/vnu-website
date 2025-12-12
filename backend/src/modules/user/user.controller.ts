@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -189,5 +190,20 @@ export class UserController {
     @Body() updateUserDto: UpdateUserDtoAdmin,
   ) {
     return this.userService.updateUser(userId, updateUserDto);
+  }
+
+  @Delete(':userId')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth('jwt')
+  @ApiOperation({
+    summary: 'Delete user. Only admin can access this endpoint',
+    description: 'Delete user by userId',
+  })
+  @ApiOkResponse({
+    description: 'User deleted successfully',
+  })
+  async deleteUser(@Param('userId') userId: number) {
+    return this.userService.deleteUser(userId);
   }
 }

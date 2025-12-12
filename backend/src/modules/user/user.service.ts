@@ -182,4 +182,22 @@ export class UserService {
       message: 'Password changed successfully',
     };
   }
+
+  async deleteUser(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { userId: Number(userId) },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const deletedUser = await this.prisma.user.delete({
+      where: { userId: Number(userId) },
+    });
+
+    return {
+      user: new UserResponseDto(deletedUser),
+    };
+  }
 }
