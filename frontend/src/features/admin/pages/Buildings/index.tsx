@@ -1,140 +1,95 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
+import PageMeta from "../../components/Common/PageMeta";
 import { Table, Button, Input, Select, Space, Tooltip } from "antd";
 import {
   SearchOutlined,
-  PlusOutlined,
   EditOutlined,
   DeleteOutlined,
   EyeOutlined,
 } from "@ant-design/icons";
 import { Plus } from "lucide-react";
 import type { ColumnsType } from "antd/es/table";
+import type { Building } from "../../types/building";
+import { mockBuilding } from "../../types/building";
 
-interface Location {
-  key: string;
-  stt: number;
-  image: string;
-  name: string;
-  building_id: string;
-  createdDate: string;
-  floors: number;
-  location_name?: string;
-  description?: string;
-}
+const PAGE_SIZE = 10;
+
 
 const Buildings: React.FC = () => {
-  const [searchText, setSearchText] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [filter, setFilter] = useState<string>("all");
 
-  const initialData: Location[] = [
-    {
-      key: "1",
-      stt: 1,
-      image: "https://fptshop.com.vn/tin-tuc/danh-gia/hoc-phi-uit-2025-176136",
-      name: "UIT",
-      building_id: "DD001",
-      createdDate: "21/04/2025",
-      floors: 12,
-      location_name: "Trường ĐH Công nghệ Thông tin",
-      description: "Tòa nhà chính của trường ĐH Công nghệ Thông tin",
-    },
-    {
-      key: "2",
-      stt: 2,
-      image: "https://fptshop.com.vn/tin-tuc/danh-gia/hoc-phi-uit-2025-176136",
-      name: "USSH",
-      building_id: "BN25251396",
-      createdDate: "21/04/2025",
-      floors: 12,
-      location_name: "Trường ĐH Công nghệ Thông tin",
-      description: "Tòa nhà chính của trường ĐH Công nghệ Thông tin",
-    },
-    {
-      key: "3",
-      stt: 3,
-      image: "https://fptshop.com.vn/tin-tuc/danh-gia/hoc-phi-uit-2025-176136",
-      name: "UIS",
-      building_id: "BN25251396",
-      createdDate: "21/04/2025",
-      floors: 12,
-      location_name: "Trường ĐH Công nghệ Thông tin",
-      description: "Tòa nhà chính của trường ĐH Công nghệ Thông tin",
-    },
-    {
-      key: "4",
-      stt: 4,
-      image: "https://fptshop.com.vn/tin-tuc/danh-gia/hoc-phi-uit-2025-176136",
-      name: "UT",
-      building_id: "BN25251396",
-      createdDate: "21/04/2025",
-      floors: 12,
-      location_name: "Trường ĐH Công nghệ Thông tin",
-      description: "Tòa nhà chính của trường ĐH Công nghệ Thông tin",
-    },
-    {
-      key: "5",
-      stt: 5,
-      image: "https://fptshop.com.vn/tin-tuc/danh-gia/hoc-phi-uit-2025-176136",
-      name: "Tòa E - UIT",
-      building_id: "BN25251396",
-      createdDate: "21/04/2025",
-      floors: 12,
-      location_name: "Trường ĐH Công nghệ Thông tin",
-      description: "Tòa nhà chính của trường ĐH Công nghệ Thông tin",
-    },
-    {
-      key: "6",
-      stt: 6,
-      image: "https://fptshop.com.vn/tin-tuc/danh-gia/hoc-phi-uit-2025-176136",
-      name: "Tòa A - UIT",
-      building_id: "BN25251396",
-      createdDate: "21/04/2025",
-      floors: 12,
-      location_name: "Trường ĐH Công nghệ Thông tin",
-      description: "Tòa nhà chính của trường ĐH Công nghệ Thông tin",
-    },
-    {
-      key: "7",
-      stt: 7,
-      image: "https://fptshop.com.vn/tin-tuc/danh-gia/hoc-phi-uit-2025-176136",
-      name: "Tòa B - UIT",
-      building_id: "BN25251396",
-      createdDate: "21/04/2025",
-      floors: 12,
-      location_name: "Trường ĐH Công nghệ Thông tin",
-      description: "Tòa nhà chính của trường ĐH Công nghệ Thông tin",
-    },
-    {
-      key: "8",
-      stt: 8,
-      image: "https://fptshop.com.vn/tin-tuc/danh-gia/hoc-phi-uit-2025-176136",
-      name: "Nhà văn hóa SV",
-      building_id: "BN25251396",
-      createdDate: "21/04/2025",
-      floors: 12,
-      location_name: "Trường ĐH Công nghệ Thông tin",
-      description: "Tòa nhà chính của trường ĐH Công nghệ Thông tin",
-    },
-    {
-      key: "9",
-      stt: 9,
-      image: "https://fptshop.com.vn/tin-tuc/danh-gia/hoc-phi-uit-2025-176136",
-      name: "KTX khu A",
-      building_id: "BN25251396",
-      createdDate: "21/04/2025",
-      floors: 12,
-      location_name: "Trường ĐH Công nghệ Thông tin",
-      description: "Tòa nhà chính của trường ĐH Công nghệ Thông tin",
-    },
-  ];
+  const [building, setBuilding] = useState<Building[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const [data] = useState<Location[]>(initialData);
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [buildingToDelete, setBuildingToDelete] = useState<number | null>(null);
 
-  const columns: ColumnsType<Location> = [
+
+   const navigate = useNavigate();
+  
+    useEffect(() => {
+      loadBuilding();
+    }, []);
+  
+    function loadBuilding() {
+      setLoading(true);
+      setTimeout(() => {
+        setBuilding(mockBuilding);
+        setLoading(false);
+      }, 300);
+    }
+  
+    function handleSearch() {
+      setLoading(true);
+      setTimeout(() => {
+        const filtered = mockBuilding.filter((n) =>
+          n.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setBuilding(filtered);
+        setCurrentPage(1);
+        setLoading(false);
+      }, 200);
+    }
+  
+    function handleView(building_id: number) {
+      navigate(`/admin/building/${building_id}`);
+    }
+  
+    function handleEdit(building_id: number) {
+      navigate(`/admin/building/edit/${building_id}`);
+    }
+  
+    function handleAdd() {
+      navigate("/admin/buildings/add");
+    }
+  
+    function handleDelete(building_id: number) {
+      setBuildingToDelete(building_id);
+      setModalOpen(true);
+    }
+  
+    function handleConfirmDelete() {
+      if (!buildingToDelete) return;
+      setBuilding((prev) => prev.filter((n) => n.building_id !== buildingToDelete));
+      setModalOpen(false);
+    }
+
+    const totalItems = building.length;
+    const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+
+    const paginatedData = building.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const columns: ColumnsType<Building> = [
     {
-      title: "STT",
-      dataIndex: "stt",
-      key: "stt",
+      title: "ID",
+      dataIndex: "building_id",
+      key: "building_id",
       width: 60,
       align: "center",
     },
@@ -146,7 +101,7 @@ const Buildings: React.FC = () => {
       ellipsis: {
         showTitle: false,
       },
-      render: (text: string, record: Location) => (
+      render: (text: string, record: Building) => (
         <div className="flex items-center gap-3">
           <img
             src={record.image}
@@ -157,15 +112,14 @@ const Buildings: React.FC = () => {
             <Tooltip placement="topLeft" title={text}>
               {text}
             </Tooltip>
-            <div className="text-gray-500 text-sm">{record.building_id}</div>
           </div>
         </div>
       ),
     },
     {
       title: "Ngày tạo",
-      dataIndex: "createdDate",
-      key: "createdDate",
+      dataIndex: "created_at",
+      key: "created_at",
       align: "center",
       width: 110,
     },
@@ -174,22 +128,22 @@ const Buildings: React.FC = () => {
       dataIndex: "floors",
       key: "floors",
       align: "center",
-      width: 90,
-    },
-    {
-      title: "Trực thuộc địa điểm",
-      dataIndex: "location_name",
-      key: "location_name",
-      align: "center",
-      width: 300,
+      width: 110,
       ellipsis: {
         showTitle: false,
       },
-      render: (location_name) => (
-        <Tooltip placement="topLeft" title={location_name}>
-          {location_name}
+      render: (floors) => (
+        <Tooltip placement="topLeft" title={floors}>
+          {floors}
         </Tooltip>
       ),
+    },
+    {
+      title: "Trực thuộc địa điểm",
+      dataIndex: "place_belong_to",
+      key: "place_belong_to",
+      align: "center",
+      width: 200,
     },
     {
       title: "Mô tả",
@@ -199,20 +153,21 @@ const Buildings: React.FC = () => {
       ellipsis: {
         showTitle: false,
       },
-      render: (description) => (
-        <Tooltip placement="topLeft" title={description}>
-          {description}
+      render: (floors) => (
+        <Tooltip placement="topLeft" title={floors}>
+          {floors}
         </Tooltip>
       ),
     },
     {
       title: "Thao tác",
       key: "action",
-      render: () => (
+      width: 200,
+      render: (record: Building) => (
         <Space size="middle">
-          <Button type="text" icon={<EyeOutlined />} />
-          <Button type="text" icon={<EditOutlined />} />
-          <Button type="text" danger icon={<DeleteOutlined />} />
+          <Button onClick={() => handleView(record.building_id)} type="text" icon={<EyeOutlined />} />
+          <Button onClick={() => handleEdit(record.building_id)} type="text" icon={<EditOutlined />} />
+          <Button onClick={() => handleDelete(record.building_id)} type="text" danger icon={<DeleteOutlined />} />
         </Space>
       ),
       align: "center",
@@ -220,65 +175,63 @@ const Buildings: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen">
+       <PageMeta
+        title="Buildings | Admin Dashboard"
+        description="This is Buildings Dashboard"
+      />
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-row justify-between">
-          {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold mb-1">Danh sách tòa nhà</h1>
-            <p className="text-gray-500">Hiển thị Tất cả các tòa nhà đã tạo</p>
-          </div>
-
-          {/* Search and Filters */}
-          <div className="p-4 mb-4">
-            <div className="flex justify-between items-center">
-              <Space size="middle">
-                <Input
-                  placeholder="Tìm tòa nhà"
-                  prefix={<SearchOutlined />}
-                  value={searchText}
-                  size="large"
-                  onChange={(e) => setSearchText(e.target.value)}
-                  style={{ width: 300 }}
-                />
-                <Select
-                  defaultValue="all"
-                  style={{ width: 150 }}
-                  size="large"
-                  onChange={setCategoryFilter}
-                  options={[
-                    { value: "all", label: "Sắp xếp theo" },
-                    { value: "university", label: "Ngày tạo gần nhất" },
-                    { value: "building", label: "Ngày tạo xa nhất" },
-                  ]}
-                />
-              </Space>
-            </div>
-          </div>
-        </div>
-
         {/* Table Card */}
         <div className="bg-white rounded-lg shadow-sm">
           <div className="p-4 flex justify-between items-center">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <h2 className="text-lg font-semibold">Danh sách tòa nhà</h2>
-              <div className="bg-blue-100 rounded-3xl w-30 text-center">
-                <p className="text-primary font-semibold">100 tòa nhà</p>
-              </div>
+              <span className="text-sm bg-[#D1F2FF] text-[#2F73F2] py-1 px-4 rounded-full font-medium">
+                {totalItems} tòa nhà
+              </span>
             </div>
-            <button className="flex items-center gap-2 bg-primary hover:bg-primary-light hover:cursor-pointer text-white font-medium px-5 py-2.5 rounded-2xl transition">
-              <Plus size={18} />
-              <span>Tạo tòa nhà</span>
-            </button>
+            <div className="flex flex-row items-center gap-3">
+              {/* Search and Filters */}
+
+              <Input
+                placeholder="Tìm tòa nhà..."
+                prefix={<SearchOutlined />}
+                value={searchTerm}
+                size="large"
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearch();
+              }
+            }}
+                style={{ width: 300 }}
+              />
+              <Select
+                defaultValue="all"
+                style={{ width: 150 }}
+                size="large"
+                onChange={setFilter}
+                options={[
+                  { value: "all", label: "Sắp xếp theo" },
+                  { value: "new-to-old", label: "Ngày tạo gần nhất" },
+                  { value: "old-to-new", label: "Ngày tạo xa nhất" },
+                ]}
+              />
+
+              <button onClick={handleAdd} className="flex items-center gap-2 bg-primary hover:bg-primary-light hover:cursor-pointer text-white font-medium p-2 rounded-md transition">
+                <Plus size={18} />
+                <span>Tạo tòa nhà</span>
+              </button>
+            </div>
           </div>
 
           <Table
             columns={columns}
-            dataSource={data}
+            dataSource={building}
             pagination={{
-              current: 1,
-              pageSize: 10,
-              total: 100,
+              current: currentPage,
+              pageSize: PAGE_SIZE,
+              total: totalPages,
               showSizeChanger: false,
               placement: ["bottomCenter"],
             }}
