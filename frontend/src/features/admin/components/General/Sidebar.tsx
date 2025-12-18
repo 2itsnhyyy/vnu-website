@@ -33,7 +33,7 @@ const Sidebar: React.FC = () => {
     {
       icon: <MdLocationPin />,
       name: "Quản lý địa điểm",
-      path: `${basePath}/locations`,
+      path: `${basePath}/places`,
     },
     {
       icon: <FaRegBuilding />,

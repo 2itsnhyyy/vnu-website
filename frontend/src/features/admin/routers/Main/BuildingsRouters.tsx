@@ -1,4 +1,5 @@
 import Buildings from "../../pages/Buildings";
+import AddBuilding from "../../pages/Buildings/addBuilding/index";
 
 const BuildingsRouters = [
   {
@@ -9,6 +10,10 @@ const BuildingsRouters = [
     //   { path: '', element: <List /> },
     //   { path: 'create', element: <Create /> },
     // ],
+  },
+    {
+    path: "buildings/add",
+    element: <AddBuilding />,
   },
 ];
 
