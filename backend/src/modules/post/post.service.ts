@@ -10,6 +10,7 @@ import { PostResponseDto } from './dto/post-response.dto';
 import { SearchParamsDto } from './dto/search-params.dto';
 import { PostSortOptions } from 'src/common/constants/post.constant';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { UserResponseDto } from '../user/dto/user-response.dto';
 
 @Injectable()
 export class PostService {
@@ -253,6 +254,46 @@ export class PostService {
     });
     return {
       message: 'Post unliked successfully',
+    };
+  }
+
+  async getPostLikes(postId: number, limit: number, page: number) {
+    const post = await this.prisma.post.findUnique({
+      where: { postId: Number(postId) },
+    });
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    const take = Number(limit);
+    const skip = (Number(page) - 1) * take;
+
+    const totalItems = await this.prisma.likePost.count({
+      where: { postId: Number(postId) },
+    });
+    const totalPages = Math.ceil(totalItems / take);
+
+    const likes = await this.prisma.likePost.findMany({
+      where: { postId: Number(postId) },
+      include: {
+        user: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take,
+    });
+
+    return {
+      pagination: {
+        totalItems,
+        totalPages,
+        currentPage: Number(page),
+        hasNextPage: Number(page) < totalPages,
+        hasPreviousPage: Number(page) > 1,
+        limit: take,
+      },
+      users: likes.map((like) => new UserResponseDto(like.user)),
     };
   }
 }

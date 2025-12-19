@@ -33,6 +33,7 @@ import { CommentService } from '../comment/comment.service';
 import { GetCommentsParamsDto } from '../comment/dto/get-comments-params.dto';
 import { CreateCommentDto } from '../comment/dto/create-comment.dto';
 import { CommentResponseDto } from '../comment/dto/comment-response.dto';
+import { PaginationParamsDto } from 'src/common/dto/pagination-params.dto';
 
 @ApiTags('Post')
 @Controller('posts')
@@ -144,7 +145,7 @@ export class PostController {
     );
   }
 
-  @Post(':postId/like')
+  @Post(':postId/likes')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('jwt')
   @ApiOperation({
@@ -161,7 +162,7 @@ export class PostController {
     return this.postService.likePost(req.user.userId, postId);
   }
 
-  @Delete(':postId/like')
+  @Delete(':postId/likes')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('jwt')
   @ApiOperation({
@@ -176,6 +177,45 @@ export class PostController {
   })
   async unlikePost(@Param('postId') postId: number, @Req() req: any) {
     return this.postService.unlikePost(req.user.userId, postId);
+  }
+
+  @Get(':postId/likes')
+  @ApiOperation({
+    summary: 'Get users who liked the post',
+    description: 'Get list of users who liked the post with pagination',
+  })
+  @ApiOkResponse({
+    description: 'Users fetched successfully',
+    example: {
+      pagination: {
+        totalItems: 100,
+        totalPages: 10,
+        currentPage: 1,
+        hasNextPage: true,
+        hasPreviousPage: false,
+        limit: 10,
+      },
+      users: [
+        {
+          userId: 1,
+          email: 'thieu@gmail.com',
+          name: 'Huỳnh Văn Thiệu',
+          birthday: '2025-01-01',
+          avatar: 'https://example.com/avatar.png',
+          role: 0,
+        },
+      ],
+    },
+  })
+  async getPostLikes(
+    @Param('postId') postId: number,
+    @Query() paginationParams: PaginationParamsDto,
+  ) {
+    return this.postService.getPostLikes(
+      postId,
+      paginationParams.limit,
+      paginationParams.page,
+    );
   }
 
   @Get(':postId/comments')
