@@ -6,7 +6,6 @@ import {
   Param,
   Patch,
   Post,
-  Put,
   Query,
   Req,
   UseGuards,
@@ -16,7 +15,6 @@ import { CreatePostDto } from './dto/create-post.dto';
 import {
   ApiTags,
   ApiOperation,
-  ApiResponse,
   getSchemaPath,
   ApiExtraModels,
   ApiCreatedResponse,
@@ -31,11 +29,18 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { Role } from 'src/common/constants/role.constant';
 import { RoleGuard } from 'src/common/guards/role.guard';
 import { Roles } from 'src/common/decorators/role.decorator';
+import { CommentService } from '../comment/comment.service';
+import { GetCommentsParamsDto } from '../comment/dto/get-comments-params.dto';
+import { CreateCommentDto } from '../comment/dto/create-comment.dto';
+import { CommentResponseDto } from '../comment/dto/comment-response.dto';
 
-@ApiTags('posts')
+@ApiTags('Post')
 @Controller('posts')
 export class PostController {
-  constructor(private readonly postService: PostService) {}
+  constructor(
+    private readonly postService: PostService,
+    private readonly commentService: CommentService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -171,5 +176,65 @@ export class PostController {
   })
   async unlikePost(@Param('postId') postId: number, @Req() req: any) {
     return this.postService.unlikePost(req.user.userId, postId);
+  }
+
+  @Get(':postId/comments')
+  @UseGuards(OptionalAuthGuard)
+  @ApiBearerAuth('jwt')
+  @ApiOperation({
+    summary: 'Get comments by post id (authentication is optional)',
+  })
+  @ApiExtraModels(CommentResponseDto)
+  @ApiOkResponse({
+    description: 'Comments fetched successfully',
+    example: {
+      pagination: {
+        totalItems: 10,
+        totalPages: 1,
+        currentPage: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+        limit: 10,
+      },
+      comments: [],
+    },
+  })
+  async getComments(
+    @Param('postId') postId: number,
+    @Query() getCommentsParamsDto: GetCommentsParamsDto,
+    @Req() req: any,
+  ) {
+    return this.commentService.getComments(
+      postId,
+      getCommentsParamsDto,
+      req.user?.userId,
+    );
+  }
+
+  @Post(':postId/comments')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('jwt')
+  @ApiOperation({ summary: 'Create a new comment' })
+  @ApiExtraModels(CommentResponseDto)
+  @ApiCreatedResponse({
+    description: 'Comment created successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Comment created successfully' },
+        comment: { $ref: getSchemaPath(CommentResponseDto) },
+      },
+    },
+  })
+  async createComment(
+    @Body() createCommentDto: CreateCommentDto,
+    @Param('postId') postId: number,
+    @Req() req: any,
+  ) {
+    return this.commentService.createComment(
+      createCommentDto,
+      postId,
+      req.user.userId,
+    );
   }
 }
