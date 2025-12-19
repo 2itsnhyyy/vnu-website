@@ -5,6 +5,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { EmailModule } from './modules/email/email.module';
 import { UserModule } from './modules/user/user.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
+import { PostModule } from './modules/post/post.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
     EmailModule,
     UserModule,
     CloudinaryModule,
+    PostModule,
   ],
 })
 export class AppModule {}
