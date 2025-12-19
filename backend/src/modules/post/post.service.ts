@@ -1,6 +1,7 @@
 import {
   ForbiddenException,
   Injectable,
+  BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -208,6 +209,50 @@ export class PostService {
     return {
       message: 'Post deleted successfully',
       post: new PostResponseDto(deletedPost, deletedPost.authorUser),
+    };
+  }
+
+  async likePost(userId: number, postId: number) {
+    const post = await this.prisma.post.findUnique({
+      where: { postId: Number(postId) },
+    });
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+    const existingLike = await this.prisma.likePost.findFirst({
+      where: { userId: Number(userId), postId: Number(postId) },
+    });
+    if (existingLike) {
+      throw new BadRequestException('You already liked this post');
+    }
+    await this.prisma.likePost.create({
+      data: { userId: Number(userId), postId: Number(postId) },
+    });
+    return {
+      message: 'Post liked successfully',
+    };
+  }
+
+  async unlikePost(userId: number, postId: number) {
+    const post = await this.prisma.post.findUnique({
+      where: { postId: Number(postId) },
+    });
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+    const existingLike = await this.prisma.likePost.findFirst({
+      where: { userId: Number(userId), postId: Number(postId) },
+    });
+    if (!existingLike) {
+      throw new BadRequestException('You have not liked this post');
+    }
+    await this.prisma.likePost.delete({
+      where: {
+        postId_userId: { postId: Number(postId), userId: Number(userId) },
+      },
+    });
+    return {
+      message: 'Post unliked successfully',
     };
   }
 }

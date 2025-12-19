@@ -138,4 +138,38 @@ export class PostController {
       req.user.role === Role.ADMIN,
     );
   }
+
+  @Post(':postId/like')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('jwt')
+  @ApiOperation({
+    summary: 'Like post',
+    description: 'Like post by userId and postId',
+  })
+  @ApiOkResponse({
+    description: 'Post liked successfully',
+    example: {
+      message: 'Post liked successfully',
+    },
+  })
+  async likePost(@Param('postId') postId: number, @Req() req: any) {
+    return this.postService.likePost(req.user.userId, postId);
+  }
+
+  @Delete(':postId/like')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('jwt')
+  @ApiOperation({
+    summary: 'Unlike post',
+    description: 'Unlike post by userId and postId',
+  })
+  @ApiOkResponse({
+    description: 'Post unliked successfully',
+    example: {
+      message: 'Post unliked successfully',
+    },
+  })
+  async unlikePost(@Param('postId') postId: number, @Req() req: any) {
+    return this.postService.unlikePost(req.user.userId, postId);
+  }
 }
