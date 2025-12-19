@@ -90,15 +90,15 @@ export default function EditNews() {
         <Link to="/admin/news">
           <GrFormPrevious className="w-6 h-6 mr-2 my-auto" />
         </Link>
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90 ">
+        <h2 className="text-xl font-semibold text-gray-800">
           Chỉnh sửa tin tức
         </h2>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200 p-6 dark:border-gray-800">
+      <div className="bg-white rounded-2xl border border-gray-200 p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Tiêu đề
               <span className="text-red-500">
                 <span className="text-red-500">*</span>
@@ -110,11 +110,11 @@ export default function EditNews() {
               value={formData.title || ""}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Nội dung chi tiết
               <span className="text-red-500">
                 <span className="text-red-500">*</span>

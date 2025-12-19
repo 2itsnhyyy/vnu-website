@@ -63,7 +63,7 @@ const Navbar = () => {
       <div className="flex items-center space-x-5 gap-4 mr-10">
         {!token && (
           <button
-            onClick={() => navigate("/register")}
+            onClick={() => navigate("/users/register/common")}
             className="bg-primary text-white hover:bg-primary-light px-6 py-2 rounded-lg font-bold hidden md:block cursor-pointer transition-colors"
           >
             Đăng ký

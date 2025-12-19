@@ -1,6 +1,7 @@
 import News from "../../pages/News";
 import EditNews from "../../pages/News/EditNews";
 import ViewNews from "../../pages/News/ViewNews";
+import CreateNews from "../../pages/News/CreateNews";
 
 const NewsRouters = [
   {
@@ -19,6 +20,10 @@ const NewsRouters = [
   {
     path: "news/:id",
     element: <ViewNews />,
+  },
+  {
+    path: "news/add",
+    element: <CreateNews />,
   },
 ];
 

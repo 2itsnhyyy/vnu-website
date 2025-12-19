@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import type { User } from "../../types/user";
 import { MdDeleteOutline } from "react-icons/md";
-import { MdEdit } from "react-icons/md";
 import { MdRemoveRedEye } from "react-icons/md";
 import {
   Table,
@@ -57,10 +56,6 @@ export default function UserTable() {
     navigate(`/admin/users/${userId}`);
   }
 
-  function handleEdit(userId: number) {
-    navigate(`/admin/users/edit/${userId}`);
-  }
-
   function handleDelete(userId: number) {
     setUserToDelete(userId);
     setModalOpen(true);
@@ -81,10 +76,10 @@ export default function UserTable() {
   );
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 sm:px-6">
       <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex justify-start items-center pt-5">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">
+          <h2 className="text-xl font-semibold text-gray-800">
             Danh sách người dùng
           </h2>
           <span className="ml-5 text-sm bg-[#D1F2FF] text-[#2F73F2] py-1 px-4 rounded-full font-medium">
@@ -105,10 +100,10 @@ export default function UserTable() {
 
           <button
             onClick={handleSearch}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 cursor-pointer"
           >
             <svg
-              className="stroke-current fill-white dark:fill-gray-800"
+              className="stroke-current fill-white"
               width="20"
               height="20"
               viewBox="0 0 20 20"
@@ -150,54 +145,57 @@ export default function UserTable() {
         <p>Đang tải...</p>
       ) : (
         <Table>
-          <TableHeader className="border-gray-100 dark:border-gray-800 border-y">
-            <TableRow>
+          <TableHeader className="border-gray-100 border-y">
+            <TableRow className="bg-gray-50 transition-colors cursor-pointer">
               <TableCell
                 isHeader
-                className="py-3 pr-6 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                className="py-3 pr-6 font-medium text-gray-500 text-start text-theme-sm"
               >
                 Mã
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                className="py-3 font-medium text-gray-500 text-start text-theme-sm"
               >
                 Họ tên
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                className="py-3 font-medium text-gray-500 text-start text-theme-sm"
               >
                 Email
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-center text-theme-sm dark:text-gray-400 px-6"
+                className="py-3 font-medium text-gray-500 text-center text-theme-sm px-6"
               >
                 Ngày sinh
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-center text-theme-sm dark:text-gray-400 px-6"
+                className="py-3 font-medium text-gray-500 text-center text-theme-sm px-6"
               >
                 Vai trò
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400 px-6"
+                className="py-3 font-medium text-gray-500 text-start text-theme-sm px-6"
               >
                 Thao tác
               </TableCell>
             </TableRow>
           </TableHeader>
 
-          <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
+          <TableBody className="divide-y divide-gray-100">
             {paginatedData.map((user) => (
-              <TableRow key={user.userId}>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+              <TableRow
+                key={user.userId}
+                className="hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                <TableCell className="py-3 text-gray-500 text-theme-sm">
                   {user.userId}
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                <TableCell className="py-3 text-gray-500 text-theme-sm">
                   <div className="flex gap-2">
                     <img
                       src={user.avatar}
@@ -207,10 +205,10 @@ export default function UserTable() {
                     <div className="my-auto ml-2">{user.name}</div>
                   </div>
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                <TableCell className="py-3 text-gray-500 text-theme-sm">
                   {user.email}
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400 text-center px-6">
+                <TableCell className="py-3 text-gray-500 text-theme-sm text-center px-6">
                   {user.birthday}
                 </TableCell>
                 <TableCell className="text-center px-6">
@@ -226,16 +224,13 @@ export default function UserTable() {
                     {user.role === 1 ? "Người dùng" : "Quản trị viên"}
                   </span>
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400 px-6">
-                  <div className="flex gap-2">
+                <TableCell className="py-3 text-gray-500 text-theme-sm px-6">
+                  <div className="flex gap-6">
                     <button onClick={() => handleView(user.userId)}>
-                      <MdRemoveRedEye className="w-5 h-5" />
-                    </button>
-                    <button onClick={() => handleEdit(user.userId)}>
-                      <MdEdit className="w-5 h-5 " />
+                      <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleDelete(user.userId)}>
-                      <MdDeleteOutline className="w-5 h-5 " />
+                      <MdDeleteOutline className="w-5 h-5 cursor-pointer" />
                     </button>
                   </div>
                 </TableCell>

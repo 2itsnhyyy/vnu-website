@@ -7,7 +7,7 @@ const Places = () => {
   const navigate = useNavigate();
 
   const handleSeeAllClick = () => {
-    navigate("/search/campaign");
+    navigate("/users/maps");
   };
 
   return (
@@ -23,7 +23,7 @@ const Places = () => {
           onClick={handleSeeAllClick}
           className="bg-primary text-white text-sm font-semibold px-4 py-2 rounded-full hover:bg-primary-light cursor-pointer"
         >
-          Tất cả
+          Xem chi tiết
         </button>
       </div>
 
