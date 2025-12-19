@@ -10,6 +10,7 @@ import { User } from '@prisma/client';
 import { GetCommentsParamsDto } from './dto/get-comments-params.dto';
 import { PostSortOptions } from 'src/common/constants/post.constant';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { UserResponseDto } from '../user/dto/user-response.dto';
 
 @Injectable()
 export class CommentService {
@@ -180,6 +181,112 @@ export class CommentService {
 
     return {
       message: 'Comment deleted successfully',
+    };
+  }
+
+  async likeComment(commentId: number, userId: number) {
+    const comment = await this.prisma.comment.findUnique({
+      where: { commentId: Number(commentId) },
+    });
+
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+
+    const existingLike = await this.prisma.likeComment.findUnique({
+      where: {
+        commentId_userId: {
+          commentId: Number(commentId),
+          userId: Number(userId),
+        },
+      },
+    });
+
+    if (existingLike) {
+      return { message: 'Comment already liked' };
+    }
+
+    await this.prisma.likeComment.create({
+      data: {
+        commentId: Number(commentId),
+        userId: Number(userId),
+      },
+    });
+
+    return { message: 'Comment liked successfully' };
+  }
+
+  async unlikeComment(commentId: number, userId: number) {
+    const comment = await this.prisma.comment.findUnique({
+      where: { commentId: Number(commentId) },
+    });
+
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+
+    const existingLike = await this.prisma.likeComment.findUnique({
+      where: {
+        commentId_userId: {
+          commentId: Number(commentId),
+          userId: Number(userId),
+        },
+      },
+    });
+
+    if (!existingLike) {
+      return { message: 'Comment not liked yet' };
+    }
+
+    await this.prisma.likeComment.delete({
+      where: {
+        commentId_userId: {
+          commentId: Number(commentId),
+          userId: Number(userId),
+        },
+      },
+    });
+
+    return { message: 'Comment unliked successfully' };
+  }
+
+  async getCommentLikes(commentId: number, limit: number, page: number) {
+    const comment = await this.prisma.comment.findUnique({
+      where: { commentId: Number(commentId) },
+    });
+
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+
+    const take = Number(limit);
+    const skip = (Number(page) - 1) * take;
+
+    const totalItems = await this.prisma.likeComment.count({
+      where: { commentId: Number(commentId) },
+    });
+    const totalPages = Math.ceil(totalItems / take);
+
+    const likes = await this.prisma.likeComment.findMany({
+      where: { commentId: Number(commentId) },
+      include: {
+        user: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take,
+    });
+
+    return {
+      pagination: {
+        totalItems,
+        totalPages,
+        currentPage: Number(page),
+        hasNextPage: Number(page) < totalPages,
+        hasPreviousPage: Number(page) > 1,
+        limit: take,
+      },
+      users: likes.map((like) => new UserResponseDto(like.user)),
     };
   }
 }
