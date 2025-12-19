@@ -11,10 +11,12 @@ import {
   TableHeader,
   TableRow,
 } from "../UI/Table";
-
+import { forumService } from "../../services/ForumService";
 import Pagination from "../Common/Pagination";
 import SearchInput from "../Common/SearchInput";
-import { posts as mockPosts } from "../../types/post";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import dayjs from "dayjs";
 
 const PAGE_SIZE = 10;
 
@@ -30,27 +32,33 @@ export default function PostTable() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadPosts();
-  }, []);
-
-  function loadPosts() {
     setLoading(true);
-    setTimeout(() => {
-      setPosts(mockPosts);
-      setLoading(false);
-    }, 300);
-  }
+
+    forumService
+      .getAll(currentPage, PAGE_SIZE)
+      .then((res) => {
+        console.log("API DATA:", res);
+        setPosts(res.posts);
+      })
+      .catch((err) => {
+        console.error("API ERROR:", err);
+      })
+      .finally(() => setLoading(false));
+  }, [currentPage]);
 
   function handleSearch() {
     setLoading(true);
-    setTimeout(() => {
-      const filtered = mockPosts.filter((p) =>
-        p.title.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setPosts(filtered);
-      setCurrentPage(1);
-      setLoading(false);
-    }, 200);
+
+    forumService
+      .getAll(1, PAGE_SIZE)
+      .then((res) => {
+        const filtered = res.posts.filter((p) =>
+          p.title.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setPosts(filtered);
+        setCurrentPage(1);
+      })
+      .finally(() => setLoading(false));
   }
 
   function handleView(postId: number) {
@@ -154,37 +162,37 @@ export default function PostTable() {
             <TableRow className="bg-gray-50 transition-colors">
               <TableCell
                 isHeader
-                className="py-3 pr-6 font-medium text-gray-500 text-start text-theme-sm"
+                className="py-3 font-medium text-gray-500 px-3 text-center text-theme-sm"
               >
                 Mã
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm"
+                className="py-3 font-medium text-gray-500 text-center text-theme-sm"
               >
                 Tiêu đề
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm"
+                className="py-3 font-medium text-gray-500 text-center text-theme-sm"
               >
                 Tác giả
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm mx-2"
+                className="py-3 font-medium text-gray-500 text-center text-theme-sm mx-2"
               >
                 Ngày đăng
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm"
+                className="py-3 font-medium text-gray-500 text-center text-theme-sm"
               >
                 Nội dung
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm"
+                className="py-3 font-medium text-gray-500 text-center text-theme-sm"
               >
                 Thao tác
               </TableCell>
@@ -197,23 +205,28 @@ export default function PostTable() {
                 key={post.postId}
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                <TableCell className="py-3 text-gray-500 text-theme-sm">
+                <TableCell className="py-6 px-3 text-center text-gray-500 text-theme-sm">
                   {post.postId}
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm">
+                <TableCell className="py-6 text-center text-gray-500 text-theme-sm">
                   <div className="max-w-[350px] truncate">{post.title}</div>
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm">
-                  {post.author}
+                <TableCell className="py-6 text-center text-gray-500 text-theme-sm">
+                  {post.author.name}
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm mx-2">
-                  {post.createdAt}
+                <TableCell className="py-6 text-center text-gray-500 text-theme-sm mx-2">
+                  {dayjs(post.createdAt).format("DD/MM/YYYY")}
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm">
-                  <div className="max-w-[300px] truncate">{post.content}</div>
+
+                <TableCell className="py-6 text-center text-gray-500 text-theme-sm">
+                  <div className="max-w-[300px] truncate">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {post.contentMarkdown}
+                    </ReactMarkdown>
+                  </div>
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm">
-                  <div className="flex gap-2">
+                <TableCell className="py-6 text-center text-gray-500 text-theme-sm">
+                  <div className="flex gap-2 justify-center">
                     <button onClick={() => handleView(post.postId)}>
                       <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />
                     </button>
