@@ -1,14 +1,15 @@
 import Forum from "../../pages/Main/Forum/Forum";
+import PostDetails from "../../pages/Main/Forum/PostDetails";
+import CreatePost from "../../pages/Main/Forum/CreatePost";
 
 const ForumRouters = [
   {
     path: "forum",
-    element: <Forum />,
-    // Nếu sau này muốn tách các route con, có thể dùng cấu trúc children như bên dưới:
-    // children: [
-    //   { path: '', element: <List /> },
-    //   { path: 'create', element: <Create /> },
-    // ],
+    children: [
+      { path: "", element: <Forum /> },
+      { path: "details", element: <PostDetails /> },
+      { path: "create", element: <CreatePost /> },
+    ],
   },
 ];
 
