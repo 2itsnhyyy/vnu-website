@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import type { Post } from "../../types/post";
-import { posts as mockPosts } from "../../types/post";
 import PageMeta from "../../components/Common/PageMeta";
 import { GrFormPrevious } from "react-icons/gr";
+import { forumService } from "../../services/ForumService";
+import dayjs from "dayjs";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function ViewPost() {
   const { id } = useParams<{ id: string }>();
@@ -11,20 +14,21 @@ export default function ViewPost() {
   const [post, setPost] = useState<Post | null>(null);
 
   useEffect(() => {
-    if (id) loadNews(Number(id));
+    if (id) loadPost(Number(id));
+    console.log(id);
   }, [id]);
 
-  const loadNews = (postId: number) => {
+  const loadPost = async (postId: number) => {
     setLoading(true);
-
-    const found = mockPosts.find((p) => p.postId === postId);
-
-    setTimeout(() => {
-      if (found) {
-        setPost(found);
-      }
+    try {
+      const data = await forumService.getById(postId);
+      setPost(data);
+    } catch (err) {
+      console.error("Load post failed", err);
+      setPost(null);
+    } finally {
       setLoading(false);
-    }, 300);
+    }
   };
 
   if (loading && !post) {
@@ -80,7 +84,7 @@ export default function ViewPost() {
               <input
                 type="text"
                 name="author"
-                value={post.author}
+                value={post.author.name || ""}
                 disabled
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
               />
@@ -88,12 +92,47 @@ export default function ViewPost() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email
+              </label>
+              <input
+                type="text"
+                name="email"
+                value={post.author.email || ""}
+                disabled
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Ngày tạo
               </label>
               <input
                 type="date"
                 name="createdAt"
-                value={post.createdAt || ""}
+                value={
+                  post.createdAt
+                    ? dayjs(post.createdAt).format("YYYY-MM-DD")
+                    : ""
+                }
+                disabled
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Ngày cập nhật
+              </label>
+              <input
+                type="date"
+                name="updatedAt"
+                value={
+                  post.updatedAt
+                    ? dayjs(post.updatedAt).format("YYYY-MM-DD")
+                    : ""
+                }
                 disabled
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
               />
@@ -104,13 +143,11 @@ export default function ViewPost() {
               Nội dung chi tiết
             </label>
 
-            <textarea
-              name="content"
-              value={post.content || ""}
-              disabled
-              rows={9}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
-            ></textarea>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 max-h-[400px] overflow-auto">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {post.contentMarkdown || ""}
+              </ReactMarkdown>
+            </div>
           </div>
         </form>
       </div>
