@@ -1,19 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import type { Post, PostUpdateRequest } from "../../types/post";
-import { posts as mockPosts } from "../../types/post";
+import type { Post, PostEditRequest } from "../../types/post";
 import PageMeta from "../../components/Common/PageMeta";
 import { Save } from "lucide-react";
 import { GrFormPrevious } from "react-icons/gr";
 import JoditEditor from "jodit-react";
 import { Link } from "react-router-dom";
+import { forumService } from "../../services/ForumService";
 
 export default function EditPost() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(false);
   const [post, setPost] = useState<Post | null>(null);
-  const [formData, setFormData] = useState<PostUpdateRequest>({});
+  const [formData, setFormData] = useState<PostEditRequest>({});
 
   const editor = useRef(null);
 
@@ -23,15 +23,19 @@ export default function EditPost() {
 
   const loadPost = async (postId: number) => {
     setLoading(true);
-    const found = mockPosts.find((p) => p.postId === postId);
-
-    setTimeout(() => {
-      if (found) {
-        setPost(found);
-        setFormData(found);
-      }
+    try {
+      const data = await forumService.getById(postId);
+      setPost(data);
+      setFormData({
+        title: data.title,
+        contentMarkdown: data.contentMarkdown,
+      });
+    } catch (err) {
+      console.error("Load post failed", err);
+      setPost(null);
+    } finally {
       setLoading(false);
-    }, 300);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,17 +44,28 @@ export default function EditPost() {
 
     try {
       setLoading(true);
+      const updated = await forumService.update(Number(id), {
+        title: formData.title,
+        contentMarkdown: formData.contentMarkdown,
+      });
+      console.log("Updated post:", updated);
       navigate("/admin/forum");
-    } catch (error) {
-      console.error("Error updating post:", error);
-      alert("Có lỗi xảy ra khi cập nhật bài đăng");
+    } catch (error: any) {
+      if (error.response) {
+        console.error("Error response data:", error.response.data);
+        console.error("Error status:", error.response.status);
+        console.error("Error headers:", error.response.headers);
+        alert(`Có lỗi xảy ra: ${JSON.stringify(error.response.data)}`);
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+        alert("Không nhận được phản hồi từ server");
+      } else {
+        console.error("Error message:", error.message);
+        alert(`Lỗi: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSaveDraft = () => {
-    console.log("Draft saved:", formData);
   };
 
   const handleChange = (
@@ -90,49 +105,32 @@ export default function EditPost() {
         <Link to="/admin/forum">
           <GrFormPrevious className="w-6 h-6 mr-2 my-auto" />
         </Link>
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90 ">
+        <h2 className="text-xl font-semibold text-gray-800">
           Chỉnh sửa bài đăng
         </h2>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200 p-6 dark:border-gray-800">
+      <div className="bg-white rounded-2xl border border-gray-200 p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Tiêu đề
-                <span className="text-red-500">
-                  <span className="text-red-500">*</span>
-                </span>
-              </label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title || ""}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Tác giả
-                <span className="text-red-500">
-                  <span className="text-red-500">*</span>
-                </span>
-              </label>
-              <input
-                type="text"
-                name="author"
-                value={formData.author || ""}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
-              />
-            </div>
-          </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tiêu đề
+              <span className="text-red-500">
+                <span className="text-red-500">*</span>
+              </span>
+            </label>
+            <input
+              type="text"
+              name="title"
+              value={formData.title || ""}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Nội dung chi tiết
               <span className="text-red-500">
                 <span className="text-red-500">*</span>
@@ -142,11 +140,11 @@ export default function EditPost() {
             <div className="border border-gray-300 rounded-lg p-2">
               <JoditEditor
                 ref={editor}
-                value={formData.content || ""}
+                value={formData.contentMarkdown || ""}
                 onChange={(newContent) => {
                   setFormData((prev) => ({
                     ...prev,
-                    content: newContent,
+                    contentMarkdown: newContent,
                   }));
                 }}
               />
@@ -163,7 +161,7 @@ export default function EditPost() {
             </button>
             <button
               type="button"
-              onClick={handleSaveDraft}
+              onClick={handleSubmit}
               className="flex items-center gap-2 px-6 py-2 bg-[#1D4ED8] text-white rounded-lg hover:bg-blue-500 cursor-pointer"
             >
               <Save className="h-4 w-4" />

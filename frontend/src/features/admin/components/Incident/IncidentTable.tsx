@@ -87,10 +87,10 @@ export default function IncidentTable() {
   );
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 sm:px-6">
       <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex justify-start items-center pt-5">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">
+          <h2 className="text-xl font-semibold text-gray-800">
             Danh sách sự cố
           </h2>
           <span className="ml-5 text-sm bg-[#D1F2FF] text-[#2F73F2] py-1 px-4 rounded-full font-medium">
@@ -111,10 +111,10 @@ export default function IncidentTable() {
 
           <button
             onClick={handleSearch}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 cursor-pointer"
           >
             <svg
-              className="stroke-current fill-white dark:fill-gray-800"
+              className="stroke-current fill-white"
               width="20"
               height="20"
               viewBox="0 0 20 20"
@@ -164,62 +164,65 @@ export default function IncidentTable() {
         <p>Đang tải...</p>
       ) : (
         <Table>
-          <TableHeader className="border-gray-100 dark:border-gray-800 border-y">
-            <TableRow>
+          <TableHeader className="border-gray-100 border-y">
+            <TableRow className="bg-gray-50 transition-colors cursor-pointer">
               <TableCell
                 isHeader
-                className="py-3 pr-6 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                className="py-3 pr-6 font-medium text-gray-500 text-start text-theme-sm"
               >
                 Mã
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                className="py-3 font-medium text-gray-500 text-start text-theme-sm"
               >
                 Tiêu đề
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                className="py-3 font-medium text-gray-500 text-start text-theme-sm"
               >
                 Nội dung
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-center text-theme-sm dark:text-gray-400"
+                className="py-3 font-medium text-gray-500 text-center text-theme-sm"
               >
                 Ngày tạo
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-center text-theme-sm dark:text-gray-400"
+                className="py-3 font-medium text-gray-500 text-center text-theme-sm"
               >
                 Trạng thái
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                className="py-3 font-medium text-gray-500 text-start text-theme-sm"
               >
                 Thao tác
               </TableCell>
             </TableRow>
           </TableHeader>
 
-          <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
+          <TableBody className="divide-y divide-gray-100">
             {paginatedData.map((incident) => (
-              <TableRow key={incident.incidentId}>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+              <TableRow
+                key={incident.incidentId}
+                className="hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                <TableCell className="py-3 text-gray-500 text-theme-sm">
                   {incident.incidentId}
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                <TableCell className="py-3 text-gray-500 text-theme-sm">
                   <div className="max-w-[300px] truncate">{incident.title}</div>
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                <TableCell className="py-3 text-gray-500 text-theme-sm">
                   <div className="max-w-[350px] truncate">
                     {incident.content}
                   </div>
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400 text-center">
+                <TableCell className="py-3 text-gray-500 text-theme-sm text-center">
                   {incident.createdAt}
                 </TableCell>
                 <TableCell className="text-center">
@@ -235,7 +238,7 @@ export default function IncidentTable() {
                     {incident.status === 0 ? "Mới" : "Đã giải quyết"}
                   </span>
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                <TableCell className="py-3 text-gray-500 text-theme-sm">
                   <div className="flex gap-2">
                     <button onClick={() => handleView(incident.incidentId)}>
                       <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />
