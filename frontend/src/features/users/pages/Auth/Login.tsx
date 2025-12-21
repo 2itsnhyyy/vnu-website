@@ -1,30 +1,66 @@
-import React, { useState, useEffect, type FormEvent, type ChangeEvent } from "react"
-import { NavLink, useNavigate } from "react-router-dom"
-import LogoKhongChu from "../../../../assets/logos/LogoKhongChu.svg"
-import { authService } from "../../api/services/authService"
-import { userService } from "../../api/services/userService"
+import React, {
+  useState,
+  useEffect,
+  type FormEvent,
+  type ChangeEvent,
+} from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import LogoKhongChu from "../../../../assets/logos/LogoKhongChu.svg";
+import { authService } from "../../api/services/authService";
+import { userService } from "../../api/services/userService";
 
 interface LoginErrors {
-  email?: string
-  password?: string
+  email?: string;
+  password?: string;
 }
 
 const Login: React.FC = () => {
-  const navigate = useNavigate()
-  const [email, setEmail] = useState<string>("")
-  const [password, setPassword] = useState<string>("")
-  const [errors, setErrors] = useState<LoginErrors>({})
-  const [errorMessage, setErrorMessage] = useState<string>("")
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [showPassword, setShowPassword] = useState<boolean>(false)
+  const navigate = useNavigate();
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [errors, setErrors] = useState<LoginErrors>({});
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
+  // const handleSubmit = async (e: FormEvent) => {
+  //   e.preventDefault();
+
+  //   const newErrors: LoginErrors = {}
+  //   if (!email.trim()) newErrors.email = "Email không được để trống"
+  //   if (!password.trim()) newErrors.password = "Mật khẩu không được để trống"
+
+  //   if (Object.keys(newErrors).length > 0) {
+  //     setErrors(newErrors);
+  //     return;
+  //   }
+
+  //   setIsLoading(true);
+  //   setErrorMessage("");
+
+  //   try {
+  //     await authService.login({ email, password });
+
+  //     await userService.getMe();
+
+  //     navigate("/users");
+
+  //     window.location.reload();
+  //   } catch (err: any) {
+  //     setErrorMessage(err.message || "Đăng nhập thất bại. Vui lòng thử lại.");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // Sửa
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
-    const newErrors: LoginErrors = {}
-    if (!email.trim()) newErrors.email = "Email không được để trống"
-    if (!password.trim()) newErrors.password = "Mật khẩu không được để trống"
-    
+
+    const newErrors: LoginErrors = {};
+    if (!email.trim()) newErrors.email = "Email không được để trống";
+    if (!password.trim()) newErrors.password = "Mật khẩu không được để trống";
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -35,12 +71,14 @@ const Login: React.FC = () => {
 
     try {
       await authService.login({ email, password });
-      
-      await userService.getMe();
-      
-      navigate("/users"); 
-      
-      window.location.reload(); 
+
+      const me = await userService.getMe();
+
+      if (me.role === 1) {
+        navigate("/admin", { replace: true });
+      } else {
+        navigate("/users", { replace: true });
+      }
     } catch (err: any) {
       setErrorMessage(err.message || "Đăng nhập thất bại. Vui lòng thử lại.");
     } finally {
@@ -48,10 +86,31 @@ const Login: React.FC = () => {
     }
   };
 
+  // useEffect(() => {
+  //   if (authService.isAuthenticated()) {
+  //     navigate("/users", { replace: true });
+  //   }
+  // }, [navigate]);
+
+  // Sửa
   useEffect(() => {
-    if (authService.isAuthenticated()) {
-      navigate("/users", { replace: true });
-    }
+    const redirectByRole = async () => {
+      if (!authService.isAuthenticated()) return;
+
+      try {
+        const me = await userService.getMe();
+        localStorage.setItem("user", JSON.stringify(me));
+
+        if (me.role === 1) {
+          navigate("/admin", { replace: true });
+        } else {
+          navigate("/users", { replace: true });
+        }
+      } catch {
+        authService.logout();
+      }
+    };
+    redirectByRole();
   }, [navigate]);
 
   return (
@@ -76,27 +135,37 @@ const Login: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={`mt-1 w-full px-4 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-primary outline-none`}
+                className={`mt-1 w-full px-4 py-2 border ${
+                  errors.email ? "border-red-500" : "border-gray-300"
+                } rounded-lg focus:ring-2 focus:ring-primary outline-none`}
                 placeholder="email@vnu.edu.vn"
                 disabled={isLoading}
               />
-              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+              )}
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Mật khẩu</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Mật khẩu
+              </label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`mt-1 w-full px-4 py-2 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-primary outline-none`}
+                  className={`mt-1 w-full px-4 py-2 border ${
+                    errors.password ? "border-red-500" : "border-gray-300"
+                  } rounded-lg focus:ring-2 focus:ring-primary outline-none`}
                   placeholder="••••••••"
                   disabled={isLoading}
                 />
@@ -108,7 +177,9 @@ const Login: React.FC = () => {
                   {showPassword ? "Ẩn" : "Hiện"}
                 </button>
               </div>
-              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+              {errors.password && (
+                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+              )}
             </div>
 
             {/* Submit */}
@@ -116,7 +187,9 @@ const Login: React.FC = () => {
               type="submit"
               disabled={isLoading}
               className={`w-full bg-[var(--color-primary)] text-white py-3 rounded-lg font-bold transition-all ${
-                isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-primary-light"
+                isLoading
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-primary-light"
               }`}
             >
               {isLoading ? "Đang xử lý..." : "ĐĂNG NHẬP"}
@@ -132,14 +205,17 @@ const Login: React.FC = () => {
 
           <div className="mt-6 text-center text-sm text-gray-600">
             Chưa có tài khoản?{" "}
-            <NavLink to="/users/register/common" className="text-primary font-bold hover:underline">
+            <NavLink
+              to="/users/register/common"
+              className="text-primary font-bold hover:underline"
+            >
               Đăng ký ngay
             </NavLink>
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default Login;

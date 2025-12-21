@@ -1,12 +1,23 @@
-export type User = {
+export type UserRole = 0 | 1;
+
+export interface User {
   userId: number;
   name: string;
   avatar: string;
   email: string;
   birthday: string;
-  role: number;
-  createdAt: string;
-};
+  role: UserRole;
+}
+
+export interface GetUsersResponse {
+  users: User[];
+  pagination: {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    limit: number;
+  };
+}
 
 export const mockUsers: User[] = [
   {
@@ -17,7 +28,6 @@ export const mockUsers: User[] = [
     email: "an.nguyen@example.com",
     birthday: "1999-04-15",
     role: 1,
-    createdAt: "2024-02-01 09:30:00",
   },
   {
     userId: 2,
@@ -27,7 +37,6 @@ export const mockUsers: User[] = [
     email: "phuong.nhi@example.com",
     birthday: "2003-06-21",
     role: 1,
-    createdAt: "2024-05-10 14:20:00",
   },
   {
     userId: 3,
@@ -37,7 +46,6 @@ export const mockUsers: User[] = [
     email: "khoa.le@example.com",
     birthday: "1998-12-02",
     role: 0,
-    createdAt: "2024-06-18 08:55:00",
   },
   {
     userId: 4,
@@ -47,7 +55,6 @@ export const mockUsers: User[] = [
     email: "ngoc.han@example.com",
     birthday: "2000-09-09",
     role: 0,
-    createdAt: "2024-07-12 10:15:00",
   },
   {
     userId: 5,
@@ -57,6 +64,5 @@ export const mockUsers: User[] = [
     email: "thanh.trung@example.com",
     birthday: "1997-03-30",
     role: 1,
-    createdAt: "2024-03-05 16:40:00",
   },
 ];
