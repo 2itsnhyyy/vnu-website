@@ -4,9 +4,9 @@ import type { Post, PostEditRequest } from "../../types/post";
 import PageMeta from "../../components/Common/PageMeta";
 import { Save } from "lucide-react";
 import { GrFormPrevious } from "react-icons/gr";
-import JoditEditor from "jodit-react";
 import { Link } from "react-router-dom";
 import { forumService } from "../../services/ForumService";
+import MDEditor from "@uiw/react-md-editor";
 
 export default function EditPost() {
   const navigate = useNavigate();
@@ -14,8 +14,7 @@ export default function EditPost() {
   const [loading, setLoading] = useState(false);
   const [post, setPost] = useState<Post | null>(null);
   const [formData, setFormData] = useState<PostEditRequest>({});
-
-  const editor = useRef(null);
+  const editorRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (id) loadPost(Number(id));
@@ -137,16 +136,18 @@ export default function EditPost() {
               </span>
             </label>
 
-            <div className="border border-gray-300 rounded-lg p-2">
-              <JoditEditor
-                ref={editor}
-                value={formData.contentMarkdown || ""}
-                onChange={(newContent) => {
+            <div
+              ref={editorRef}
+              className="border border-gray-300 rounded-lg p-2"
+            >
+              <MDEditor
+                value={formData.contentMarkdown}
+                onChange={(value) =>
                   setFormData((prev) => ({
                     ...prev,
-                    contentMarkdown: newContent,
-                  }));
-                }}
+                    contentMarkdown: value || "",
+                  }))
+                }
               />
             </div>
           </div>
@@ -160,7 +161,7 @@ export default function EditPost() {
               Hủy
             </button>
             <button
-              type="button"
+              type="submit"
               onClick={handleSubmit}
               className="flex items-center gap-2 px-6 py-2 bg-[#1D4ED8] text-white rounded-lg hover:bg-blue-500 cursor-pointer"
             >
