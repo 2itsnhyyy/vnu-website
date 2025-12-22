@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { News, NewsUpdateRequest } from "../../types/news";
-import { mockNews } from "../../types/news";
 import PageMeta from "../../components/Common/PageMeta";
 import { Save } from "lucide-react";
 import { GrFormPrevious } from "react-icons/gr";
-import JoditEditor from "jodit-react";
+import MDEditor from "@uiw/react-md-editor";
 import { Link } from "react-router-dom";
+import { newsService } from "../../services/NewsService";
 
 export default function EditNews() {
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ export default function EditNews() {
   const [news, setNews] = useState<News | null>(null);
   const [formData, setFormData] = useState<NewsUpdateRequest>({});
 
-  const editor = useRef(null);
+  const editorRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (id) loadNews(Number(id));
@@ -23,15 +23,19 @@ export default function EditNews() {
 
   const loadNews = async (newsId: number) => {
     setLoading(true);
-    const found = mockNews.find((n) => n.newsId === newsId);
-
-    setTimeout(() => {
-      if (found) {
-        setNews(found);
-        setFormData(found);
-      }
+    try {
+      const data = await newsService.getById(newsId);
+      setNews(data);
+      setFormData({
+        title: data.title,
+        contentMarkdown: data.contentMarkdown,
+      });
+    } catch (err) {
+      console.error("Load post failed", err);
+      setNews(null);
+    } finally {
       setLoading(false);
-    }, 300);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,17 +44,28 @@ export default function EditNews() {
 
     try {
       setLoading(true);
+      const updated = await newsService.update(Number(id), {
+        title: formData.title,
+        contentMarkdown: formData.contentMarkdown,
+      });
+      console.log("Updated news:", updated);
       navigate("/admin/news");
-    } catch (error) {
-      console.error("Error updating news:", error);
-      alert("Có lỗi xảy ra khi cập nhật tin tức");
+    } catch (error: any) {
+      if (error.response) {
+        console.error("Error response data:", error.response.data);
+        console.error("Error status:", error.response.status);
+        console.error("Error headers:", error.response.headers);
+        alert(`Có lỗi xảy ra: ${JSON.stringify(error.response.data)}`);
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+        alert("Không nhận được phản hồi từ server");
+      } else {
+        console.error("Error message:", error.message);
+        alert(`Lỗi: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSaveDraft = () => {
-    console.log("Draft saved:", formData);
   };
 
   const handleChange = (
@@ -121,16 +136,18 @@ export default function EditNews() {
               </span>
             </label>
 
-            <div className="border border-gray-300 rounded-lg p-2">
-              <JoditEditor
-                ref={editor}
-                value={formData.content || ""}
-                onChange={(newContent) => {
+            <div
+              ref={editorRef}
+              className="border border-gray-300 rounded-lg p-2"
+            >
+              <MDEditor
+                value={formData.contentMarkdown}
+                onChange={(value) =>
                   setFormData((prev) => ({
                     ...prev,
-                    content: newContent,
-                  }));
-                }}
+                    contentMarkdown: value || "",
+                  }))
+                }
               />
             </div>
           </div>
@@ -144,8 +161,8 @@ export default function EditNews() {
               Hủy
             </button>
             <button
-              type="button"
-              onClick={handleSaveDraft}
+              type="submit"
+              onClick={handleSubmit}
               className="flex items-center gap-2 px-6 py-2 bg-[#1D4ED8] text-white rounded-lg hover:bg-blue-500 cursor-pointer"
             >
               <Save className="h-4 w-4" />

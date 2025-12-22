@@ -53,7 +53,7 @@ export default function CreateNews() {
       />
 
       <div className="mb-6 flex items-center cursor-pointer">
-        <Link to="/admin/incidents">
+        <Link to="/admin/news">
           <GrFormPrevious className="w-6 h-6 mr-2 my-auto" />
         </Link>
         <h2 className="text-xl font-semibold text-gray-800">Tạo tin tức mới</h2>
@@ -82,7 +82,7 @@ export default function CreateNews() {
             <div className="border border-gray-300 rounded-lg p-2">
               <JoditEditor
                 ref={editor}
-                value={formData.content || ""}
+                value={formData.contentMarkdown || ""}
                 onChange={(newContent) =>
                   setFormData((prev) => ({ ...prev, content: newContent }))
                 }
