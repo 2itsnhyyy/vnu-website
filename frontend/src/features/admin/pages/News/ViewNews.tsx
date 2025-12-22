@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import type { News } from "../../types/news";
-import { mockNews } from "../../types/news";
 import PageMeta from "../../components/Common/PageMeta";
 import { GrFormPrevious } from "react-icons/gr";
+import { newsService } from "../../services/NewsService";
+import dayjs from "dayjs";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function ViewNews() {
   const { id } = useParams<{ id: string }>();
@@ -14,17 +17,22 @@ export default function ViewNews() {
     if (id) loadNews(Number(id));
   }, [id]);
 
-  const loadNews = (newsId: number) => {
+  useEffect(() => {
+    if (id) loadNews(Number(id));
+    console.log(id);
+  }, [id]);
+
+  const loadNews = async (newsId: number) => {
     setLoading(true);
-
-    const found = mockNews.find((n) => n.newsId === newsId);
-
-    setTimeout(() => {
-      if (found) {
-        setNews(found);
-      }
+    try {
+      const data = await newsService.getById(newsId);
+      setNews(data);
+    } catch (err) {
+      console.error("Load post failed", err);
+      setNews(null);
+    } finally {
       setLoading(false);
-    }, 300);
+    }
   };
 
   if (loading && !news) {
@@ -80,7 +88,11 @@ export default function ViewNews() {
               <input
                 type="date"
                 name="createdAt"
-                value={news.createdAt || ""}
+                value={
+                  news.createdAt
+                    ? dayjs(news.createdAt).format("YYYY-MM-DD")
+                    : ""
+                }
                 disabled
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
               />
@@ -93,7 +105,11 @@ export default function ViewNews() {
               <input
                 type="date"
                 name="updatedAt"
-                value={news.updatedAt || ""}
+                value={
+                  news.updatedAt
+                    ? dayjs(news.updatedAt).format("YYYY-MM-DD")
+                    : ""
+                }
                 disabled
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
               />
@@ -104,13 +120,11 @@ export default function ViewNews() {
               Nội dung chi tiết
             </label>
 
-            <textarea
-              name="content"
-              value={news.content || ""}
-              disabled
-              rows={9}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
-            ></textarea>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 max-h-[400px] overflow-auto">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {news.contentMarkdown || ""}
+              </ReactMarkdown>
+            </div>
           </div>
         </form>
       </div>
