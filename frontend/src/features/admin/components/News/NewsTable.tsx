@@ -30,6 +30,17 @@ export default function NewsTable() {
   const [isModalOpen, setModalOpen] = useState(false);
   const [newsToDelete, setNewsToDelete] = useState<number | null>(null);
 
+  const markdownToPlainText = (markdown?: string) => {
+    if (!markdown) return "";
+
+    return markdown
+      .replace(/[#_*`>~-]/g, "")
+      .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+      .replace(/\r?\n|\r/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  };
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -218,10 +229,8 @@ export default function NewsTable() {
                   <div className="truncate">{news.title}</div>
                 </TableCell>
                 <TableCell className="py-4 text-gray-500 text-theme-sm">
-                  <div className="truncate">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {news.contentMarkdown}
-                    </ReactMarkdown>
+                  <div className="max-w-[400px] truncate mx-auto">
+                    {markdownToPlainText(news.contentMarkdown)}
                   </div>
                 </TableCell>
                 <TableCell className="py-4 text-gray-500 text-theme-sm text-center px-2">
