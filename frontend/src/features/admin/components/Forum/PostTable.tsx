@@ -15,6 +15,7 @@ import { forumService } from "../../services/ForumService";
 import Pagination from "../Common/Pagination";
 import SearchInput from "../Common/SearchInput";
 import dayjs from "dayjs";
+import { DeleteConfirmationModal } from "../Common/DeleteConfirmationModal";
 
 const PAGE_SIZE = 10;
 
@@ -83,10 +84,20 @@ export default function PostTable() {
     setModalOpen(true);
   }
 
-  function handleConfirmDelete() {
+  async function handleConfirmDelete() {
     if (!postToDelete) return;
-    setPosts((prev) => prev.filter((p) => p.postId !== postToDelete));
-    setModalOpen(false);
+
+    try {
+      await forumService.delete(postToDelete);
+
+      setPosts((prev) => prev.filter((p) => p.postId !== postToDelete));
+    } catch (error) {
+      console.error("Delete failed:", error);
+      alert("Xóa bài đăng thất bại");
+    } finally {
+      setModalOpen(false);
+      setPostToDelete(null);
+    }
   }
 
   const totalItems = posts.length;
@@ -261,6 +272,19 @@ export default function PostTable() {
           onPageChange={setCurrentPage}
         />
       )}
+
+      <DeleteConfirmationModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setPostToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa bài đăng"
+        message="Bạn có chắc chắn muốn xóa bài đăng này không? Hành động này không thể hoàn tác."
+        confirmButtonText="Xóa"
+        cancelButtonText="Hủy"
+      />
     </div>
   );
 }

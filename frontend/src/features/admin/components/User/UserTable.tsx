@@ -15,6 +15,7 @@ import Pagination from "../Common/Pagination";
 import SearchInput from "../Common/SearchInput";
 import { userService } from "../../services/UserService";
 import dayjs from "dayjs";
+import { DeleteConfirmationModal } from "../Common/DeleteConfirmationModal";
 
 const PAGE_SIZE = 10;
 
@@ -67,10 +68,20 @@ export default function UserTable() {
     setModalOpen(true);
   }
 
-  function handleConfirmDelete() {
+  async function handleConfirmDelete() {
     if (!userToDelete) return;
-    setUsers((prev) => prev.filter((u) => u.userId !== userToDelete));
-    setModalOpen(false);
+
+    try {
+      await userService.delete(userToDelete);
+
+      setUsers((prev) => prev.filter((u) => u.userId !== userToDelete));
+    } catch (error) {
+      console.error("Delete failed:", error);
+      alert("Xóa tin tức thất bại");
+    } finally {
+      setModalOpen(false);
+      setUserToDelete(null);
+    }
   }
 
   const totalItems = users.length;
@@ -255,6 +266,19 @@ export default function UserTable() {
           onPageChange={setCurrentPage}
         />
       )}
+
+      <DeleteConfirmationModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setUserToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa người dùng"
+        message="Bạn có chắc chắn muốn xóa người dùng này không? Hành động này không thể hoàn tác."
+        confirmButtonText="Xóa"
+        cancelButtonText="Hủy"
+      />
     </div>
   );
 }
