@@ -30,6 +30,17 @@ export default function NewsTable() {
   const [isModalOpen, setModalOpen] = useState(false);
   const [newsToDelete, setNewsToDelete] = useState<number | null>(null);
 
+  const markdownToPlainText = (markdown?: string) => {
+    if (!markdown) return "";
+
+    return markdown
+      .replace(/[#_*`>~-]/g, "")
+      .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+      .replace(/\r?\n|\r/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  };
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -211,23 +222,21 @@ export default function NewsTable() {
                 key={news.newsId}
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                <TableCell className="py-4 px-4 text-center text-gray-500 text-theme-sm">
+                <TableCell className="py-5 px-4 text-center text-gray-500 text-theme-sm">
                   {news.newsId}
                 </TableCell>
-                <TableCell className="py-4 px-3 text-gray-500 text-theme-sm">
+                <TableCell className="py-5 px-3 text-gray-500 text-theme-sm">
                   <div className="truncate">{news.title}</div>
                 </TableCell>
-                <TableCell className="py-4 text-gray-500 text-theme-sm">
-                  <div className="truncate">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {news.contentMarkdown}
-                    </ReactMarkdown>
+                <TableCell className="py-5 text-gray-500 text-theme-sm">
+                  <div className="max-w-[400px] truncate mx-auto">
+                    {markdownToPlainText(news.contentMarkdown)}
                   </div>
                 </TableCell>
-                <TableCell className="py-4 text-gray-500 text-theme-sm text-center px-2">
+                <TableCell className="py-5 text-gray-500 text-theme-sm text-center px-2">
                   {dayjs(news.createdAt).format("DD/MM/YYYY")}
                 </TableCell>
-                <TableCell className="py-4 text-gray-500 text-theme-sm px-4">
+                <TableCell className="py-5 text-gray-500 text-theme-sm px-4">
                   <div className="flex gap-2 justify-center">
                     <button onClick={() => handleView(news.newsId)}>
                       <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />

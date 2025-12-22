@@ -211,18 +211,18 @@ export default function IncidentTable() {
                 key={incident.incidentId}
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                <TableCell className="py-3 text-gray-500 text-theme-sm">
+                <TableCell className="py-6 text-gray-500 text-theme-sm">
                   {incident.incidentId}
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm">
+                <TableCell className="py-6 text-gray-500 text-theme-sm">
                   <div className="max-w-[300px] truncate">{incident.title}</div>
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm">
+                <TableCell className="py-6 text-gray-500 text-theme-sm">
                   <div className="max-w-[350px] truncate">
                     {incident.content}
                   </div>
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm text-center">
+                <TableCell className="py-6 text-gray-500 text-theme-sm text-center">
                   {incident.createdAt}
                 </TableCell>
                 <TableCell className="text-center">
@@ -238,7 +238,7 @@ export default function IncidentTable() {
                     {incident.status === 0 ? "Mới" : "Đã giải quyết"}
                   </span>
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm">
+                <TableCell className="py-6 text-gray-500 text-theme-sm">
                   <div className="flex gap-2">
                     <button onClick={() => handleView(incident.incidentId)}>
                       <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />
