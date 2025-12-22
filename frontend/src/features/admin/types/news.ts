@@ -1,10 +1,20 @@
-export type News = {
+export interface News {
   newsId: number;
   title: string;
-  content: string;
+  contentMarkdown: string;
   createdAt: string;
   updatedAt: string;
-};
+}
+
+export interface GetNewsResponse {
+  news: News[];
+  pagination: {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    limit: number;
+  };
+}
 
 export type NewsUpdateRequest = {
   title?: string;
@@ -15,7 +25,7 @@ export const mockNews: News[] = [
   {
     newsId: 1,
     title: "Hệ thống bảo trì định kỳ trong tháng 12",
-    content: `Hệ thống sẽ tiến hành bảo trì định kỳ vào 23:00 ngày 15/12 để nâng cấp hiệu năng và bảo mật. 
+    contentMarkdown: `Hệ thống sẽ tiến hành bảo trì định kỳ vào 23:00 ngày 15/12 để nâng cấp hiệu năng và bảo mật. 
       Người dùng có thể bị gián đoạn truy cập trong thời gian này.Hệ thống sẽ tiến hành bảo trì định kỳ vào 23:00 ngày 15/12 để nâng cấp hiệu năng và bảo mật. 
       Người dùng có thể bị gián đoạn truy cập trong thời gian này. Hệ thống sẽ tiến hành bảo trì định kỳ vào 23:00 ngày 15/12 để nâng cấp hiệu năng và bảo mật. 
       Người dùng có thể bị gián đoạn truy cập trong thời gian nàyHệ thống sẽ tiến hành bảo trì định kỳ vào 23:00 ngày 15/12 để nâng cấp hiệu năng và bảo mật. 
@@ -26,7 +36,7 @@ export const mockNews: News[] = [
   {
     newsId: 2,
     title: "Ra mắt tính năng báo cáo sự cố",
-    content:
+    contentMarkdown:
       "Tính năng báo cáo sự cố trực tuyến đã được triển khai. Người dùng có thể gửi thông báo lỗi để hỗ trợ xử lý nhanh hơn.",
     createdAt: "2024-11-28",
     updatedAt: "2024-11-29",
@@ -34,7 +44,7 @@ export const mockNews: News[] = [
   {
     newsId: 3,
     title: "Nâng cấp giao diện trang quản trị",
-    content:
+    contentMarkdown:
       "Trang quản trị được nâng cấp với giao diện trực quan hơn, tối ưu cho mobile và tablet.",
     createdAt: "2024-11-20",
     updatedAt: "2024-11-21",
@@ -42,7 +52,7 @@ export const mockNews: News[] = [
   {
     newsId: 4,
     title: "Thông báo ngừng hỗ trợ API cũ",
-    content:
+    contentMarkdown:
       "API phiên bản 1.0 sẽ ngừng hỗ trợ từ ngày 31/12. Vui lòng chuyển sang phiên bản API 2.0 để đảm bảo tính ổn định.",
     createdAt: "2024-11-10",
     updatedAt: "2024-11-12",
@@ -50,7 +60,7 @@ export const mockNews: News[] = [
   {
     newsId: 5,
     title: "Tổ chức đào tạo nội bộ tháng 12",
-    content:
+    contentMarkdown:
       "Buổi đào tạo về an toàn thông tin sẽ được tổ chức vào ngày 12/12 cho toàn bộ nhân viên.",
     createdAt: "2024-12-02",
     updatedAt: "2024-12-02",
@@ -58,7 +68,7 @@ export const mockNews: News[] = [
   {
     newsId: 6,
     title: "Thông báo nghỉ lễ Tết Dương Lịch",
-    content:
+    contentMarkdown:
       "Công ty sẽ nghỉ lễ Tết Dương Lịch từ ngày 30/12 đến 01/01. Chúc mọi người kỳ nghỉ vui vẻ.",
     createdAt: "2024-12-05",
     updatedAt: "2024-12-05",

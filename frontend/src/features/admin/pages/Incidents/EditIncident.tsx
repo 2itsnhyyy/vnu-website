@@ -95,15 +95,13 @@ export default function EditIncident() {
         <Link to="/admin/incidents">
           <GrFormPrevious className="w-6 h-6 mr-2 my-auto" />
         </Link>
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90 ">
-          Chỉnh sửa sự cố
-        </h2>
+        <h2 className="text-xl font-semibold text-gray-800">Chỉnh sửa sự cố</h2>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200 p-6 dark:border-gray-800">
+      <div className="bg-white rounded-2xl border border-gray-200 p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Tiêu đề
               <span className="text-red-500">
                 <span className="text-red-500">*</span>
@@ -115,13 +113,13 @@ export default function EditIncident() {
               value={formData.title || ""}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Ngày tạo
               </label>
               <input
@@ -129,12 +127,12 @@ export default function EditIncident() {
                 name="createdAt"
                 value={incident.createdAt || ""}
                 disabled
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Tình trạng <span className="text-red-500">*</span>
               </label>
               <select
@@ -142,7 +140,7 @@ export default function EditIncident() {
                 value={String(formData.status ?? "")}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
               >
                 <option value="">Chọn danh mục</option>
                 <option value="0">Mới</option>
@@ -152,7 +150,7 @@ export default function EditIncident() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Nội dung chi tiết
               <span className="text-red-500">
                 <span className="text-red-500">*</span>

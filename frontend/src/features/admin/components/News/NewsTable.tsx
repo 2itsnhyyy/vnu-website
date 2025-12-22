@@ -11,10 +11,13 @@ import {
   TableHeader,
   TableRow,
 } from "../UI/Table";
-
 import Pagination from "../Common/Pagination";
 import SearchInput from "../Common/SearchInput";
-import { mockNews } from "../../types/news";
+import { FaPlus } from "react-icons/fa6";
+import { newsService } from "../../services/NewsService";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import dayjs from "dayjs";
 
 const PAGE_SIZE = 10;
 
@@ -30,27 +33,32 @@ export default function NewsTable() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadNews();
-  }, []);
-
-  function loadNews() {
     setLoading(true);
-    setTimeout(() => {
-      setNews(mockNews);
-      setLoading(false);
-    }, 300);
-  }
+    newsService
+      .getAll(currentPage, PAGE_SIZE)
+      .then((res) => {
+        console.log("API DATA:", res);
+        setNews(res.news);
+      })
+      .catch((err) => {
+        console.error("API ERROR:", err);
+      })
+      .finally(() => setLoading(false));
+  }, [currentPage]);
 
   function handleSearch() {
     setLoading(true);
-    setTimeout(() => {
-      const filtered = mockNews.filter((n) =>
-        n.title.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setNews(filtered);
-      setCurrentPage(1);
-      setLoading(false);
-    }, 200);
+
+    newsService
+      .getAll(1, PAGE_SIZE)
+      .then((res) => {
+        const filtered = res.news.filter((n) =>
+          n.title.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setNews(filtered);
+        setCurrentPage(1);
+      })
+      .finally(() => setLoading(false));
   }
 
   function handleView(newsId: number) {
@@ -59,6 +67,10 @@ export default function NewsTable() {
 
   function handleEdit(newsId: number) {
     navigate(`/admin/news/edit/${newsId}`);
+  }
+
+  function handleAdd() {
+    navigate("/admin/news/add");
   }
 
   function handleDelete(newsId: number) {
@@ -81,10 +93,10 @@ export default function NewsTable() {
   );
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 sm:px-6">
       <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex justify-start items-center pt-5">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">
+          <h2 className="text-xl font-semibold text-gray-800">
             Danh sách tin tức
           </h2>
           <span className="ml-5 text-sm bg-[#D1F2FF] text-[#2F73F2] py-1 px-4 rounded-full font-medium">
@@ -105,10 +117,10 @@ export default function NewsTable() {
 
           <button
             onClick={handleSearch}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 cursor-pointer"
           >
             <svg
-              className="stroke-current fill-white dark:fill-gray-800"
+              className="stroke-current fill-white"
               width="20"
               height="20"
               viewBox="0 0 20 20"
@@ -144,72 +156,87 @@ export default function NewsTable() {
             </svg>
             Tìm kiếm
           </button>
+
+          <button
+            onClick={handleAdd}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-[#1D4ED8] px-4 py-2.5 text-theme-sm font-medium text-white shadow-theme-xs hover:bg-[rgba(29,78,216,0.9)] cursor-pointer"
+          >
+            <FaPlus className="my-auto" />
+            Tạo tin tức
+          </button>
         </div>
       </div>
       {loading ? (
         <p>Đang tải...</p>
       ) : (
         <Table>
-          <TableHeader className="border-gray-100 dark:border-gray-800 border-y">
-            <TableRow>
+          <TableHeader className="border-gray-100 border-y">
+            <TableRow className="bg-gray-50 transition-colors cursor-pointer">
               <TableCell
                 isHeader
-                className="py-3 pr-6 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                className="py-3 px-4 font-medium text-gray-500 text-center text-theme-sm"
               >
                 Mã
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                className="py-3 px-2 font-medium text-gray-500 text-center text-theme-sm"
               >
                 Tiêu đề
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                className="py-3 px-2 font-medium text-gray-500 text-center text-theme-sm"
               >
                 Nội dung
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-center text-theme-sm dark:text-gray-400 pr-8"
+                className="py-3 px-2 font-medium text-gray-500 text-center text-theme-sm"
               >
                 Ngày tạo
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400 px-8"
+                className="py-3 px-4 font-medium text-gray-500 text-center text-theme-sm"
               >
                 Thao tác
               </TableCell>
             </TableRow>
           </TableHeader>
 
-          <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
+          <TableBody className="divide-y divide-gray-100">
             {paginatedData.map((news) => (
-              <TableRow key={news.newsId}>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+              <TableRow
+                key={news.newsId}
+                className="hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                <TableCell className="py-4 px-4 text-center text-gray-500 text-theme-sm">
                   {news.newsId}
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  <div className="max-w-[300px] truncate">{news.title}</div>
+                <TableCell className="py-4 px-3 text-gray-500 text-theme-sm">
+                  <div className="truncate">{news.title}</div>
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  <div className="max-w-[400px] truncate">{news.content}</div>
+                <TableCell className="py-4 text-gray-500 text-theme-sm">
+                  <div className="truncate">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {news.contentMarkdown}
+                    </ReactMarkdown>
+                  </div>
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400 text-center pr-8">
-                  {news.createdAt}
+                <TableCell className="py-4 text-gray-500 text-theme-sm text-center px-2">
+                  {dayjs(news.createdAt).format("DD/MM/YYYY")}
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400 px-8">
-                  <div className="flex gap-2">
+                <TableCell className="py-4 text-gray-500 text-theme-sm px-4">
+                  <div className="flex gap-2 justify-center">
                     <button onClick={() => handleView(news.newsId)}>
-                      <MdRemoveRedEye className="w-5 h-5" />
+                      <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleEdit(news.newsId)}>
-                      <MdEdit className="w-5 h-5 " />
+                      <MdEdit className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleDelete(news.newsId)}>
-                      <MdDeleteOutline className="w-5 h-5 " />
+                      <MdDeleteOutline className="w-5 h-5 cursor-pointer" />
                     </button>
                   </div>
                 </TableCell>

@@ -14,7 +14,7 @@ export default function CreateIncident() {
   const [formData, setFormData] = useState<IncidentUpdateRequest>({});
   const editor = useRef(null);
 
-  const numberFields = ["status", "price", "quantity"];
+  const numberFields = ["status"];
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -56,14 +56,12 @@ export default function CreateIncident() {
         <Link to="/admin/incidents">
           <GrFormPrevious className="w-6 h-6 mr-2 my-auto" />
         </Link>
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90 ">
-          Tạo sự cố mới
-        </h2>
+        <h2 className="text-xl font-semibold text-gray-800">Tạo sự cố mới</h2>
       </div>
-      <div className="bg-white rounded-2xl border border-gray-200 p-6 dark:border-gray-800">
+      <div className="bg-white rounded-2xl border border-gray-200 p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Tiêu đề <span className="text-red-500">*</span>
             </label>
             <input
@@ -73,12 +71,12 @@ export default function CreateIncident() {
               value={formData.title || ""}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Tình trạng <span className="text-red-500">*</span>
             </label>
             <select
@@ -86,7 +84,7 @@ export default function CreateIncident() {
               value={String(formData.status ?? "")}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
             >
               <option value="">Chọn tình trạng</option>
               <option value="0">Mới</option>
@@ -95,7 +93,7 @@ export default function CreateIncident() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Nội dung chi tiết <span className="text-red-500">*</span>
             </label>
             <div className="border border-gray-300 rounded-lg p-2">
