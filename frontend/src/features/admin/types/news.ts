@@ -16,7 +16,12 @@ export interface GetNewsResponse {
   };
 }
 
-export type NewsUpdateRequest = {
+export interface NewsUpdateRequest {
   title?: string;
   contentMarkdown?: string;
-};
+}
+
+export interface NewsCreateRequest {
+  title: string;
+  contentMarkdown: string;
+}

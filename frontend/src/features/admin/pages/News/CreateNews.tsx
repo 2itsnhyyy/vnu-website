@@ -1,41 +1,47 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import type { NewsUpdateRequest } from "../../types/news";
+import type { NewsCreateRequest } from "../../types/news";
 import PageMeta from "../../components/Common/PageMeta";
 import { Save } from "lucide-react";
-import JoditEditor from "jodit-react";
+import MDEditor from "@uiw/react-md-editor";
 import { Link } from "react-router-dom";
 import { GrFormPrevious } from "react-icons/gr";
+import { newsService } from "../../services/NewsService";
 
 export default function CreateNews() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<NewsUpdateRequest>({});
+  const [formData, setFormData] = useState<NewsCreateRequest>({
+    title: "",
+    contentMarkdown: "",
+  });
+
   const editor = useRef(null);
 
-  const numberFields = ["status"];
-
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
 
     setFormData((prev) => ({
       ...prev,
-      [name]: numberFields.includes(name) ? Number(value) : value,
+      [name]: value,
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.title || !formData.contentMarkdown) {
+      alert("Vui lòng nhập đầy đủ tiêu đề và nội dung");
+      return;
+    }
 
     try {
       setLoading(true);
-      console.log("Created News:", formData);
-
+      const created = await newsService.create(formData);
+      console.log("Created news:", created);
       navigate("/admin/news");
     } catch (error) {
       console.error("Error creating news:", error);
@@ -80,11 +86,13 @@ export default function CreateNews() {
               Nội dung chi tiết <span className="text-red-500">*</span>
             </label>
             <div className="border border-gray-300 rounded-lg p-2">
-              <JoditEditor
-                ref={editor}
-                value={formData.contentMarkdown || ""}
-                onChange={(newContent) =>
-                  setFormData((prev) => ({ ...prev, content: newContent }))
+              <MDEditor
+                value={formData.contentMarkdown}
+                onChange={(value) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    contentMarkdown: value || "",
+                  }))
                 }
               />
             </div>
