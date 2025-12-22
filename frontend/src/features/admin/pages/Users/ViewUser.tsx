@@ -3,9 +3,10 @@ import { useParams, Link } from "react-router-dom";
 import { GrFormPrevious } from "react-icons/gr";
 import PageMeta from "../../components/Common/PageMeta";
 import type { User } from "../../types/user";
-import { mockUsers } from "../../types/user";
 import { MdOutlineMail } from "react-icons/md";
 import { FaBirthdayCake } from "react-icons/fa";
+import { userService } from "../../services/UserService";
+import dayjs from "dayjs";
 
 const ViewUser = () => {
   const { id } = useParams<{ id: string }>();
@@ -13,20 +14,25 @@ const ViewUser = () => {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    if (id) loadUser(Number(id));
+    if (id) loadUsers(Number(id));
   }, [id]);
 
-  const loadUser = (userId: number) => {
+  useEffect(() => {
+    if (id) loadUsers(Number(id));
+    console.log(id);
+  }, [id]);
+
+  const loadUsers = async (userId: number) => {
     setLoading(true);
-
-    const found = mockUsers.find((u) => u.userId === userId);
-
-    setTimeout(() => {
-      if (found) {
-        setUser(found);
-      }
+    try {
+      const data = await userService.getById(userId);
+      setUser(data);
+    } catch (err) {
+      console.error("Load post failed", err);
+      setUser(null);
+    } finally {
       setLoading(false);
-    }, 300);
+    }
   };
 
   if (loading && !user) {
@@ -115,7 +121,9 @@ const ViewUser = () => {
                 <FaBirthdayCake className="mr-2 my-auto w-5 h-5" />
                 Ngày sinh
               </p>
-              <span className="ml-7">{user.birthday}</span>
+              <span className="ml-7">
+                {dayjs(user.birthday).format("DD/MM/YYYY")}
+              </span>
             </p>
           </div>
         </div>

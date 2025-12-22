@@ -14,6 +14,7 @@ import {
 import Pagination from "../Common/Pagination";
 import SearchInput from "../Common/SearchInput";
 import { userService } from "../../services/UserService";
+import dayjs from "dayjs";
 
 const PAGE_SIZE = 10;
 
@@ -160,13 +161,13 @@ export default function UserTable() {
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 px-3 font-medium text-gray-500 text-center text-theme-sm"
+                className="py-3 px-3 font-medium text-gray-500 text-start text-theme-sm"
               >
                 Họ tên
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 px-3 font-medium text-gray-500 text-center text-theme-sm"
+                className="py-3 px-3 font-medium text-gray-500 text-start text-theme-sm"
               >
                 Email
               </TableCell>
@@ -203,18 +204,18 @@ export default function UserTable() {
                 <TableCell className="py-4 text-center px-3 text-gray-500 text-theme-sm">
                   <div className="flex gap-2">
                     <img
-                      src={user.avatar}
-                      alt=""
+                      src={user.avatar || "/default-avatar.png"}
+                      alt="avatar"
                       className="w-8 h-8 rounded-full"
                     />
                     <div className="my-auto ml-2">{user.name}</div>
                   </div>
                 </TableCell>
-                <TableCell className="py-4 text-gray-500 text-theme-sm">
+                <TableCell className="py-4 px-3 text-gray-500 text-theme-sm">
                   {user.email}
                 </TableCell>
                 <TableCell className="py-4 text-gray-500 text-theme-sm text-center">
-                  {user.birthday}
+                  {dayjs(user.birthday).format("DD/MM/YYYY")}
                 </TableCell>
                 <TableCell className="text-center px-6">
                   <span
@@ -226,7 +227,7 @@ export default function UserTable() {
                     }
                     `}
                   >
-                    {user.role === 1 ? "Người dùng" : "Quản trị viên"}
+                    {user.role === 1 ? "Quản trị viên" : "Người dùng"}
                   </span>
                 </TableCell>
                 <TableCell className="py-4 text-gray-500 text-theme-sm px-3 text-center">
