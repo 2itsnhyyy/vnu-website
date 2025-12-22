@@ -14,8 +14,6 @@ import {
 import { forumService } from "../../services/ForumService";
 import Pagination from "../Common/Pagination";
 import SearchInput from "../Common/SearchInput";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import dayjs from "dayjs";
 
 const PAGE_SIZE = 10;
@@ -28,6 +26,17 @@ export default function PostTable() {
 
   const [isModalOpen, setModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<number | null>(null);
+
+  const markdownToPlainText = (markdown?: string) => {
+    if (!markdown) return "";
+
+    return markdown
+      .replace(/[#_*`>~-]/g, "")
+      .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+      .replace(/\r?\n|\r/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  };
 
   const navigate = useNavigate();
 
@@ -219,12 +228,11 @@ export default function PostTable() {
                 </TableCell>
 
                 <TableCell className="py-6 text-center text-gray-500 text-theme-sm">
-                  <div className="max-w-[300px] truncate">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {post.contentMarkdown}
-                    </ReactMarkdown>
+                  <div className="max-w-[200px] truncate mx-auto">
+                    {markdownToPlainText(post.contentMarkdown)}
                   </div>
                 </TableCell>
+
                 <TableCell className="py-6 text-center text-gray-500 text-theme-sm">
                   <div className="flex gap-2 justify-center">
                     <button onClick={() => handleView(post.postId)}>
