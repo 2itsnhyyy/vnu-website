@@ -14,9 +14,8 @@ import {
 import { forumService } from "../../services/ForumService";
 import Pagination from "../Common/Pagination";
 import SearchInput from "../Common/SearchInput";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import dayjs from "dayjs";
+import { DeleteConfirmationModal } from "../Common/DeleteConfirmationModal";
 
 const PAGE_SIZE = 10;
 
@@ -28,6 +27,17 @@ export default function PostTable() {
 
   const [isModalOpen, setModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<number | null>(null);
+
+  const markdownToPlainText = (markdown?: string) => {
+    if (!markdown) return "";
+
+    return markdown
+      .replace(/[#_*`>~-]/g, "")
+      .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+      .replace(/\r?\n|\r/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  };
 
   const navigate = useNavigate();
 
@@ -74,10 +84,20 @@ export default function PostTable() {
     setModalOpen(true);
   }
 
-  function handleConfirmDelete() {
+  async function handleConfirmDelete() {
     if (!postToDelete) return;
-    setPosts((prev) => prev.filter((p) => p.postId !== postToDelete));
-    setModalOpen(false);
+
+    try {
+      await forumService.delete(postToDelete);
+
+      setPosts((prev) => prev.filter((p) => p.postId !== postToDelete));
+    } catch (error) {
+      console.error("Delete failed:", error);
+      alert("Xóa bài đăng thất bại");
+    } finally {
+      setModalOpen(false);
+      setPostToDelete(null);
+    }
   }
 
   const totalItems = posts.length;
@@ -219,12 +239,11 @@ export default function PostTable() {
                 </TableCell>
 
                 <TableCell className="py-6 text-center text-gray-500 text-theme-sm">
-                  <div className="max-w-[300px] truncate">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {post.contentMarkdown}
-                    </ReactMarkdown>
+                  <div className="max-w-[200px] truncate mx-auto">
+                    {markdownToPlainText(post.contentMarkdown)}
                   </div>
                 </TableCell>
+
                 <TableCell className="py-6 text-center text-gray-500 text-theme-sm">
                   <div className="flex gap-2 justify-center">
                     <button onClick={() => handleView(post.postId)}>
@@ -253,6 +272,19 @@ export default function PostTable() {
           onPageChange={setCurrentPage}
         />
       )}
+
+      <DeleteConfirmationModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setPostToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa bài đăng"
+        message="Bạn có chắc chắn muốn xóa bài đăng này không? Hành động này không thể hoàn tác."
+        confirmButtonText="Xóa"
+        cancelButtonText="Hủy"
+      />
     </div>
   );
 }

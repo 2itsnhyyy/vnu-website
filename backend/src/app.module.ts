@@ -8,6 +8,7 @@ import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { PostModule } from './modules/post/post.module';
 import { CommentModule } from './modules/comment/comment.module';
 import { NewsModule } from './modules/news/news.module';
+import { PlaceModule } from './modules/place/place.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { NewsModule } from './modules/news/news.module';
     PostModule,
     CommentModule,
     NewsModule,
+    PlaceModule,
   ],
 })
 export class AppModule {}

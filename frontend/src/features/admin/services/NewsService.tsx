@@ -1,5 +1,10 @@
 import api from "./api";
-import type { GetNewsResponse, News } from "../types/news";
+import type {
+  GetNewsResponse,
+  News,
+  NewsUpdateRequest,
+  NewsCreateRequest,
+} from "../types/news";
 
 export const newsService = {
   getAll(page = 1, limit = 10): Promise<GetNewsResponse> {
@@ -12,5 +17,17 @@ export const newsService = {
 
   getById(id: number): Promise<News> {
     return api.get(`/news/${id}`).then((res) => res.data.news);
+  },
+
+  create(data: NewsCreateRequest): Promise<News> {
+    return api.post("/news", data).then((res) => res.data.news);
+  },
+
+  update(id: number, data: NewsUpdateRequest): Promise<News> {
+    return api.patch(`/news/${id}`, data).then((res) => res.data.news);
+  },
+
+  delete(id: number): Promise<{ success: boolean; message: string }> {
+    return api.delete(`/news/${id}`).then((res) => res.data.news);
   },
 };

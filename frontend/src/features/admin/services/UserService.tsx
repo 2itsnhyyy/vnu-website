@@ -13,4 +13,8 @@ export const userService = {
   getById(id: number): Promise<User> {
     return api.get(`/users/${id}`).then((res) => res.data.user);
   },
+
+  delete(id: number): Promise<{ success: boolean; message: string }> {
+    return api.delete(`/users/${id}`).then((res) => res.data.user);
+  },
 };
