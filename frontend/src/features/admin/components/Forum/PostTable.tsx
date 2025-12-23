@@ -18,15 +18,14 @@ import dayjs from "dayjs";
 import { DeleteConfirmationModal } from "../Common/DeleteConfirmationModal";
 import { FaPlus } from "react-icons/fa6";
 
-const PAGE_SIZE = 5;
-
 export default function PostTable() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+
+  const PAGE_SIZE = 5;
 
   const [isModalOpen, setModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<number | null>(null);
@@ -48,21 +47,28 @@ export default function PostTable() {
     setLoading(true);
 
     forumService
-      .getAll({
-        page: currentPage,
-        limit: PAGE_SIZE,
-        search: searchTerm || undefined,
-      })
+      .getAll({ page: currentPage, limit: PAGE_SIZE })
       .then((res) => {
         setPosts(res.posts);
         setTotalItems(res.pagination.totalItems);
       })
-      .catch(console.error)
+      .catch((err) => console.error(err))
       .finally(() => setLoading(false));
-  }, [currentPage, searchTerm]);
+  }, [currentPage]);
 
   function handleSearch() {
-    setCurrentPage(1);
+    setLoading(true);
+
+    forumService
+      .getAll({ page: 1, limit: PAGE_SIZE, search: searchTerm })
+      .then((res) => {
+        const filtered = res.posts.filter((p) =>
+          p.title.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setPosts(filtered);
+        setCurrentPage(1);
+      })
+      .finally(() => setLoading(false));
   }
 
   function handleView(postId: number) {
@@ -97,6 +103,8 @@ export default function PostTable() {
       setPostToDelete(null);
     }
   }
+
+  const totalPages = Math.ceil(totalItems / PAGE_SIZE);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 sm:px-6">

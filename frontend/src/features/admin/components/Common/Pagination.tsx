@@ -27,7 +27,7 @@ const Pagination: React.FC<PaginationProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-between border-t border-gray-200 bg-white px-2 py-4 mt-8">
+    <div className="flex items-center justify-between border-t border-gray-200 bg-white px-2 py-4">
       <div className="flex flex-1 justify-between sm:hidden">
         <button
           onClick={() => onPageChange(currentPage - 1)}
