@@ -11,6 +11,7 @@ import { IoWarningOutline } from "react-icons/io5";
 import { LuUsersRound } from "react-icons/lu";
 import logo from "../../../../assets/logos/LogoChu.svg";
 import { useSidebar } from "../../contexts/SidebarContext";
+import { authService } from "../../../users/api";
 
 type NavItem = {
   name: string;
@@ -21,6 +22,11 @@ type NavItem = {
 const Sidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
+
+  const handleLogout = () => {
+    authService.logout();
+    window.location.href = "/users/login";
+  };
 
   const basePath = "/admin";
 
@@ -63,7 +69,6 @@ const Sidebar: React.FC = () => {
     {
       icon: <MdOutlineLogout />,
       name: "Đăng xuất",
-      path: `${basePath}/logout`,
     },
   ];
 
@@ -107,26 +112,36 @@ const Sidebar: React.FC = () => {
       </div>
 
       <nav className="flex flex-col gap-4">
-        {navItems.map((item) => (
-          <Link
-            key={item.name}
-            to={item.path!}
-            className={`
-              flex items-center gap-4 p-2 rounded-md
-              ${
-                isActive(item.path!)
-                  ? "bg-[#1D4ED8] text-white"
-                  : "text-gray-700"
-              }
-              transition-colors
-            `}
-          >
-            <span>{item.icon}</span>
-            {(isExpanded || isHovered || isMobileOpen) && (
-              <span>{item.name}</span>
-            )}
-          </Link>
-        ))}
+        {navItems.map((item) =>
+          item.name === "Đăng xuất" ? (
+            <button
+              key={item.name}
+              type="button"
+              onClick={handleLogout}
+              className="flex items-center gap-4 p-2 rounded-md text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
+            >
+              <span>{item.icon}</span>
+              {(isExpanded || isHovered || isMobileOpen) && (
+                <span>{item.name}</span>
+              )}
+            </button>
+          ) : (
+            <Link
+              key={item.name}
+              to={item.path!}
+              className={`
+        flex items-center gap-4 p-2 rounded-md
+        ${isActive(item.path!) ? "bg-[#1D4ED8] text-white" : "text-gray-700"}
+        transition-colors
+      `}
+            >
+              <span>{item.icon}</span>
+              {(isExpanded || isHovered || isMobileOpen) && (
+                <span>{item.name}</span>
+              )}
+            </Link>
+          )
+        )}
       </nav>
     </aside>
   );
