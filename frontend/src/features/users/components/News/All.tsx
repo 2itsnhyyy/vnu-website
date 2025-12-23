@@ -67,8 +67,9 @@ const AllNews = () => {
                 key={item.newsId}
                 id={item.newsId}
                 title={item.title}
-                image={item.thumbnail || "https://via.placeholder.com/400x250"}
+                image={item.thumbnail}
                 date={item.createdAt}
+                contentMarkdown={item.contentMarkdown}
               />
             ))}
           </div>
