@@ -86,11 +86,11 @@ export default function ViewNews() {
                 Ngày tạo
               </label>
               <input
-                type="date"
+                type="text"
                 name="createdAt"
                 value={
                   news.createdAt
-                    ? dayjs(news.createdAt).format("YYYY-MM-DD")
+                    ? dayjs(news.createdAt).format("DD/MM/YYYY")
                     : ""
                 }
                 disabled
@@ -103,11 +103,11 @@ export default function ViewNews() {
                 Ngày cập nhật
               </label>
               <input
-                type="date"
+                type="text"
                 name="updatedAt"
                 value={
                   news.updatedAt
-                    ? dayjs(news.updatedAt).format("YYYY-MM-DD")
+                    ? dayjs(news.updatedAt).format("DD/MM/YYYY")
                     : ""
                 }
                 disabled

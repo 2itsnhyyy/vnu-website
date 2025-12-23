@@ -15,9 +15,8 @@ import Pagination from "../Common/Pagination";
 import SearchInput from "../Common/SearchInput";
 import { FaPlus } from "react-icons/fa6";
 import { newsService } from "../../services/NewsService";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import dayjs from "dayjs";
+import { DeleteConfirmationModal } from "../Common/DeleteConfirmationModal";
 
 const PAGE_SIZE = 10;
 
@@ -89,10 +88,20 @@ export default function NewsTable() {
     setModalOpen(true);
   }
 
-  function handleConfirmDelete() {
+  async function handleConfirmDelete() {
     if (!newsToDelete) return;
-    setNews((prev) => prev.filter((n) => n.newsId !== newsToDelete));
-    setModalOpen(false);
+
+    try {
+      await newsService.delete(newsToDelete);
+
+      setNews((prev) => prev.filter((n) => n.newsId !== newsToDelete));
+    } catch (error) {
+      console.error("Delete failed:", error);
+      alert("Xóa tin tức thất bại");
+    } finally {
+      setModalOpen(false);
+      setNewsToDelete(null);
+    }
   }
 
   const totalItems = news.length;
@@ -264,6 +273,19 @@ export default function NewsTable() {
           onPageChange={setCurrentPage}
         />
       )}
+
+      <DeleteConfirmationModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setNewsToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa tin tức"
+        message="Bạn có chắc chắn muốn xóa tin tức này không? Hành động này không thể hoàn tác."
+        confirmButtonText="Xóa"
+        cancelButtonText="Hủy"
+      />
     </div>
   );
 }

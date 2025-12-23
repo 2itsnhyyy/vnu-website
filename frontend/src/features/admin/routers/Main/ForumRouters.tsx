@@ -1,17 +1,12 @@
 import Forum from "../../pages/Forum";
 import EditPost from "../../pages/Forum/EditPost";
 import ViewPost from "../../pages/Forum/ViewPost";
+import CreatePost from "../../pages/Forum/CreatePost";
 
 const ForumRouters = [
   {
     path: "forum",
     element: <Forum />,
-    // children: [{ path: "edit/1", element: <EditPost /> }],
-    // Nếu sau này muốn tách các route con, có thể dùng cấu trúc children như bên dưới:
-    // children: [
-    //   { path: '', element: <List /> },
-    //   { path: 'create', element: <Create /> },
-    // ],
   },
   {
     path: "forum/edit/:id",
@@ -20,6 +15,10 @@ const ForumRouters = [
   {
     path: "forum/:id",
     element: <ViewPost />,
+  },
+  {
+    path: "forum/add",
+    element: <CreatePost />,
   },
 ];
 
