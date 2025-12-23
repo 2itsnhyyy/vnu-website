@@ -7,10 +7,18 @@ import type {
 } from "../types/news";
 
 export const newsService = {
-  getAll(page = 1, limit = 10): Promise<GetNewsResponse> {
+  getAll(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  }): Promise<GetNewsResponse> {
     return api
       .get("/news", {
-        params: { page, limit },
+        params: {
+          page: params?.page ?? 1,
+          limit: params?.limit ?? 10,
+          search: params?.search,
+        },
       })
       .then((res) => res.data);
   },
