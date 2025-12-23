@@ -1,6 +1,5 @@
 import Login from '../../pages/Auth/Login';
-import RegisterDetails from '../../pages/Auth/Register/RegisterDetails';
-import RegisterCommon from '../../pages/Auth/Register/RegisterCommon';
+import Register from '../../pages/Auth/Register';
 import ForgotPassword from '../../pages/Auth/ForgotPassword';
 import ResetPassword from '../../pages/Auth/ResetPassword';
 import VerifyOtp from '../../pages/Auth/VerifyOTP';
@@ -11,12 +10,8 @@ const AuthRouters = [
     element: <Login />,
   },
   {
-    path: '/users/register/common',
-    element: <RegisterCommon />,
-  },
-  {
-    path: '/users/register/details',
-    element: <RegisterDetails />,
+    path: '/users/register',
+    element: <Register />,
   },
   {
     path: '/users/forgot-password',

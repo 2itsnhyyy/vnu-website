@@ -1,124 +1,41 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { authService } from "../../api/index";
 import LogoKhongChu from "../../../../assets/logos/LogoKhongChu.svg";
-
-interface Errors {
-  otp?: string;
-}
-
-interface Status {
-  success: boolean;
-  message: string;
-}
-
-interface LocationState {
-  email?: string;
-}
 
 export default function VerifyOtp() {
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
-  const [errors, setErrors] = useState<Errors>({});
-  const [status, setStatus] = useState<Status | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [otpTimer, setOtpTimer] = useState<number>(60 * 60);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { email } = (location.state as LocationState) || {};
+  
+  const email = location.state?.email;
 
   useEffect(() => {
     if (!email) {
       navigate("/users/register");
     }
-    if (otpTimer > 0) {
-      const interval = setInterval(() => {
-        setOtpTimer((prev) => prev - 1);
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [otpTimer, email, navigate]);
+  }, [email, navigate]);
 
-  const validateOtp = (): boolean => {
-    const otpString = otp.join("");
-    if (!otpString || otpString.length !== 6) {
-      setErrors({ otp: "Mã OTP phải là 6 chữ số." });
-      return false;
-    }
-    return true;
-  };
-
-  const handleOtpChange = (index: number, value: string): void => {
-    if (value.length > 1) return;
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-    setErrors({});
-
-    if (value && index < 5) {
-      const nextInput = document.getElementById(
-        `otp-${index + 1}`
-      ) as HTMLInputElement;
-      nextInput?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (
-    index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
-  ): void => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      const prevInput = document.getElementById(
-        `otp-${index - 1}`
-      ) as HTMLInputElement;
-      prevInput?.focus();
-    }
-  };
-
-  const handleConfirmOtp = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus(null);
-
-    if (!validateOtp()) return;
+    const otpCode = otp.join("");
+    if (otpCode.length < 6) return alert("Vui lòng nhập đủ 6 số");
 
     setIsLoading(true);
-
-    setTimeout(() => {
-      const otpString = otp.join("");
-      if (otpString === "123456") {
-        setStatus({
-          success: true,
-          message: "Xác nhận OTP thành công! Đăng ký hoàn tất. (Demo mode)",
-        });
-        setTimeout(() => navigate("/users/login"), 2000);
-      } else {
-        setStatus({
-          success: false,
-          message: "Mã OTP không đúng. (Demo mode - sử dụng: 123456)",
-        });
-      }
-      setIsLoading(false);
-    }, 1000);
-  };
-
-  const handleResendOtp = async () => {
-    setIsLoading(true);
-    setStatus(null);
-
-    setTimeout(() => {
-      setStatus({
-        success: true,
-        message:
-          "Mã OTP mới đã được gửi tới email của bạn! (Demo mode - mã OTP: 123456)",
+    try {
+      await authService.verifyOtp({
+        email: email,
+        code: otpCode
       });
-      setOtpTimer(60 * 60);
-      setOtp(["", "", "", "", "", ""]);
+      
+      alert("Xác thực thành công! Bạn có thể đăng nhập ngay.");
+      navigate("/users/login");
+    } catch (error: any) {
+      alert(error.message || "Mã OTP không chính xác");
+    } finally {
       setIsLoading(false);
-    }, 1000);
-  };
-
-  const formatTimer = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
+    }
   };
 
   return (
