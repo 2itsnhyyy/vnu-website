@@ -109,11 +109,11 @@ export default function ViewPost() {
                 Ngày tạo
               </label>
               <input
-                type="date"
+                type="text"
                 name="createdAt"
                 value={
                   post.createdAt
-                    ? dayjs(post.createdAt).format("YYYY-MM-DD")
+                    ? dayjs(post.createdAt).format("DD/MM/YYYY")
                     : ""
                 }
                 disabled
@@ -126,11 +126,11 @@ export default function ViewPost() {
                 Ngày cập nhật
               </label>
               <input
-                type="date"
+                type="text"
                 name="updatedAt"
                 value={
                   post.updatedAt
-                    ? dayjs(post.updatedAt).format("YYYY-MM-DD")
+                    ? dayjs(post.updatedAt).format("DD/MM/YYYY")
                     : ""
                 }
                 disabled

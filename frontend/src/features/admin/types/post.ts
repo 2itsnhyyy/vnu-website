@@ -22,6 +22,11 @@ export interface GetPostsResponse {
   };
 }
 
+export interface PostCreateRequest {
+  title: string;
+  contentMarkdown: string;
+}
+
 export interface PostEditRequest {
   title?: string;
   contentMarkdown?: string;

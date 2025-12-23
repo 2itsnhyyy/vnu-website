@@ -16,8 +16,9 @@ import Pagination from "../Common/Pagination";
 import SearchInput from "../Common/SearchInput";
 import dayjs from "dayjs";
 import { DeleteConfirmationModal } from "../Common/DeleteConfirmationModal";
+import { FaPlus } from "react-icons/fa6";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 
 export default function PostTable() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -49,6 +50,7 @@ export default function PostTable() {
       .then((res) => {
         console.log("API DATA:", res);
         setPosts(res.posts);
+        setTotalItems(res.pagination.totalItems);
       })
       .catch((err) => {
         console.error("API ERROR:", err);
@@ -77,6 +79,10 @@ export default function PostTable() {
 
   function handleEdit(postId: number) {
     navigate(`/admin/forum/edit/${postId}`);
+  }
+
+  function handleAdd() {
+    navigate("/admin/forum/add");
   }
 
   function handleDelete(postId: number) {
@@ -119,7 +125,7 @@ export default function PostTable() {
             {totalItems} bài đăng
           </span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 ">
           <SearchInput
             placeholder="Tìm kiếm bài đăng..."
             value={searchTerm}
@@ -132,45 +138,11 @@ export default function PostTable() {
           />
 
           <button
-            onClick={handleSearch}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 cursor-pointer"
+            onClick={handleAdd}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-[#1D4ED8] px-4 py-2.5 text-theme-sm font-medium text-white shadow-theme-xs hover:bg-[rgba(29,78,216,0.9)] cursor-pointer"
           >
-            <svg
-              className="stroke-current fill-white"
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M2.29004 5.90393H17.7067"
-                stroke=""
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M17.7075 14.0961H2.29085"
-                stroke=""
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M12.0826 3.33331C13.5024 3.33331 14.6534 4.48431 14.6534 5.90414C14.6534 7.32398 13.5024 8.47498 12.0826 8.47498C10.6627 8.47498 9.51172 7.32398 9.51172 5.90415C9.51172 4.48432 10.6627 3.33331 12.0826 3.33331Z"
-                fill=""
-                stroke=""
-                strokeWidth="1.5"
-              />
-              <path
-                d="M7.91745 11.525C6.49762 11.525 5.34662 12.676 5.34662 14.0959C5.34661 15.5157 6.49762 16.6667 7.91745 16.6667C9.33728 16.6667 10.4883 15.5157 10.4883 14.0959C10.4883 12.676 9.33728 11.525 7.91745 11.525Z"
-                fill=""
-                stroke=""
-                strokeWidth="1.5"
-              />
-            </svg>
-            Tìm kiếm
+            <FaPlus className="my-auto" />
+            Tạo bài đăng
           </button>
         </div>
       </div>
@@ -194,7 +166,7 @@ export default function PostTable() {
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-center text-theme-sm"
+                className="py-3 font-medium text-gray-500 text-center text-theme-sm mx-2"
               >
                 Tác giả
               </TableCell>
@@ -206,13 +178,13 @@ export default function PostTable() {
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-center text-theme-sm"
+                className="py-3 font-medium text-gray-500 text-center text-theme-sm mx-2"
               >
                 Nội dung
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-center text-theme-sm"
+                className="py-3 font-medium text-gray-500 text-center text-theme-sm mx-2"
               >
                 Thao tác
               </TableCell>
@@ -225,26 +197,26 @@ export default function PostTable() {
                 key={post.postId}
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                <TableCell className="py-6 px-3 text-center text-gray-500 text-theme-sm">
+                <TableCell className="py-6 px-3 text-center text-gray-500 text-theme-sm mx-2">
                   {post.postId}
                 </TableCell>
-                <TableCell className="py-6 text-center text-gray-500 text-theme-sm">
-                  <div className="max-w-[350px] truncate">{post.title}</div>
+                <TableCell className="py-6 text-gray-500 text-theme-sm mx-2">
+                  <div className="">{post.title.slice(0, 60)}...</div>
                 </TableCell>
-                <TableCell className="py-6 text-center text-gray-500 text-theme-sm">
+                <TableCell className="py-6 text-center text-gray-500 text-theme-sm mx-2">
                   {post.author.name}
                 </TableCell>
                 <TableCell className="py-6 text-center text-gray-500 text-theme-sm mx-2">
                   {dayjs(post.createdAt).format("DD/MM/YYYY")}
                 </TableCell>
 
-                <TableCell className="py-6 text-center text-gray-500 text-theme-sm">
+                <TableCell className="py-6 text-gray-500 text-theme-sm mx-2">
                   <div className="max-w-[200px] truncate mx-auto">
-                    {markdownToPlainText(post.contentMarkdown)}
+                    {markdownToPlainText(post.contentMarkdown).slice(0, 24)}...
                   </div>
                 </TableCell>
 
-                <TableCell className="py-6 text-center text-gray-500 text-theme-sm">
+                <TableCell className="py-6 text-center text-gray-500 text-theme-sm mx-2">
                   <div className="flex gap-2 justify-center">
                     <button onClick={() => handleView(post.postId)}>
                       <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />
