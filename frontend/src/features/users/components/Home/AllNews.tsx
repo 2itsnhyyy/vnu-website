@@ -6,7 +6,7 @@ const AllNews = () => {
   const navigate = useNavigate();
 
   const handleSeeAllClick = () => {
-    navigate("/users/news");
+    navigate("/users/news"); 
   };
 
   return (
@@ -18,7 +18,7 @@ const AllNews = () => {
         </div>
         <button
           onClick={handleSeeAllClick}
-          className="bg-primary text-white text-sm font-semibold px-4 py-2 rounded-full hover:bg-primary-light cursor-pointer transition-colors"
+          className="bg-primary text-white text-sm font-semibold px-6 py-2 rounded-full hover:bg-opacity-90 transition-colors"
         >
           Tất cả
         </button>

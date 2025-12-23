@@ -1,8 +1,8 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  IsBoolean,
   IsEnum,
   IsInt,
+  IsNumber,
   IsOptional,
   IsString,
   Min,
@@ -39,6 +39,13 @@ export class SearchParamsDto {
     description: 'The search query',
   })
   search?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @ApiPropertyOptional({
+    description: 'Filter by author id',
+  })
+  author?: number;
 
   @IsOptional()
   @IsEnum(PostSortOptions)

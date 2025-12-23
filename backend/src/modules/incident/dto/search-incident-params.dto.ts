@@ -1,0 +1,47 @@
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import {
+  DEFAULT_LIMIT,
+  DEFAULT_PAGE,
+} from 'src/common/constants/pagination.constant';
+
+export class SearchIncidentParamsDto {
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @ApiPropertyOptional({
+    description: 'The size of a page',
+    example: 10,
+  })
+  limit: number = DEFAULT_LIMIT;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @ApiPropertyOptional({
+    description: 'The page number (starts from 1)',
+    example: 1,
+  })
+  page: number = DEFAULT_PAGE;
+
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({
+    description: 'Search keyword for title or content',
+  })
+  search?: string;
+
+  @IsOptional()
+  @IsInt()
+  @ApiPropertyOptional({
+    description: 'Filter by place id',
+  })
+  placeId?: number;
+
+  @IsOptional()
+  @IsInt()
+  @ApiPropertyOptional({
+    description: 'Filter by status',
+  })
+  status?: number;
+}

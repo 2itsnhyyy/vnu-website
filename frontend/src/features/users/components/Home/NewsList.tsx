@@ -1,25 +1,18 @@
 import React, { useEffect, useState } from "react";
 import NewsCard from "./NewsCard";
-import axios from "axios";
+import { newsService } from "../../api/index";
+import type { News } from "../../api/types/news.types";
 
 const NewsList = () => {
-  const [news, setNews] = useState([]);
+  const [news, setNews] = useState<News[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const response = await axios.get("/api/news");
-
-        console.log("Dữ liệu API trả về:", response.data);
-
-        let newsArray = [];
-
-        if (Array.isArray(response.data.news)) {
-          newsArray = response.data.news;
-        }
-
-        setNews(newsArray);
+        const data = await newsService.getAll(1, 9);
+        
+        setNews(data.news || []);
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu tin tức:", error);
         setNews([]);
@@ -41,8 +34,8 @@ const NewsList = () => {
         <div className="text-center text-gray-500">Không có tin tức nào.</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {news.map((item, idx) => (
-            <NewsCard key={item._id || idx} item={item} />
+          {news.map((item) => (
+            <NewsCard key={item.newsId} item={item} />
           ))}
         </div>
       )}
