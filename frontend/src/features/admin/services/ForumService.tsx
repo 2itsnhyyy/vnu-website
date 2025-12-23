@@ -21,4 +21,12 @@ export const forumService = {
   delete(id: number): Promise<{ success: boolean; message: string }> {
     return api.delete(`/posts/${id}`).then((res) => res.data.post);
   },
+
+  getByUserId(id: number, page = 1, limit = 10): Promise<GetPostsResponse> {
+    return api
+      .get(`/posts/user/${id}`, {
+        params: { page, limit },
+      })
+      .then((res) => res.data);
+  },
 };

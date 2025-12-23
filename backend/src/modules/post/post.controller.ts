@@ -277,4 +277,39 @@ export class PostController {
       req.user.userId,
     );
   }
+
+  @Get('user/:userId')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth('jwt')
+  @ApiOperation({
+    summary: 'Get posts by a specific user',
+  })
+  @ApiOkResponse({
+    description: 'Posts fetched successfully',
+    example: {
+      pagination: {
+        totalItems: 10,
+        totalPages: 1,
+        currentPage: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+        limit: 10,
+      },
+      posts: [],
+    },
+  })
+  async getPostsByUser(
+    @Param('userId') userId: number,
+    @Query('limit') limit?: number,
+    @Query('page') page?: number,
+    @Req() req?: any,
+  ) {
+    return this.postService.getPostsByUser(
+      Number(userId),
+      limit ? Number(limit) : undefined,
+      page ? Number(page) : undefined,
+      req?.user?.userId,
+    );
+  }
 }
