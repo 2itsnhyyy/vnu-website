@@ -63,10 +63,7 @@ export default function NewsTable() {
     newsService
       .getAll({ page: 1, limit: PAGE_SIZE, search: searchTerm })
       .then((res) => {
-        const filtered = res.news.filter((n) =>
-          n.title.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setNews(filtered);
+        setNews(res.news);
         setCurrentPage(1);
       })
       .finally(() => setLoading(false));
