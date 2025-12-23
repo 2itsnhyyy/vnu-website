@@ -24,7 +24,8 @@ const AllNews = () => {
         </button>
       </div>
 
-      <NewsList />
+      {/* Truyền giới hạn 6 tại đây */}
+      <NewsList limit={6} /> 
     </div>
   );
 };

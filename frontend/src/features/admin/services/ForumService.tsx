@@ -1,5 +1,10 @@
 import api from "./api";
-import type { Post, GetPostsResponse, PostEditRequest } from "../types/post";
+import type {
+  Post,
+  GetPostsResponse,
+  PostEditRequest,
+  PostCreateRequest,
+} from "../types/post";
 
 export const forumService = {
   getAll(params?: {
@@ -22,6 +27,10 @@ export const forumService = {
 
   getById(id: number): Promise<Post> {
     return api.get(`/posts/${id}`).then((res) => res.data.post);
+  },
+
+  create(data: PostCreateRequest): Promise<Post> {
+    return api.post("/posts/", data).then((res) => res.data.post);
   },
 
   update(id: number, data: PostEditRequest): Promise<Post> {

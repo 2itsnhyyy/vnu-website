@@ -2,6 +2,7 @@ import React from "react";
 import { FaRegCalendarAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import type { News } from "../../api/types/news.types";
+import ReactMarkdown from "react-markdown";
 
 interface NewsCardProps {
   item: News;
@@ -10,6 +11,14 @@ interface NewsCardProps {
 const NewsCard = ({ item }: NewsCardProps) => {
   const navigate = useNavigate();
 
+  const extractImage = (markdown: string) => {
+    const match = markdown.match(/!\[.*?\]\((.*?)\)/);
+    return match ? match[1] : null;
+  };
+
+  const displayThumbnail =
+    item.thumbnail ||
+    (item.contentMarkdown ? extractImage(item.contentMarkdown) : null);
   const handleReadMore = () => {
     navigate(`/users/news/${item.newsId}`);
   };
@@ -26,9 +35,16 @@ const NewsCard = ({ item }: NewsCardProps) => {
   return (
     <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
       <img
-        src={item.thumbnail || "https://via.placeholder.com/400x200"}
+        src={
+          displayThumbnail ||
+          "https://via.placeholder.com/400x200?text=No+Image"
+        }
         alt={item.title}
-        className="w-full h-48 object-cover"
+        className="w-full h-50 object-cover group-hover:scale-105 transition-transform duration-500"
+        onError={(e) => {
+          (e.target as HTMLImageElement).src =
+            "https://via.placeholder.com/400x200?text=Image+Error";
+        }}
       />
       <div className="p-4 flex flex-col flex-1 justify-between">
         <div>
@@ -37,13 +53,12 @@ const NewsCard = ({ item }: NewsCardProps) => {
             {item.createdAt ? formatDate(item.createdAt) : "N/A"}
           </p>
 
-          <h3 className="text-lg font-semibold text-gray-800 mb-1 truncate" title={item.title}>
+          <h3
+            className="text-lg font-semibold text-gray-800 mb-1 truncate"
+            title={item.title}
+          >
             {item.title}
           </h3>
-
-          <p className="text-sm text-gray-600 line-clamp-3 mb-3 text-justify">
-            {item.contentMarkdown || "Nội dung đang được cập nhật..."}
-          </p>
         </div>
 
         <button

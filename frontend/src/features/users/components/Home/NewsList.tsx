@@ -3,14 +3,18 @@ import NewsCard from "./NewsCard";
 import { newsService } from "../../api/index";
 import type { News } from "../../api/types/news.types";
 
-const NewsList = () => {
+interface NewsListProps {
+  limit?: number;
+}
+
+const NewsList = ({ limit = 9 }: NewsListProps) => {
   const [news, setNews] = useState<News[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const data = await newsService.getAll(1, 9);
+        const data = await newsService.getAll(1, limit);
         
         setNews(data.news || []);
       } catch (error) {
@@ -22,7 +26,7 @@ const NewsList = () => {
     };
 
     fetchNews();
-  }, []);
+  }, [limit]);
 
   if (loading) {
     return <div className="text-center mt-10 text-lg">Đang tải dữ liệu...</div>;

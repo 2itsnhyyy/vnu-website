@@ -7,3 +7,4 @@ export { API_CONFIG, STORAGE_KEYS } from './config';
 export * from './types/auth.types';
 export * from './types/user.types';
 export * from './types/news.types';
+export * as forumTypes from './types/forumType';
