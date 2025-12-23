@@ -1,93 +1,157 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import axios from "axios";
+import newsService from "../../api/services/newsService";
+import type { News } from "../../api/types/news.types";
+import banner from "../../../../assets/images/users/hero.png";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const Detail = () => {
-  const { id } = useParams();
-  const [news, setNews] = useState(null);
-  const [latestNews, setLatestNews] = useState([]);
+  const { id } = useParams<{ id: string }>();
+  const [news, setNews] = useState<News | null>(null);
+  const [latestNews, setLatestNews] = useState<News[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchNews = async () => {
+    const loadData = async () => {
+      if (!id) return;
+      setLoading(true);
       try {
-        const res = await axios.get(`/api/news/${id}`);
-        setNews(res.data);
+        const [detailRes, latestRes] = await Promise.all([
+          newsService.getById(id),
+          newsService.getAll(1, 5),
+        ]);
+        setNews(detailRes.news);
+        setLatestNews(latestRes.news);
       } catch (err) {
-        console.error("Lỗi khi lấy chi tiết bài viết:", err);
+        console.error("Lỗi khi lấy dữ liệu:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    const fetchLatestNews = async () => {
-      try {
-        const res = await axios.get("/api/news?page=1&limit=5");
-        setLatestNews(res.data.news);
-      } catch (err) {
-        console.error("Lỗi khi lấy bài viết mới nhất:", err);
-      }
-    };
-
-    fetchNews();
-    fetchLatestNews();
+    loadData();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [id]);
 
-  if (loading) return <p className="p-4 text-center">Đang tải...</p>;
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-screen text-red-600 font-bold">
+        Đang tải...
+      </div>
+    );
+
   if (!news) return <p className="p-4 text-center">Không tìm thấy bài viết.</p>;
 
   return (
-    <div>
-      <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-30">
-        {/* Left Side - Nội dung bài viết */}
+    <div className="w-full">
+      <div className="relative w-full">
+        <div
+          className="relative w-full h-full bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url(${banner})`,
+            height: "70vh",
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-red to-transparent"></div>
+          <div className="absolute inset-0 bg-black opacity-50"></div>
+
+          <div className="container mx-auto px-4 lg:px-0 flex flex-col lg:flex-row items-center justify-center h-full">
+            <div className="z-10 max-w-4xl w-full flex flex-col items-center justify-center gap-4">
+              <p className="text-white font-[Brushwell] text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
+                Tham gia trao đổi!
+              </p>
+              <div className="text-white text-[40px] md:text-[60px] lg:text-[80px] font-bold leading-tight mt-5 mb-5 ">
+                <p>Diễn đàn chung</p>
+              </div>
+              <div className="text-white text-center text-[12px] md:text-[16px] lg:text-[20px] font-light leading-tight">
+                <p>
+                  Nền tảng trực tuyến nơi mọi người có thể trao đổi, thảo luận
+                  và chia sẻ thông tin về các chủ đề trong Đại học quốc gia -
+                  TP.HCM. Hãy cùng đóng góp và tạo nên một diễn đàn sôi nổi nhé!
+                </p>
+              </div>
+              <div className="w-full h-px bg-white mt-10"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-3 gap-10">
         <div className="lg:col-span-2">
-          <h1 className="font-[Brushwell] text-3xl pb-2 text-red">
-            Câu chuyện
-          </h1>
-          <h1 className="text-3xl font-bold text-black mb-4 text-justify">
+          <h1 className="text-4xl font-extrabold mb-4 text-gray-900 leading-tight">
             {news.title}
           </h1>
-          <p className="text-gray-500 text-sm mb-4">
-            Ngày đăng: {new Date(news.datePosted).toLocaleDateString("vi-VN")}
+          <p className="text-gray-500 mb-6 flex items-center gap-2">
+            <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold uppercase">
+              Tin tức
+            </span>
+            • Ngày đăng: {new Date(news.createdAt).toLocaleDateString("vi-VN")}
           </p>
-          <img
-            src={news.thumbnail}
-            alt={news.title}
-            className="w-full h-auto object-cover rounded-lg mb-6"
-          />
-          <div className="text-gray-800 leading-relaxed whitespace-pre-line text-justify">
-            {news.content}
+
+          <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                // Tùy chỉnh cách hiển thị hình ảnh bên trong Markdown
+                img: ({ node, ...props }) => (
+                  <img
+                    {...props}
+                    className="rounded-xl shadow-md mx-auto my-6 max-w-full h-auto"
+                    alt={props.alt || "Hình ảnh bài viết"}
+                  />
+                ),
+                // Tùy chỉnh cách hiển thị link
+                a: ({ node, ...props }) => (
+                  <a
+                    {...props}
+                    className="text-red-600 hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  />
+                ),
+              }}
+            >
+              {news.contentMarkdown}
+            </ReactMarkdown>
           </div>
         </div>
 
-        {/* Right Side - Tin mới nhất */}
-        <div className="space-y-6">
-          <h2 className="text-xl font-bold text-gray-800 border-b pb-2">
-            TIN MỚI NHẤT
-          </h2>
-          {latestNews
-            .filter((item) => item._id !== id)
-            .map((item) => (
-              <Link
-                to={`/news/${item._id}`}
-                key={item._id}
-                className="block hover:opacity-90"
-              >
-                <div className="flex gap-3">
-                  <img
-                    src={item.thumbnail}
-                    alt={item.title}
-                    className="w-24 h-16 object-cover rounded"
-                  />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800 text-justify">
-                      {item.title}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">{item.date}</p>
-                  </div>
-                </div>
-              </Link>
-            ))}
+        <div className="space-y-8">
+          <div className="bg-gray-50 p-6 rounded-2xl">
+            <h2 className="text-xl font-bold border-b-2 border-red-500 pb-2 mb-6 uppercase tracking-wider">
+              Tin mới nhất
+            </h2>
+            <div className="space-y-6">
+              {latestNews
+                .filter((item) => item.newsId.toString() !== id)
+                .map((item) => (
+                  <Link
+                    to={`/news/${item.newsId}`}
+                    key={item.newsId}
+                    className="group flex gap-4 items-start"
+                  >
+                    <div className="w-24 h-20 flex-shrink-0 overflow-hidden rounded-lg shadow-sm">
+                      <img
+                        src={
+                          item.thumbnail || "https://via.placeholder.com/100"
+                        }
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        alt={item.title}
+                      />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold line-clamp-2 group-hover:text-red-600 transition-colors">
+                        {item.title}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {new Date(item.createdAt).toLocaleDateString("vi-VN")}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

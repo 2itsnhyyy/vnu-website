@@ -23,37 +23,6 @@ const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
-  // const handleSubmit = async (e: FormEvent) => {
-  //   e.preventDefault();
-
-  //   const newErrors: LoginErrors = {}
-  //   if (!email.trim()) newErrors.email = "Email không được để trống"
-  //   if (!password.trim()) newErrors.password = "Mật khẩu không được để trống"
-
-  //   if (Object.keys(newErrors).length > 0) {
-  //     setErrors(newErrors);
-  //     return;
-  //   }
-
-  //   setIsLoading(true);
-  //   setErrorMessage("");
-
-  //   try {
-  //     await authService.login({ email, password });
-
-  //     await userService.getMe();
-
-  //     navigate("/users");
-
-  //     window.location.reload();
-  //   } catch (err: any) {
-  //     setErrorMessage(err.message || "Đăng nhập thất bại. Vui lòng thử lại.");
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
-  // Sửa
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -86,13 +55,6 @@ const Login: React.FC = () => {
     }
   };
 
-  // useEffect(() => {
-  //   if (authService.isAuthenticated()) {
-  //     navigate("/users", { replace: true });
-  //   }
-  // }, [navigate]);
-
-  // Sửa
   useEffect(() => {
     const redirectByRole = async () => {
       if (!authService.isAuthenticated()) return;
@@ -206,11 +168,21 @@ const Login: React.FC = () => {
           <div className="mt-6 text-center text-sm text-gray-600">
             Chưa có tài khoản?{" "}
             <NavLink
-              to="/users/register/common"
+              to="/users/register"
               className="text-primary font-bold hover:underline"
             >
               Đăng ký ngay
             </NavLink>
+
+                      <div className="mt-6 text-center text-sm text-gray-600">
+            Quên mật khẩu?{" "}
+            <NavLink
+              to="/users/forgot-password"
+              className="text-primary font-bold hover:underline"
+            >
+              Đặt lại mật khẩu
+            </NavLink>
+          </div>
           </div>
         </div>
       </div>
