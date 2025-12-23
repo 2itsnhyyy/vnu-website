@@ -1,7 +1,8 @@
 import type React from "react"
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom" // Add this import
+import { useNavigate } from "react-router-dom"
 import { Eye, MessageSquare, ThumbsUp } from "lucide-react"
+import ReactMarkdown from "react-markdown"
 import { GuestSidebar } from "./GuestSidebar"
 import { RightSidebar } from "./RightSidebar"
 import { Pagination } from "./Pagination"
@@ -63,6 +64,7 @@ const PostCard: React.FC<{
     // Extract plain text from markdown for preview
     const getPlainText = (markdown: string) => {
         return markdown
+            .replace(/!\[.*?\]\(.*?\)/g, '') // Remove images
             .replace(/#{1,6}\s/g, '')
             .replace(/\*\*(.+?)\*\*/g, '$1')
             .replace(/\*(.+?)\*/g, '$1')
@@ -142,7 +144,7 @@ const PostCard: React.FC<{
 
 // Main Forum Component
 const ForumInterface: React.FC = () => {
-    const navigate = useNavigate() // Add this
+    const navigate = useNavigate()
     const [activeTab, setActiveTab] = useState<"newest" | "top" | "unanswered" | "answered">("newest")
     const [currentPage, setCurrentPage] = useState(1)
     const [posts, setPosts] = useState<Post[]>([])
@@ -217,7 +219,6 @@ const ForumInterface: React.FC = () => {
     }
 
     const handlePostClick = (postId: number) => {
-        // Use relative path
         navigate(`posts/${postId}`)
     }
 

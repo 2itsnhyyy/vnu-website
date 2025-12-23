@@ -2,12 +2,15 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { ThumbsUp, Send, ArrowLeft, MessageSquare } from "lucide-react"
+import ReactMarkdown from "react-markdown"
 import { AuthenticatedSidebar } from "./AuthenticatedSidebar"
 import { RightSidebar } from "./RightSidebar"
 import { Pagination } from "./Pagination"
 import forumService from "../../api/services/forumService"
 import type { Post, Comment } from "../../api/types/forumType"
 import { STORAGE_KEYS } from "../../api/config"
+import { Image, Eye } from "lucide-react"
+import MDEditor from "@uiw/react-md-editor"
 
 // Helper function for time formatting
 const formatTimeAgo = (dateString: string) => {
@@ -25,7 +28,7 @@ const formatTimeAgo = (dateString: string) => {
     return date.toLocaleDateString('vi-VN')
 }
 
-// Post Content Component
+// Post Content Component with Markdown rendering
 const PostContent: React.FC<{
     post: Post;
     onLike: () => void;
@@ -58,29 +61,46 @@ const PostContent: React.FC<{
             <h1 className="text-2xl font-bold text-gray-900 mb-4">{post.title}</h1>
 
             <div className="prose max-w-none text-gray-700 mb-6 leading-relaxed">
-                {post.contentMarkdown.split('\n').map((line, index) => {
-                    if (line.startsWith('# ')) {
-                        return <h1 key={index} className="text-3xl font-bold mt-6 mb-4">{line.substring(2)}</h1>
-                    }
-                    if (line.startsWith('## ')) {
-                        return <h2 key={index} className="text-2xl font-bold mt-5 mb-3">{line.substring(3)}</h2>
-                    }
-                    if (line.startsWith('### ')) {
-                        return <h3 key={index} className="text-xl font-bold mt-4 mb-2">{line.substring(4)}</h3>
-                    }
-                    if (line.trim() === '') {
-                        return <br key={index} />
-                    }
-                    const boldRegex = /\*\*(.+?)\*\*/g
-                    const parts = line.split(boldRegex)
-                    return (
-                        <p key={index} className="mb-2">
-                            {parts.map((part, i) =>
-                                i % 2 === 1 ? <strong key={i}>{part}</strong> : part
-                            )}
-                        </p>
-                    )
-                })}
+                <ReactMarkdown
+                    components={{
+                        h1: ({ node, ...props }) => <h1 className="text-3xl font-bold mt-6 mb-4" {...props} />,
+                        h2: ({ node, ...props }) => <h2 className="text-2xl font-bold mt-5 mb-3" {...props} />,
+                        h3: ({ node, ...props }) => <h3 className="text-xl font-bold mt-4 mb-2" {...props} />,
+                        h4: ({ node, ...props }) => <h4 className="text-lg font-semibold mt-3 mb-2" {...props} />,
+                        p: ({ node, ...props }) => <p className="mb-4" {...props} />,
+                        ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-4 space-y-2" {...props} />,
+                        ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />,
+                        li: ({ node, ...props }) => <li className="ml-4" {...props} />,
+                        strong: ({ node, ...props }) => <strong className="font-bold" {...props} />,
+                        em: ({ node, ...props }) => <em className="italic" {...props} />,
+                        code: ({ node, inline, ...props }: any) =>
+                            inline ? (
+                                <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono" {...props} />
+                            ) : (
+                                <code className="block bg-gray-100 p-4 rounded-lg text-sm font-mono overflow-x-auto mb-4" {...props} />
+                            ),
+                        blockquote: ({ node, ...props }) => (
+                            <blockquote className="border-l-4 border-gray-300 pl-4 italic my-4" {...props} />
+                        ),
+                        img: ({ node, ...props }) => (
+                            <img
+                                className="max-w-full h-auto rounded-lg my-4 shadow-md"
+                                loading="lazy"
+                                {...props}
+                            />
+                        ),
+                        a: ({ node, ...props }) => (
+                            <a
+                                className="text-blue-600 hover:text-blue-800 underline"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                {...props}
+                            />
+                        ),
+                    }}
+                >
+                    {post.contentMarkdown}
+                </ReactMarkdown>
             </div>
 
             <div className="flex items-center justify-between pt-4 border-t border-gray-200">
@@ -111,73 +131,71 @@ const PostContent: React.FC<{
 
 // Comment Input Component
 const CommentInput: React.FC<{
-    onSubmit: (text: string) => Promise<void>;
-    isAuthenticated: boolean;
-    parentId?: number | null;
-    placeholder?: string;
-    onCancel?: () => void;
-}> = ({ onSubmit, isAuthenticated, parentId, placeholder = "Nhập câu trả lời của bạn", onCancel }) => {
-    const [comment, setComment] = useState("")
+    onSubmit: (text: string) => Promise<void>
+    isAuthenticated: boolean
+    parentId?: number | null
+    placeholder?: string
+    onCancel?: () => void
+}> = ({ onSubmit, isAuthenticated, parentId, onCancel }) => {
+    const [comment, setComment] = useState<string>("")
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const handleSubmit = async () => {
         if (!isAuthenticated) {
-            alert('Bạn cần đăng nhập để bình luận')
+            alert("Bạn cần đăng nhập để bình luận")
             return
         }
 
-        if (comment.trim()) {
-            setIsSubmitting(true)
-            try {
-                await onSubmit(comment)
-                setComment("")
-                if (onCancel) onCancel()
-            } finally {
-                setIsSubmitting(false)
-            }
+        if (!comment.trim()) return
+
+        setIsSubmitting(true)
+        try {
+            await onSubmit(comment)
+            setComment("")
+            onCancel?.()
+        } finally {
+            setIsSubmitting(false)
         }
     }
 
-    const handleCancel = () => {
-        setComment("")
-        if (onCancel) onCancel()
-    }
-
     return (
-        <div className={`bg-white border border-gray-200 rounded-xl p-4 ${parentId ? 'ml-12' : 'mb-6'} shadow-sm`}>
+        <div
+            className={`bg-white border border-gray-200 rounded-xl p-4 ${parentId ? "ml-12" : "mb-6"
+                } shadow-sm`}
+        >
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
                 {parentId ? "Trả lời bình luận" : "Bình luận"}
             </h3>
-            <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder={placeholder}
-                className="w-full border border-gray-300 rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={3}
-                disabled={!isAuthenticated || isSubmitting}
-            />
-            <div className="flex justify-end gap-3 mt-3">
-                <button
-                    onClick={handleCancel}
-                    className="px-4 py-1.5 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium"
-                    disabled={isSubmitting}
-                >
-                    Hủy
-                </button>
+
+            <div className="border border-gray-300 rounded-lg p-2 mb-3">
+                <MDEditor
+                    value={comment}
+                    onChange={(value) => setComment(value || "")}
+                    preview="edit"
+                    data-color-mode="light"
+                    textareaProps={{
+                        placeholder: "Nhập bình luận",
+                    }}
+                />
+            </div>
+
+            <div className="flex justify-end gap-3">
+                {onCancel && (
+                    <button
+                        onClick={onCancel}
+                        className="px-4 py-1.5 text-gray-600 hover:bg-gray-100 rounded-lg text-sm"
+                    >
+                        Hủy
+                    </button>
+                )}
                 <button
                     onClick={handleSubmit}
-                    className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2 disabled:opacity-50"
-                    disabled={!isAuthenticated || isSubmitting || !comment.trim()}
+                    disabled={isSubmitting || !comment.trim()}
+                    className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
                 >
-                    <Send size={14} />
                     {isSubmitting ? "Đang gửi..." : "Gửi"}
                 </button>
             </div>
-            {!isAuthenticated && (
-                <p className="text-xs text-gray-500 mt-2">
-                    Bạn cần <a href="/users/login" className="text-blue-500 hover:underline">đăng nhập</a> để bình luận
-                </p>
-            )}
         </div>
     )
 }
@@ -194,7 +212,6 @@ const ReplyCard: React.FC<{
     const [showReplyInput, setShowReplyInput] = useState(false)
 
     const handleReplySubmit = async (content: string) => {
-        // Always use the root comment as parent (2-level only)
         await onReply(parentCommentId, content)
         setShowReplyInput(false)
     }
@@ -213,7 +230,31 @@ const ReplyCard: React.FC<{
                             <h5 className="font-semibold text-sm text-gray-900">{reply.author.name}</h5>
                             <span className="text-xs text-gray-500">{formatTimeAgo(reply.createdAt)}</span>
                         </div>
-                        <p className="text-gray-700 text-sm mt-1 whitespace-pre-wrap">{reply.content}</p>
+                        <div className="prose max-w-none text-gray-700 text-sm mt-1">
+                            <ReactMarkdown
+                                components={{
+                                    p: ({ ...props }) => <p className="mb-2" {...props} />,
+                                    img: ({ ...props }) => (
+                                        <img
+                                            className="max-w-full h-auto rounded-md my-2 shadow"
+                                            loading="lazy"
+                                            {...props}
+                                        />
+                                    ),
+                                    a: ({ ...props }) => (
+                                        <a
+                                            className="text-blue-600 hover:underline"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            {...props}
+                                        />
+                                    ),
+                                }}
+                            >
+                                {reply.content}
+                            </ReactMarkdown>
+                        </div>
+
                         <div className="flex items-center gap-3 mt-2">
                             <button
                                 onClick={() => onLike(reply.commentId, reply.liked)}
@@ -273,6 +314,7 @@ const CommentCard: React.FC<{
         }
         onLike(comment.commentId, comment.liked)
     }
+
     const handleLikeReply = async (replyId: number, isCurrentlyLiked: boolean) => {
         setReplies(replies.map(reply =>
             reply.commentId === replyId
@@ -330,7 +372,6 @@ const CommentCard: React.FC<{
     const handleReplySubmit = async (content: string) => {
         await onReply(comment.commentId, content)
         setShowReplyInput(false)
-        // Reload replies to show the new one
         const response = await forumService.getComments(postId, {
             limit: 50,
             page: 1,
@@ -358,7 +399,30 @@ const CommentCard: React.FC<{
                     </div>
                 </div>
 
-                <p className="text-gray-700 mb-4 leading-relaxed whitespace-pre-wrap">{comment.content}</p>
+                <div className="prose max-w-none text-gray-700 mb-4">
+                    <ReactMarkdown
+                        components={{
+                            p: ({ ...props }) => <p className="mb-3" {...props} />,
+                            img: ({ ...props }) => (
+                                <img
+                                    className="max-w-full h-auto rounded-lg my-3 shadow"
+                                    loading="lazy"
+                                    {...props}
+                                />
+                            ),
+                            a: ({ ...props }) => (
+                                <a
+                                    className="text-blue-600 hover:underline"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    {...props}
+                                />
+                            ),
+                        }}
+                    >
+                        {comment.content}
+                    </ReactMarkdown>
+                </div>
 
                 <div className="flex items-center gap-4">
                     <button
@@ -581,7 +645,6 @@ const PostDetailPage: React.FC = () => {
                 parent: parentId,
             })
 
-            // Update parent comment's reply count
             setComments(comments.map(comment =>
                 comment.commentId === parentId
                     ? { ...comment, commentsCount: comment.commentsCount + 1 }
