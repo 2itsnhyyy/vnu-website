@@ -86,7 +86,14 @@ export class BuildingController {
   @ApiOperation({
     summary: 'Get buildings with 3D objects for map rendering',
     description:
-      'Get buildings in a ring area (minRadius to maxRadius from center) with their 3D objects (meshes and bodies) for rendering on map. Start with minRadius=0 for initial load, then use previous maxRadius as new minRadius when zooming out.',
+      'Get buildings for 3D map using camera parameters:\n\n' +
+      '**Parameters:**\n' +
+      '- `lat`, `lon`: Camera position (latitude, longitude)\n' +
+      '- `zoom`: Zoom level (10=City, 15=District, 18=Building, 20=Detail)\n' +
+      '- `heading`: Camera rotation (0-360°). 0=North, 90=East, 180=South, 270=West\n' +
+      '- `tilt`: Camera elevation angle (0-90°). 0=top-down, 45=tilted, 90=horizontal\n\n' +
+      '**Example:** `?lat=10.8579&lon=106.7857&zoom=18&heading=72.674&tilt=25.371`\n\n' +
+      'Returns buildings within calculated radius. Higher tilt (tilted view) loads more buildings ahead.',
   })
   @ApiOkResponse({
     description: 'Buildings with 3D objects for map fetched successfully',

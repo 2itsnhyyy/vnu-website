@@ -552,7 +552,36 @@ export class BuildingService {
   }
 
   async getBuildingsForMap(query: BuildingMapQueryDto) {
-    const { centerLat, centerLng, minRadius, maxRadius } = query;
+    const { lat, lon, zoom, heading, tilt } = query;
+
+    const zoomToRadius: { [key: number]: number } = {
+      10: 50000,
+      11: 25000,
+      12: 12500,
+      13: 6250,
+      14: 3125,
+      15: 1562,
+      16: 781,
+      17: 390,
+      18: 195,
+      19: 97,
+      20: 48,
+      21: 24,
+      22: 12,
+    };
+
+    const roundedZoom = Math.round(zoom);
+    let baseRadius = zoomToRadius[roundedZoom] || 195;
+
+    if (tilt > 0) {
+      const tiltFactor = 1 + (Math.min(tilt, 85) / 85) * 1.0;
+      baseRadius = baseRadius * tiltFactor;
+    }
+
+    const centerLat = lat;
+    const centerLng = lon;
+    const minRadius = 0;
+    const maxRadius = baseRadius;
 
     const centerPoint = `POINT(${centerLng} ${centerLat})`;
 
