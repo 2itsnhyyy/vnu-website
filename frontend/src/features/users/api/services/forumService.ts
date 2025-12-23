@@ -152,6 +152,32 @@ class ForumService {
             throw new Error(error.message || "Không thể bỏ thích bình luận");
         }
     }
+    async uploadImages(files: File[]): Promise<Array<{
+        url: string;
+        publicId: string;
+        height: number;
+        width: number;
+        format: string;
+        resourceType: string;
+    }>> {
+        try {
+            const formData = new FormData();
+            files.forEach(file => {
+                formData.append('files', file);
+            });
+
+            const response = await apiClient.post('/cloudinary/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            
+            return response.data;
+        } catch (error: any) {
+            console.error("Error uploading images:", error);
+            throw new Error(error.message || "Không thể upload ảnh");
+        }
+    }
 }
 
 export default new ForumService();

@@ -1,7 +1,6 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ThumbsUp, Send, ArrowLeft, MessageSquare } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import { AuthenticatedSidebar } from "./AuthenticatedSidebar"
 import { RightSidebar } from "./RightSidebar"
@@ -9,8 +8,65 @@ import { Pagination } from "./Pagination"
 import forumService from "../../api/services/forumService"
 import type { Post, Comment } from "../../api/types/forumType"
 import { STORAGE_KEYS } from "../../api/config"
-import { Image, Eye } from "lucide-react"
-import MDEditor from "@uiw/react-md-editor"
+import { Eye } from "lucide-react"
+import { useRef } from "react"
+import { ThumbsUp, Send, ArrowLeft, MessageSquare, Image as ImageIcon } from "lucide-react"
+
+
+// Add this after imports
+const renderCommentContent = (content: string) => {
+    const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g
+    const parts: Array<{ type: 'text' | 'image'; content?: string; src?: string; alt?: string; key: string }> = []
+    let lastIndex = 0
+    let match: RegExpExecArray | null
+
+    while ((match = imageRegex.exec(content)) !== null) {
+        if (match.index > lastIndex) {
+            parts.push({
+                type: 'text',
+                content: content.substring(lastIndex, match.index),
+                key: `text-${lastIndex}`
+            })
+        }
+
+        parts.push({
+            type: 'image',
+            alt: match[1] || 'image',
+            src: match[2],
+            key: `image-${match.index}`
+        })
+
+        lastIndex = match.index + match[0].length
+    }
+
+    if (lastIndex < content.length) {
+        parts.push({
+            type: 'text',
+            content: content.substring(lastIndex),
+            key: `text-${lastIndex}`
+        })
+    }
+
+    return parts.map((part) => {
+        if (part.type === 'image') {
+            return (
+                <img
+                    key={part.key}
+                    src={part.src}
+                    alt={part.alt}
+                    className="max-w-full h-auto rounded-lg my-2 cursor-pointer hover:opacity-90 transition-opacity"
+                    style={{ maxHeight: '500px', objectFit: 'contain' }}
+                    onClick={() => window.open(part.src, '_blank')}
+                />
+            )
+        }
+        return (
+            <span key={part.key} className="whitespace-pre-wrap">
+                {part.content}
+            </span>
+        )
+    })
+}
 
 // Helper function for time formatting
 const formatTimeAgo = (dateString: string) => {
@@ -131,71 +187,205 @@ const PostContent: React.FC<{
 
 // Comment Input Component
 const CommentInput: React.FC<{
-    onSubmit: (text: string) => Promise<void>
-    isAuthenticated: boolean
-    parentId?: number | null
-    placeholder?: string
-    onCancel?: () => void
-}> = ({ onSubmit, isAuthenticated, parentId, onCancel }) => {
-    const [comment, setComment] = useState<string>("")
+    onSubmit: (text: string) => Promise<void>;
+    isAuthenticated: boolean;
+    parentId?: number | null;
+    placeholder?: string;
+    onCancel?: () => void;
+}> = ({ onSubmit, isAuthenticated, parentId, placeholder = "Nhập câu trả lời của bạn", onCancel }) => {
+    const [comment, setComment] = useState("")
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [uploadingImages, setUploadingImages] = useState<Array<{ id: number; name: string }>>([])
+    const textareaRef = useRef<HTMLTextAreaElement>(null)
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
-    const handleSubmit = async () => {
-        if (!isAuthenticated) {
-            alert("Bạn cần đăng nhập để bình luận")
-            return
-        }
-
-        if (!comment.trim()) return
-
-        setIsSubmitting(true)
+    const uploadToCloudinary = async (file: File) => {
         try {
-            await onSubmit(comment)
-            setComment("")
-            onCancel?.()
-        } finally {
-            setIsSubmitting(false)
+            const data = await forumService.uploadImages([file])
+            return data[0]
+        } catch (error) {
+            console.error('Error uploading image:', error)
+            throw error
         }
     }
 
+    const insertImageMarkdown = (imageUrl: string, cursorPosition: number) => {
+        const beforeCursor = comment.substring(0, cursorPosition)
+        const afterCursor = comment.substring(cursorPosition)
+        const imageMarkdown = `![image](${imageUrl})`
+
+        const newContent = beforeCursor + imageMarkdown + afterCursor
+        setComment(newContent)
+
+        setTimeout(() => {
+            if (textareaRef.current) {
+                const newPosition = cursorPosition + imageMarkdown.length
+                textareaRef.current.setSelectionRange(newPosition, newPosition)
+                textareaRef.current.focus()
+            }
+        }, 0)
+    }
+
+    const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+        const items = e.clipboardData?.items
+        if (!items) return
+
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i]
+
+            if (item.type.indexOf('image') !== -1) {
+                e.preventDefault()
+
+                const file = item.getAsFile()
+                if (!file) continue
+
+                const uploadId = Date.now() + i
+                const cursorPosition = textareaRef.current?.selectionStart || comment.length
+
+                setUploadingImages(prev => [...prev, { id: uploadId, name: file.name }])
+
+                try {
+                    const uploadedImage = await uploadToCloudinary(file)
+                    setUploadingImages(prev => prev.filter(img => img.id !== uploadId))
+                    insertImageMarkdown(uploadedImage.url, cursorPosition)
+                } catch (error) {
+                    alert('Không thể upload ảnh. Vui lòng thử lại.')
+                    setUploadingImages(prev => prev.filter(img => img.id !== uploadId))
+                }
+            }
+        }
+    }
+
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files
+        if (!files || files.length === 0) return
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i]
+            if (!file.type.startsWith('image/')) continue
+
+            const uploadId = Date.now() + i
+            const cursorPosition = textareaRef.current?.selectionStart || comment.length
+
+            setUploadingImages(prev => [...prev, { id: uploadId, name: file.name }])
+
+            try {
+                const uploadedImage = await uploadToCloudinary(file)
+                setUploadingImages(prev => prev.filter(img => img.id !== uploadId))
+                insertImageMarkdown(uploadedImage.url, cursorPosition)
+            } catch (error) {
+                alert('Không thể upload ảnh. Vui lòng thử lại.')
+                setUploadingImages(prev => prev.filter(img => img.id !== uploadId))
+            }
+        }
+
+        // Reset file input
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ''
+        }
+    }
+
+    const handleSubmit = async () => {
+        if (!isAuthenticated) {
+            alert('Bạn cần đăng nhập để bình luận')
+            return
+        }
+
+        if (comment.trim()) {
+            setIsSubmitting(true)
+            try {
+                await onSubmit(comment)
+                setComment("")
+                setUploadingImages([])
+                if (onCancel) onCancel()
+            } finally {
+                setIsSubmitting(false)
+            }
+        }
+    }
+
+    const handleCancel = () => {
+        setComment("")
+        setUploadingImages([])
+        if (onCancel) onCancel()
+    }
+
     return (
-        <div
-            className={`bg-white border border-gray-200 rounded-xl p-4 ${parentId ? "ml-12" : "mb-6"
-                } shadow-sm`}
-        >
+        <div className={`bg-white border border-gray-200 rounded-xl p-4 ${parentId ? 'ml-12' : 'mb-6'} shadow-sm`}>
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
                 {parentId ? "Trả lời bình luận" : "Bình luận"}
             </h3>
 
-            <div className="border border-gray-300 rounded-lg p-2 mb-3">
-                <MDEditor
-                    value={comment}
-                    onChange={(value) => setComment(value || "")}
-                    preview="edit"
-                    data-color-mode="light"
-                    textareaProps={{
-                        placeholder: "Nhập bình luận",
-                    }}
-                />
-            </div>
+            <textarea
+                ref={textareaRef}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                onPaste={handlePaste}
+                placeholder={placeholder}
+                className="w-full border border-gray-300 rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={3}
+                disabled={!isAuthenticated || isSubmitting}
+            />
 
-            <div className="flex justify-end gap-3">
-                {onCancel && (
+            {uploadingImages.length > 0 && (
+                <div className="mt-2 space-y-1">
+                    {uploadingImages.map((img) => (
+                        <div key={img.id} className="flex items-center gap-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500"></div>
+                            <span>Đang upload {img.name}...</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            <div className="flex items-center justify-between mt-3">
+                <div className="flex items-center gap-2">
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleFileSelect}
+                        className="hidden"
+                    />
                     <button
-                        onClick={onCancel}
-                        className="px-4 py-1.5 text-gray-600 hover:bg-gray-100 rounded-lg text-sm"
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+                        title="Thêm ảnh"
+                        disabled={!isAuthenticated || isSubmitting}
+                    >
+                        <ImageIcon size={18} />
+                    </button>
+                    <span className="text-xs text-gray-500">
+                        Paste ảnh vào ô nhập
+                    </span>
+                </div>
+
+                <div className="flex gap-3">
+                    <button
+                        onClick={handleCancel}
+                        className="px-4 py-1.5 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium transition-colors"
+                        disabled={isSubmitting}
                     >
                         Hủy
                     </button>
-                )}
-                <button
-                    onClick={handleSubmit}
-                    disabled={isSubmitting || !comment.trim()}
-                    className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
-                >
-                    {isSubmitting ? "Đang gửi..." : "Gửi"}
-                </button>
+                    <button
+                        onClick={handleSubmit}
+                        className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2 disabled:opacity-50 transition-colors"
+                        disabled={!isAuthenticated || isSubmitting || !comment.trim() || uploadingImages.length > 0}
+                    >
+                        <Send size={14} />
+                        {isSubmitting ? "Đang gửi..." : "Gửi"}
+                    </button>
+                </div>
             </div>
+
+            {!isAuthenticated && (
+                <p className="text-xs text-gray-500 mt-2">
+                    Bạn cần <a href="/users/login" className="text-blue-500 hover:underline">đăng nhập</a> để bình luận
+                </p>
+            )}
         </div>
     )
 }
@@ -230,31 +420,9 @@ const ReplyCard: React.FC<{
                             <h5 className="font-semibold text-sm text-gray-900">{reply.author.name}</h5>
                             <span className="text-xs text-gray-500">{formatTimeAgo(reply.createdAt)}</span>
                         </div>
-                        <div className="prose max-w-none text-gray-700 text-sm mt-1">
-                            <ReactMarkdown
-                                components={{
-                                    p: ({ ...props }) => <p className="mb-2" {...props} />,
-                                    img: ({ ...props }) => (
-                                        <img
-                                            className="max-w-full h-auto rounded-md my-2 shadow"
-                                            loading="lazy"
-                                            {...props}
-                                        />
-                                    ),
-                                    a: ({ ...props }) => (
-                                        <a
-                                            className="text-blue-600 hover:underline"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            {...props}
-                                        />
-                                    ),
-                                }}
-                            >
-                                {reply.content}
-                            </ReactMarkdown>
+                        <div className="text-gray-700 text-sm mt-1">
+                            {renderCommentContent(reply.content)}
                         </div>
-
                         <div className="flex items-center gap-3 mt-2">
                             <button
                                 onClick={() => onLike(reply.commentId, reply.liked)}
@@ -399,29 +567,8 @@ const CommentCard: React.FC<{
                     </div>
                 </div>
 
-                <div className="prose max-w-none text-gray-700 mb-4">
-                    <ReactMarkdown
-                        components={{
-                            p: ({ ...props }) => <p className="mb-3" {...props} />,
-                            img: ({ ...props }) => (
-                                <img
-                                    className="max-w-full h-auto rounded-lg my-3 shadow"
-                                    loading="lazy"
-                                    {...props}
-                                />
-                            ),
-                            a: ({ ...props }) => (
-                                <a
-                                    className="text-blue-600 hover:underline"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    {...props}
-                                />
-                            ),
-                        }}
-                    >
-                        {comment.content}
-                    </ReactMarkdown>
+                <div className="text-gray-700 mb-4 leading-relaxed">
+                    {renderCommentContent(comment.content)}
                 </div>
 
                 <div className="flex items-center gap-4">
