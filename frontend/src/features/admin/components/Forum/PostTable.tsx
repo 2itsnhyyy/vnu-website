@@ -62,10 +62,7 @@ export default function PostTable() {
     forumService
       .getAll({ page: 1, limit: PAGE_SIZE, search: searchTerm })
       .then((res) => {
-        const filtered = res.posts.filter((p) =>
-          p.title.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setPosts(filtered);
+        setPosts(res.posts);
         setCurrentPage(1);
       })
       .finally(() => setLoading(false));
