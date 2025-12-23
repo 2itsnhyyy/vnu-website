@@ -4,7 +4,7 @@ import { CreatePlaceDto } from './dto/create-place.dto';
 import { UpdatePlaceDto } from './dto/update-place.dto';
 import { QueryPlaceDto } from './dto/query-place.dto';
 import { Prisma } from '@prisma/client';
-import { geoJsonToPostGIS } from 'src/common/utils/geometry.utils';
+import { geoJsonPolygonToWKT } from 'src/common/utils/geometry.utils';
 
 @Injectable()
 export class PlaceService {
@@ -12,7 +12,7 @@ export class PlaceService {
 
   async create(createPlaceDto: CreatePlaceDto) {
     const { boundaryGeom, ...placeData } = createPlaceDto;
-    const geomWKT = geoJsonToPostGIS(boundaryGeom);
+    const geomWKT = geoJsonPolygonToWKT(boundaryGeom);
 
     const result = await this.prisma.$executeRaw`
       INSERT INTO place (name, description, address, image, open_time, close_time, phone, boundary_geom)
@@ -151,7 +151,7 @@ export class PlaceService {
     }
 
     if (boundaryGeom) {
-      const geomWKT = geoJsonToPostGIS(boundaryGeom);
+      const geomWKT = geoJsonPolygonToWKT(boundaryGeom);
       await this.prisma.$executeRaw`
         UPDATE place
         SET boundary_geom = ST_GeomFromText(${geomWKT})
