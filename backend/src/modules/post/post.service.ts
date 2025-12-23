@@ -32,7 +32,7 @@ export class PostService {
     return { post: new PostResponseDto(post, post.authorUser) };
   }
   async getPosts(searchParamsDto: SearchParamsDto, currentUserId?: number) {
-    const { limit, page, search, sort } = searchParamsDto;
+    const { limit, page, search, sort, author } = searchParamsDto;
     const take = Number(limit);
     const skip = (Number(page) - 1) * take;
 
@@ -43,6 +43,7 @@ export class PostService {
           { contentMarkdown: { contains: search, mode: 'insensitive' } },
         ],
       }),
+      ...(author && { author: Number(author) }),
     };
 
     const orderBy: any =

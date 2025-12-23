@@ -1,80 +1,44 @@
-import React, {
-  useState,
-  type FormEvent,
-  type ChangeEvent,
-  type FocusEvent,
-} from "react";
+import React, { useState, type FormEvent, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import LogoKhongChu from "../../../../../assets/logos/LogoKhongChu.svg";
+import { authService } from "../../api/index";
+import LogoKhongChu from "../../../../assets/logos/LogoKhongChu.svg";
 
-interface FormData {
-  username: string;
-  email: string;
-  password: string;
-}
-
-interface FormErrors {
-  username?: string;
-  email?: string;
-  password?: string;
-  [key: string]: string | undefined;
-}
-
-const RegisterCommon: React.FC = () => {
-  const [formData, setFormData] = useState<FormData>({
-    username: "",
+const Register: React.FC = () => {
+  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
     email: "",
     password: "",
+    confirmPassword: "",
+    birthday: "",
   });
-
-  const [errors, setErrors] = useState<FormErrors>({});
-  const navigate = useNavigate();
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value.trim() }));
-    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleBlur = (e: FocusEvent<HTMLInputElement>): void => {};
-
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-    if (!formData.username) newErrors.username = "Vui lòng nhập username.";
-
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    if (!emailRegex.test(formData.email.trim()))
-      newErrors.email = "Email không hợp lệ.";
-
-    const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
-    if (!passwordRegex.test(formData.password))
-      newErrors.password =
-        "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.";
-
-    setErrors((prev) => ({ ...prev, ...newErrors }));
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    console.log("Đăng ký với mật khẩu:", formData.password);
+    if (formData.password !== formData.confirmPassword) {
+      alert("Mật khẩu xác nhận không trùng khớp!");
+      return;
+    }
 
-    const dataToSubmit = {
-      ...formData,
-      email: formData.email.trim(),
-      username: formData.username.trim(),
-    };
+    setIsSubmitting(true);
+    try {
+      await authService.register(formData);
 
-    console.log("Dữ liệu đăng ký:", dataToSubmit);
-
-    if (validateForm()) {
-      console.log("Form hợp lệ, sẵn sàng gửi:", dataToSubmit);
-      navigate("/users/register/details");
+      alert("Đăng ký thành công!");
+      navigate("/users/login");
+    } catch (error: any) {
+      alert(error.message || "Có lỗi xảy ra");
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
   return (
     <div className="min-h-screen flex items-center justify-center relative">
       <div className="w-full flex z-10">
@@ -88,7 +52,7 @@ const RegisterCommon: React.FC = () => {
         {/* Right Half: Login Form */}
         <div className="w-full md:w-1/2 bg-white p-20 fade-in flex flex-col justify-center h-screen">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-[var(--color-text-main)] mb-6">
-            ĐĂNG KÝ TÀI KHOẢN - THÔNG TIN CHUNG
+            ĐĂNG KÝ TÀI KHOẢN
           </h2>
 
           <div className="text-center text-[var(--color-text-main)] opacity-70 mb-8">
@@ -104,18 +68,13 @@ const RegisterCommon: React.FC = () => {
                 Username <span className="text-red-500">*</span>
               </label>
               <input
-                id="username"
-                name="username"
-                placeholder="Nhập username"
-                value={formData.username}
+                name="name"
+                type="text"
+                required
+                className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:ring-2 focus:ring-[var(--color-primary)] outline-none"
+                placeholder="Nguyễn Văn A"
                 onChange={handleChange}
-                onBlur={handleBlur}
-                className="mt-1 w-full px-4 py-2 border border-[var(--color-surface-dim)] rounded-lg 
-                        focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] input-focus"
               />
-              {errors.username && (
-                <p className="text-red-500 text-sm mt-1">{errors.username}</p>
-              )}
             </div>
 
             {/* EMAIL */}
@@ -124,19 +83,13 @@ const RegisterCommon: React.FC = () => {
                 Email <span className="text-red-500">*</span>
               </label>
               <input
-                id="email"
                 name="email"
                 type="email"
-                placeholder="Nhập email"
-                value={formData.email}
+                required
+                className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:ring-2 focus:ring-[var(--color-primary)] outline-none"
+                placeholder="example@gmail.com"
                 onChange={handleChange}
-                onBlur={handleBlur}
-                className="mt-1 w-full px-4 py-2 border border-[var(--color-surface-dim)] rounded-lg 
-                        focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] input-focus"
               />
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-              )}
             </div>
 
             {/* PASSWORD */}
@@ -145,22 +98,57 @@ const RegisterCommon: React.FC = () => {
                 Mật khẩu <span className="text-red-500">*</span>
               </label>
               <input
-                id="password"
                 name="password"
                 type="password"
-                placeholder="Nhập mật khẩu"
-                value={formData.password}
+                required
+                className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:ring-2 focus:ring-[var(--color-primary)] outline-none"
+                placeholder="••••••••"
                 onChange={handleChange}
-                className="mt-1 w-full px-4 py-2 border border-[var(--color-surface-dim)] rounded-lg 
-                        focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] input-focus"
               />
-              {errors.password && (
-                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
-              )}
               <p className="text-xs text-[var(--color-text-main)] opacity-60 mt-1">
                 Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường,
                 số và ký tự đặc biệt.
               </p>
+            </div>
+
+            {/* CONFIRM PASSWORD - TRƯỜNG MỚI THÊM */}
+            <div>
+              <label className="block text-sm font-medium">
+                Xác nhận mật khẩu *
+              </label>
+              <input
+                name="confirmPassword"
+                type="password"
+                required
+                placeholder="••••••••"
+                className={`w-full px-4 py-3 border-2 rounded-xl outline-none ${
+                  formData.confirmPassword &&
+                  formData.password !== formData.confirmPassword
+                    ? "border-red-500"
+                    : "border-gray-100"
+                }`}
+                onChange={handleChange}
+              />
+              {formData.confirmPassword &&
+                formData.password !== formData.confirmPassword && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Mật khẩu không khớp!
+                  </p>
+                )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-2">
+                Ngày sinh
+              </label>
+              <input
+                name="birthday"
+                type="date"
+                required
+                className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:ring-2 focus:ring-[var(--color-primary)] outline-none"
+                onChange={handleChange}
+                value={formData.birthday}
+              />
             </div>
 
             {/* BUTTON */}
@@ -169,7 +157,7 @@ const RegisterCommon: React.FC = () => {
               className="w-full bg-[var(--color-primary)] text-white py-2 rounded-lg font-bold
                       hover:bg-[var(--color-primary-light)] transition-all duration-300 button-hover cursor-pointer"
             >
-              Tiếp tục
+              Đăng ký
             </button>
 
             {/* LINK TO LOGIN */}
@@ -192,4 +180,4 @@ const RegisterCommon: React.FC = () => {
   );
 };
 
-export default RegisterCommon;
+export default Register;

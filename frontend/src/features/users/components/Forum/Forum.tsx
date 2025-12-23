@@ -1,5 +1,6 @@
 import type React from "react"
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom" // Add this import
 import { Eye, MessageSquare, ThumbsUp } from "lucide-react"
 import { GuestSidebar } from "./GuestSidebar"
 import { RightSidebar } from "./RightSidebar"
@@ -14,7 +15,7 @@ const FilterTabs: React.FC<{ activeTab: string; onTabChange: (tab: string) => vo
     onTabChange,
 }) => {
     const tabs = [
-        { id: "newest", label: "Mới Nhất", icon: "🕒" },
+        { id: "newest", label: "Mới Nhất", icon: "🕐" },
         { id: "top", label: "Top", icon: "⬆️" },
         { id: "unanswered", label: "Nổi Bật", icon: "💬" },
         { id: "answered", label: "Đã Đóng", icon: "✔️" },
@@ -41,8 +42,9 @@ const FilterTabs: React.FC<{ activeTab: string; onTabChange: (tab: string) => vo
 const PostCard: React.FC<{ 
     post: Post; 
     onLike: (id: number, isLiked: boolean) => void;
+    onPostClick: (postId: number) => void;
     isAuthenticated: boolean;
-}> = ({ post, onLike, isAuthenticated }) => {
+}> = ({ post, onLike, onPostClick, isAuthenticated }) => {
     const formatTimeAgo = (dateString: string) => {
         const date = new Date(dateString)
         const now = new Date()
@@ -68,7 +70,8 @@ const PostCard: React.FC<{
             .trim()
     }
 
-    const handleLikeClick = () => {
+    const handleLikeClick = (e: React.MouseEvent) => {
+        e.stopPropagation()
         if (!isAuthenticated) {
             alert('Bạn cần đăng nhập để thích bài viết')
             return
@@ -77,7 +80,10 @@ const PostCard: React.FC<{
     }
 
     return (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-4 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-sm">
+        <div 
+            onClick={() => onPostClick(post.postId)}
+            className="bg-white border border-gray-200 rounded-xl p-6 mb-4 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-sm cursor-pointer"
+        >
             <div className="flex items-start gap-4">
                 <img 
                     src={post.author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author.name}`} 
@@ -103,7 +109,7 @@ const PostCard: React.FC<{
                         </button>
                     </div>
 
-                    <h2 className="text-lg font-semibold text-gray-900 mb-2">{post.title}</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-2 hover:text-blue-600 transition-colors">{post.title}</h2>
                     <p className="text-gray-600 text-sm mb-4 line-clamp-2">{getPlainText(post.contentMarkdown)}</p>
 
                     <div className="flex items-center justify-between">
@@ -136,6 +142,7 @@ const PostCard: React.FC<{
 
 // Main Forum Component
 const ForumInterface: React.FC = () => {
+    const navigate = useNavigate() // Add this
     const [activeTab, setActiveTab] = useState<"newest" | "top" | "unanswered" | "answered">("newest")
     const [currentPage, setCurrentPage] = useState(1)
     const [posts, setPosts] = useState<Post[]>([])
@@ -204,10 +211,14 @@ const ForumInterface: React.FC = () => {
                     : post
             ))
             
-            // Show error message
             alert(err.message || 'Có lỗi xảy ra')
             console.error('Error toggling like:', err)
         }
+    }
+
+    const handlePostClick = (postId: number) => {
+        // Use relative path
+        navigate(`posts/${postId}`)
     }
 
     const handleTabChange = (tab: string) => {
@@ -261,6 +272,7 @@ const ForumInterface: React.FC = () => {
                                     key={post.postId} 
                                     post={post} 
                                     onLike={handleLike}
+                                    onPostClick={handlePostClick}
                                     isAuthenticated={isAuthenticated}
                                 />
                             ))}

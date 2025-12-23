@@ -7,7 +7,7 @@ const ForumRouters = [
     path: "forum",
     children: [
       { path: "", element: <Forum /> },
-      { path: "details", element: <PostDetails /> },
+      { path: "posts/:postId", element: <PostDetails /> }, 
       { path: "create", element: <CreatePost /> },
     ],
   },
