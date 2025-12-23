@@ -2,10 +2,20 @@ import api from "./api";
 import type { Post, GetPostsResponse, PostEditRequest } from "../types/post";
 
 export const forumService = {
-  getAll(page = 1, limit = 10): Promise<GetPostsResponse> {
+  getAll(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    userId?: number;
+  }): Promise<GetPostsResponse> {
     return api
       .get("/posts", {
-        params: { page, limit },
+        params: {
+          page: params?.page ?? 1,
+          limit: params?.limit ?? 10,
+          search: params?.search,
+          author: params?.userId,
+        },
       })
       .then((res) => res.data);
   },

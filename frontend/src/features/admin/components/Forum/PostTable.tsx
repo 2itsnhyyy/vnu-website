@@ -24,6 +24,8 @@ export default function PostTable() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   const [isModalOpen, setModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<number | null>(null);
@@ -45,30 +47,22 @@ export default function PostTable() {
     setLoading(true);
 
     forumService
-      .getAll(currentPage, PAGE_SIZE)
+      .getAll({
+        page: currentPage,
+        limit: PAGE_SIZE,
+        search: searchTerm || undefined,
+      })
       .then((res) => {
-        console.log("API DATA:", res);
         setPosts(res.posts);
+        setTotalPages(res.pagination.totalPages);
+        setTotalItems(res.pagination.totalItems);
       })
-      .catch((err) => {
-        console.error("API ERROR:", err);
-      })
+      .catch(console.error)
       .finally(() => setLoading(false));
-  }, [currentPage]);
+  }, [currentPage, searchTerm]);
 
   function handleSearch() {
-    setLoading(true);
-
-    forumService
-      .getAll(1, PAGE_SIZE)
-      .then((res) => {
-        const filtered = res.posts.filter((p) =>
-          p.title.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setPosts(filtered);
-        setCurrentPage(1);
-      })
-      .finally(() => setLoading(false));
+    setCurrentPage(1);
   }
 
   function handleView(postId: number) {
@@ -99,14 +93,6 @@ export default function PostTable() {
       setPostToDelete(null);
     }
   }
-
-  const totalItems = posts.length;
-  const totalPages = Math.ceil(totalItems / PAGE_SIZE);
-
-  const paginatedData = posts.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
-  );
 
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 sm:px-6">
@@ -220,7 +206,7 @@ export default function PostTable() {
           </TableHeader>
 
           <TableBody className="divide-y divide-gray-100">
-            {paginatedData.map((post) => (
+            {posts.map((post) => (
               <TableRow
                 key={post.postId}
                 className="hover:bg-gray-50 transition-colors cursor-pointer"

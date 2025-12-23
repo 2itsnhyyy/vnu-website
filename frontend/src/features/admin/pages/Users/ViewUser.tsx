@@ -37,7 +37,11 @@ const ViewUser = () => {
   const loadPosts = async (userId: number, page: number, limit: number) => {
     setPostsLoading(true);
     try {
-      const data = await forumService.getByUserId(userId, page, limit);
+      const data = await forumService.getAll({
+        page,
+        limit,
+        userId,
+      });
 
       setPosts(data.posts || []);
       setTotalPosts(data.pagination.totalItems);
