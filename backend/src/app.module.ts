@@ -11,6 +11,7 @@ import { NewsModule } from './modules/news/news.module';
 import { PlaceModule } from './modules/place/place.module';
 import { IncidentModule } from './modules/incident/incident.module';
 import { BuildingModule } from './modules/building/building.module';
+import { RoadModule } from './modules/road/road.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { BuildingModule } from './modules/building/building.module';
     PlaceModule,
     IncidentModule,
     BuildingModule,
+    RoadModule,
   ],
 })
 export class AppModule {}
