@@ -48,7 +48,7 @@ export class RoadService {
     ]);
 
     return {
-      data: roads,
+      roads,
       meta: {
         page,
         limit,
@@ -75,8 +75,26 @@ export class RoadService {
       throw new NotFoundException(`Road with ID ${roadId} not found`);
     }
 
+    const segmentsWithGeometry = await Promise.all(
+      road.segments.map(async (segment) => {
+        const geomResult = await this.prisma.$queryRaw<Array<{ geojson: any }>>`
+          SELECT ST_AsGeoJSON(geom)::json as geojson
+          FROM routing_segment
+          WHERE segment_id = ${segment.segmentId}
+        `;
+
+        return {
+          ...segment,
+          geom: geomResult[0]?.geojson || null,
+        };
+      }),
+    );
+
     return {
-      road,
+      road: {
+        ...road,
+        segments: segmentsWithGeometry,
+      },
     };
   }
 

@@ -12,6 +12,7 @@ import { PlaceModule } from './modules/place/place.module';
 import { IncidentModule } from './modules/incident/incident.module';
 import { BuildingModule } from './modules/building/building.module';
 import { RoadModule } from './modules/road/road.module';
+import { RoutingModule } from './modules/routing/routing.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { RoadModule } from './modules/road/road.module';
     IncidentModule,
     BuildingModule,
     RoadModule,
+    RoutingModule,
   ],
 })
 export class AppModule {}

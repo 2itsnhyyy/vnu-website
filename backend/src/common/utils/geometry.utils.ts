@@ -8,6 +8,11 @@ export interface GeoJsonPolygon {
   coordinates: number[][][];
 }
 
+export interface GeoJsonLineString {
+  type: 'LineString';
+  coordinates: [number, number][] | [number, number, number][];
+}
+
 export function geoJsonPointToWKT(geoJson: GeoJsonPoint): string {
   const coords = geoJson.coordinates;
   if (coords.length === 3) {
@@ -30,4 +35,19 @@ export function geoJsonPolygonToWKT(geoJson: GeoJsonPolygon): string {
 
   const coords = ring.map((point) => `${point[0]} ${point[1]}`).join(', ');
   return `POLYGON ((${coords}))`;
+}
+
+export function geoJsonLineStringToWKT(geoJson: GeoJsonLineString): string {
+  const coords = geoJson.coordinates;
+  const hasZ = coords[0] && coords[0].length === 3;
+
+  if (hasZ) {
+    const coordsStr = coords
+      .map((point) => `${point[0]} ${point[1]} ${point[2]}`)
+      .join(', ');
+    return `LINESTRING Z (${coordsStr})`;
+  }
+
+  const coordsStr = coords.map((point) => `${point[0]} ${point[1]}`).join(', ');
+  return `LINESTRING (${coordsStr})`;
 }
