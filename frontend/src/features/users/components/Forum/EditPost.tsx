@@ -8,19 +8,23 @@ import { AuthenticatedSidebar } from "./AuthenticatedSidebar"
 import { RightSidebar } from "./RightSidebar"
 import MDEditor from "@uiw/react-md-editor"
 import forumService from "../../api/services/forumService"
+import authService from "../../api/services/authService"
 
-const CreatePostPage: React.FC = () => {
+const EditPostPage: React.FC = () => {
     const navigate = useNavigate()
     const { postId } = useParams<{ postId: string }>()
     const [title, setTitle] = useState("")
     const [contentMarkdown, setContentMarkdown] = useState("")
     const [loading, setLoading] = useState(false)
-    const [fetchingPost, setFetchingPost] = useState(false)
-    const isEditMode = !!postId
+    const [fetchingPost, setFetchingPost] = useState(true)
+    const [originalTitle, setOriginalTitle] = useState("")
+    const [originalContent, setOriginalContent] = useState("")
 
     useEffect(() => {
-        if (isEditMode && postId) {
+        if (postId) {
             fetchPost()
+        } else {
+            navigate("/users/forum")
         }
     }, [postId])
 
@@ -28,8 +32,19 @@ const CreatePostPage: React.FC = () => {
         setFetchingPost(true)
         try {
             const response = await forumService.getPostDetail(Number(postId))
+            const currentUser = authService.getCurrentUser()
+            
+            // Check if current user is the owner
+            if (!currentUser || Number(currentUser.userId) !== Number(response.post.author.userId)) {
+                alert("Bạn không có quyền chỉnh sửa bài đăng này")
+                navigate("/users/forum")
+                return
+            }
+
             setTitle(response.post.title)
             setContentMarkdown(response.post.contentMarkdown)
+            setOriginalTitle(response.post.title)
+            setOriginalContent(response.post.contentMarkdown)
         } catch (error: any) {
             alert(error.message || "Không thể tải bài đăng")
             navigate("/users/forum")
@@ -44,31 +59,32 @@ const CreatePostPage: React.FC = () => {
             return
         }
 
+        // Check if there are any changes
+        if (title === originalTitle && contentMarkdown === originalContent) {
+            alert("Không có thay đổi nào để cập nhật")
+            return
+        }
+
         try {
             setLoading(true)
-            if (isEditMode && postId) {
-                await forumService.updatePost(Number(postId), { title, contentMarkdown })
-                alert("Cập nhật bài đăng thành công!")
-            } else {
-                await forumService.createPost({ title, contentMarkdown })
-                alert("Đăng bài thành công!")
-            }
-            navigate("/users/forum")
+            await forumService.updatePost(Number(postId), { title, contentMarkdown })
+            alert("Cập nhật bài đăng thành công!")
+            navigate(`/users/forum/posts/${postId}`)
         } catch (error: any) {
             alert(error.message || "Có lỗi xảy ra")
-            console.error("Error saving post:", error)
+            console.error("Error updating post:", error)
         } finally {
             setLoading(false)
         }
     }
 
     const handleCancel = () => {
-        if (title || contentMarkdown) {
+        if (title !== originalTitle || contentMarkdown !== originalContent) {
             if (confirm("Bạn có chắc muốn hủy? Các thay đổi sẽ không được lưu.")) {
-                navigate("/users/forum")
+                navigate(`/users/forum/posts/${postId}`)
             }
         } else {
-            navigate("/users/forum")
+            navigate(`/users/forum/posts/${postId}`)
         }
     }
 
@@ -94,7 +110,7 @@ const CreatePostPage: React.FC = () => {
             <div className="flex-1 overflow-auto bg-white">
                 <div className="max-w-4xl mx-auto px-12 pt-8 pb-10">
                     <button
-                        onClick={() => navigate("/users/forum")}
+                        onClick={() => navigate(`/users/forum/posts/${postId}`)}
                         className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
                     >
                         <ArrowLeft size={20} />
@@ -102,7 +118,7 @@ const CreatePostPage: React.FC = () => {
                     </button>
 
                     <h1 className="text-3xl font-bold text-gray-900 mb-8">
-                        {isEditMode ? "Chỉnh sửa bài đăng" : "Tạo bài đăng mới"}
+                        Chỉnh sửa bài đăng
                     </h1>
 
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200">
@@ -151,7 +167,7 @@ const CreatePostPage: React.FC = () => {
                                 className="px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <Send size={18} />
-                                {loading ? "Đang xử lý..." : isEditMode ? "Cập nhật" : "Đăng bài"}
+                                {loading ? "Đang xử lý..." : "Cập nhật"}
                             </button>
                         </div>
                     </div>
@@ -163,4 +179,4 @@ const CreatePostPage: React.FC = () => {
     )
 }
 
-export default CreatePostPage
+export default EditPostPage

@@ -1,0 +1,153 @@
+import type React from "react"
+import { useState } from "react"
+import { MessageSquare, ThumbsUp, Edit2, Trash2, X, Check } from "lucide-react"
+import type { Post } from "../../api/types/forumType"
+import { formatTimeAgo, getPlainText } from "./utils/formatters"
+import authService from "../../api/services/authService"
+import forumService from "../../api/services/forumService"
+import { useNavigate } from "react-router-dom"
+
+interface PostCardProps {
+    post: Post
+    onLike: (id: number, isLiked: boolean) => void
+    onPostClick: (postId: number) => void
+    onDelete?: (postId: number) => void
+    onUpdate?: (postId: number, title: string, contentMarkdown: string) => void
+    isAuthenticated: boolean
+}
+
+export const PostCard: React.FC<PostCardProps> = ({ 
+    post, 
+    onLike, 
+    onPostClick, 
+    onDelete,
+    onUpdate,
+    isAuthenticated 
+}) => {
+    const navigate = useNavigate()
+    const [isEditing, setIsEditing] = useState(false)
+    const [editTitle, setEditTitle] = useState(post.title)
+    const [editContent, setEditContent] = useState(post.contentMarkdown)
+    const [isUpdating, setIsUpdating] = useState(false)
+
+    const currentUser = authService.getCurrentUser()
+    const isOwner = currentUser && Number(currentUser.userId) === Number(post.author.userId)
+
+    const handleLikeClick = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        if (!isAuthenticated) {
+            alert('Bạn cần đăng nhập để thích bài viết')
+            return
+        }
+        onLike(post.postId, post.liked)
+    }
+
+    const handleEdit = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        // Navigate to edit page
+        navigate(`/users/forum/edit/${post.postId}`)
+    }
+
+    const handleDelete = async (e: React.MouseEvent) => {
+        e.stopPropagation()
+        if (!window.confirm('Bạn có chắc chắn muốn xóa bài đăng này?')) {
+            return
+        }
+
+        try {
+            await forumService.deletePost(post.postId)
+            if (onDelete) {
+                onDelete(post.postId)
+            }
+            alert('Xóa bài đăng thành công!')
+        } catch (err: any) {
+            alert(err.message || 'Không thể xóa bài đăng')
+        }
+    }
+
+    const handleCardClick = () => {
+        if (!isEditing) {
+            onPostClick(post.postId)
+        }
+    }
+
+    return (
+        <div 
+            onClick={handleCardClick}
+            className="bg-white border border-gray-200 rounded-xl p-6 mb-4 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-sm cursor-pointer"
+        >
+            <div className="flex items-start gap-4">
+                <img 
+                    src={post.author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author.name}`} 
+                    alt={post.author.name} 
+                    className="w-12 h-12 rounded-full" 
+                />
+                <div className="flex-1">
+                    <div className="flex items-center justify-between mb-2">
+                        <div>
+                            <h3 className="font-semibold text-gray-900">{post.author.name}</h3>
+                            <p className="text-xs text-gray-500">{formatTimeAgo(post.createdAt)}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {isOwner && (
+                                <>
+                                    <button
+                                        onClick={handleEdit}
+                                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                        title="Chỉnh sửa"
+                                    >
+                                        <Edit2 size={18} />
+                                    </button>
+                                    <button
+                                        onClick={handleDelete}
+                                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                        title="Xóa"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </>
+                            )}
+                            <button
+                                onClick={handleLikeClick}
+                                className={`p-2 rounded-full transition-colors ${
+                                    post.liked 
+                                        ? "text-blue-500 bg-blue-50" 
+                                        : "text-gray-400 hover:bg-gray-100"
+                                } ${!isAuthenticated ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+                                title={isAuthenticated ? (post.liked ? "Bỏ thích" : "Thích") : "Đăng nhập để thích"}
+                            >
+                                <ThumbsUp size={20} fill={post.liked ? "currentColor" : "none"} />
+                            </button>
+                        </div>
+                    </div>
+
+                    <h2 className="text-lg font-semibold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
+                        {post.title}
+                    </h2>
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                        {getPlainText(post.contentMarkdown)}
+                    </p>
+
+                    <div className="flex items-center justify-between">
+                        <div className="flex gap-2">
+                            <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                {post.author.role === 1 ? "Admin" : "User"}
+                            </span>
+                        </div>
+
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <span className="flex items-center gap-1">
+                                <MessageSquare size={16} />
+                                {post.commentsCount}
+                            </span>
+                            <span className="flex items-center gap-1">
+                                <ThumbsUp size={16} />
+                                {post.likesCount}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
