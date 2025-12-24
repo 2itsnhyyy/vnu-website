@@ -1,5 +1,3 @@
-"use client"
-
 import React, { useState, useEffect, useRef } from "react"
 import { message, Switch } from "antd"
 import type { BuildingFormData } from "../../../types/building"

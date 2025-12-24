@@ -6,10 +6,10 @@ import type {
 } from "../types/place";
 
 export const placeService = {
-  getAll(page = 1, limit = 10): Promise<GetPlaceResponse> {
+  getAll(page = 1, limit = 10, search?: string): Promise<GetPlaceResponse> {
     return api
       .get("/places", {
-        params: { page, limit },
+        params: { page, limit, search },
       })
       .then((res) => res.data);
   },

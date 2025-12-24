@@ -1,5 +1,4 @@
 export type Place = {
-  //formdata, bổ sung thêm tỉnh, quận huyện, xã phườn
   placeId: number;
   name: string;
   description?: string;
@@ -64,3 +63,7 @@ export type PlaceUpdateRequest = {
   };
 };
 
+export interface BelongToPlaceOption {
+  placeId: number
+  name: string
+}
