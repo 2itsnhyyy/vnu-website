@@ -74,14 +74,14 @@ const Navbar = () => {
             <div className="absolute right-0 w-48 mt-2 py-2 bg-white border border-gray-100 rounded-lg shadow-xl invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 z-50">
               <button 
                 onClick={() => navigate(`/users/${user.userId}`)}
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
               >
                 Trang cá nhân
               </button>
               <hr className="my-1 border-gray-100" />
               <button 
                 onClick={handleLogout}
-                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
               >
                 Đăng xuất
               </button>
@@ -89,8 +89,8 @@ const Navbar = () => {
           </div>
         ) : (
           <button
-            onClick={() => navigate("/users/register/common")}
-            className="bg-primary text-white hover:bg-opacity-90 px-6 py-2 rounded-lg font-bold transition-all shadow-sm"
+            onClick={() => navigate("/users/register")}
+            className="bg-primary text-white hover:bg-opacity-90 px-6 py-2 rounded-lg font-bold transition-all shadow-sm cursor-pointer"
           >
             Đăng ký
           </button>
