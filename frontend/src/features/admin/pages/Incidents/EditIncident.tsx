@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import type { Incident, IncidentUpdateRequest } from "../../types/incident";
-import { mockIncidents } from "../../types/incident";
+import type {
+  Incident,
+  IncidentStatus,
+  IncidentUpdateRequest,
+} from "../../types/incident";
 import PageMeta from "../../components/Common/PageMeta";
 import { Save } from "lucide-react";
 import { GrFormPrevious } from "react-icons/gr";
-import JoditEditor from "jodit-react";
 import { Link } from "react-router-dom";
+import { incidentService } from "../../services/IncidentService";
 
 export default function EditIncident() {
   const navigate = useNavigate();
@@ -14,24 +17,29 @@ export default function EditIncident() {
   const [loading, setLoading] = useState(false);
   const [incident, setIncident] = useState<Incident | null>(null);
   const [formData, setFormData] = useState<IncidentUpdateRequest>({});
-
-  const editor = useRef(null);
+  const editorRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (id) loadIncident(Number(id));
+    if (id) loadPost(Number(id));
   }, [id]);
 
-  const loadIncident = async (incidentId: number) => {
+  const loadPost = async (incidentId: number) => {
     setLoading(true);
-    const found = mockIncidents.find((i) => i.incidentId === incidentId);
-
-    setTimeout(() => {
-      if (found) {
-        setIncident(found);
-        setFormData(found);
-      }
+    try {
+      const data = await incidentService.getById(incidentId);
+      setIncident(data);
+      setFormData({
+        title: data.title,
+        content: data.content,
+        placeId: data.placeId,
+        status: data.status,
+      });
+    } catch (err) {
+      console.error("Load incident failed", err);
+      setIncident(null);
+    } finally {
       setLoading(false);
-    }, 300);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,20 +48,31 @@ export default function EditIncident() {
 
     try {
       setLoading(true);
+      const updated = await incidentService.update(Number(id), {
+        title: formData.title,
+        content: formData.content,
+        placeId: formData.placeId,
+        status: formData.status,
+      });
+      console.log("Updated incident:", updated);
       navigate("/admin/incidents");
-    } catch (error) {
-      console.error("Error updating incident:", error);
-      alert("Có lỗi xảy ra khi cập nhật sự cố");
+    } catch (error: any) {
+      if (error.response) {
+        console.error("Error response data:", error.response.data);
+        console.error("Error status:", error.response.status);
+        console.error("Error headers:", error.response.headers);
+        alert(`Có lỗi xảy ra: ${JSON.stringify(error.response.data)}`);
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+        alert("Không nhận được phản hồi từ server");
+      } else {
+        console.error("Error message:", error.message);
+        alert(`Lỗi: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
   };
-
-  const handleSaveDraft = () => {
-    console.log("Draft saved:", formData);
-  };
-
-  const numberFields = ["status", "price", "quantity"];
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -64,7 +83,7 @@ export default function EditIncident() {
 
     setFormData((prev) => ({
       ...prev,
-      [name]: numberFields.includes(name) ? Number(value) : value,
+      [name]: name === "status" ? (Number(value) as IncidentStatus) : value,
     }));
   };
 
@@ -117,36 +136,38 @@ export default function EditIncident() {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Ngày tạo
-              </label>
-              <input
-                type="date"
-                name="createdAt"
-                value={incident.createdAt || ""}
-                disabled
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tình trạng <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="status"
+              value={String(formData.status ?? "")}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
+            >
+              <option value="">Chọn danh mục</option>
+              <option value={0}>Mới</option>
+              <option value={1}>Đã giải quyết</option>
+            </select>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tình trạng <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="status"
-                value={String(formData.status ?? "")}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
-              >
-                <option value="">Chọn danh mục</option>
-                <option value="0">Mới</option>
-                <option value="1">Đã giải quyết</option>
-              </select>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mã địa điểm
+              <span className="text-red-500">
+                <span className="text-red-500">*</span>
+              </span>
+            </label>
+            <input
+              type="text"
+              name="title"
+              value={formData.placeId || ""}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
+            />
           </div>
 
           <div>
@@ -158,15 +179,12 @@ export default function EditIncident() {
             </label>
 
             <div className="border border-gray-300 rounded-lg p-2">
-              <JoditEditor
-                ref={editor}
+              <textarea
+                className="w-full p-2"
+                name="content"
                 value={formData.content || ""}
-                onChange={(newContent) => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    content: newContent,
-                  }));
-                }}
+                onChange={handleChange}
+                rows={4}
               />
             </div>
           </div>
@@ -181,7 +199,7 @@ export default function EditIncident() {
             </button>
             <button
               type="button"
-              onClick={handleSaveDraft}
+              onClick={handleSubmit}
               className="flex items-center gap-2 px-6 py-2 bg-[#1D4ED8] text-white rounded-lg hover:bg-blue-500 cursor-pointer"
             >
               <Save className="h-4 w-4" />
