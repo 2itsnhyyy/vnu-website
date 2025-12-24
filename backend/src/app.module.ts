@@ -10,6 +10,7 @@ import { CommentModule } from './modules/comment/comment.module';
 import { NewsModule } from './modules/news/news.module';
 import { PlaceModule } from './modules/place/place.module';
 import { IncidentModule } from './modules/incident/incident.module';
+import { BuildingModule } from './modules/building/building.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { IncidentModule } from './modules/incident/incident.module';
     NewsModule,
     PlaceModule,
     IncidentModule,
+    BuildingModule,
   ],
 })
 export class AppModule {}

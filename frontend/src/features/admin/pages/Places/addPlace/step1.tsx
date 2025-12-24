@@ -13,6 +13,9 @@ import {
 import type { UploadFile } from "antd/es/upload/interface";
 import type { Place } from "../../../types/place";
 import type { UploadProps } from "antd";
+import type { UploadedImageResponse } from "../../../types/image";
+import { imageService } from "../../../services/ImageService";
+import type { RcFile } from "antd/es/upload";
 
 const { TextArea } = Input;
 const { Dragger } = Upload;
@@ -81,6 +84,8 @@ const wardsByDistrict: Record<string, { value: string; label: string }[]> = {
 const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [uploadedImage, setUploadedImage] =
+    useState<UploadedImageResponse | null>(null);
   const [description, setDescription] = useState(initialData.description || "");
   const [selectedProvince, setSelectedProvince] = useState<string | undefined>(
     initialData.province
@@ -94,6 +99,34 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
   const [wards, setWards] = useState<{ value: string; label: string }[]>(
     selectedDistrict ? wardsByDistrict[selectedDistrict] || [] : []
   );
+
+  const handleUploadImage = async (options: any) => {
+    const { file, onSuccess, onError } = options;
+
+    try {
+      const res = await imageService.uploadImages([file as File]);
+
+      const image = res[0];
+
+      setUploadedImage(image);
+
+      setFileList([
+        {
+          uid: file.uid,
+          name: file.name,
+          status: "done",
+          url: image.url,
+        },
+      ]);
+
+      onSuccess(image);
+      message.success("Upload ảnh thành công");
+    } catch (error) {
+      console.error(error);
+      onError(error);
+      message.error("Upload ảnh thất bại");
+    }
+  };
 
   const handleUploadChange = (info: any) => {
     setFileList(info.fileList.slice(-1));
@@ -118,25 +151,26 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
 
   const handleSubmit = () => {
     form.validateFields().then((values) => {
-      const imageUrl = fileList[0]?.url || fileList[0]?.thumbUrl || "";
+      if (!uploadedImage) {
+        message.error("Vui lòng upload hình ảnh");
+        return;
+      }
+
       const addressParts = [
         values.address_detail,
-        values.ward ? wards.find((w) => w.value === values.ward)?.label : "",
-        values.district
-          ? districts.find((d) => d.value === values.district)?.label
-          : "",
-        values.province
-          ? provinces.find((p) => p.value === values.province)?.label
-          : "",
+        wards.find((w) => w.value === values.ward)?.label,
+        districts.find((d) => d.value === values.district)?.label,
+        provinces.find((p) => p.value === values.province)?.label,
       ].filter(Boolean);
 
       onNext({
         name: values.name,
         address: addressParts.join(", "),
-        description: description,
-        image: imageUrl,
-        open_time: values.open_time?.format("HH:mm"),
-        close_time: values.close_time?.format("HH:mm"),
+        description,
+        image: uploadedImage.url, 
+        openTime: values.open_time?.format("HH:mm"),
+        closeTime: values.close_time?.format("HH:mm"),
+        phone: "0961565563"
       });
     });
   };
@@ -144,7 +178,6 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
       <Form form={form} layout="vertical" initialValues={initialData}>
-
         {/* Image Upload */}
         <div className="flex flex-row mb-6 justify-between">
           <div>
@@ -156,7 +189,16 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
             </p>
           </div>
 
-          <Dragger {...props}>
+          <Dragger
+            multiple={false}
+            accept="image/*"
+            customRequest={handleUploadImage}
+            fileList={fileList}
+            onRemove={() => {
+              setFileList([]);
+              setUploadedImage(null);
+            }}
+          >
             <p className="ant-upload-drag-icon">
               <InboxOutlined />
             </p>
@@ -164,7 +206,7 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
               Nhấp hoặc kéo thả ảnh vào khu vực này
             </p>
             <p className="ant-upload-hint">
-              Hỗ trợ tải một ảnh (PNG, JPG, SVG, tối đa 400×400px)
+              Hỗ trợ tải một ảnh (PNG, JPG, SVG)
             </p>
           </Dragger>
         </div>
@@ -195,10 +237,7 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
                 { required: true, message: "Vui lòng nhập tên địa điểm" },
               ]}
             >
-              <Input
-                placeholder="Nhập tên địa điểm"
-                size="large"
-              />
+              <Input placeholder="Nhập tên địa điểm" size="large" />
             </Form.Item>
 
             {/* Province */}
@@ -257,12 +296,9 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
               <Input placeholder="Số nhà, tên đường" size="large" />
             </Form.Item>
 
-             {/* Opening and Closing Hours */}
+            {/* Opening and Closing Hours */}
             <div className="grid grid-cols-2 gap-4">
-              <Form.Item
-                name="open_time"
-                label="Giờ mở cửa"
-              >
+              <Form.Item name="open_time" label="Giờ mở cửa">
                 <TimePicker
                   placeholder="Chọn giờ mở cửa"
                   size="large"
@@ -271,10 +307,7 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
                 />
               </Form.Item>
 
-              <Form.Item
-                name="close_time"
-                label="Giờ đóng cửa"
-              >
+              <Form.Item name="close_time" label="Giờ đóng cửa">
                 <TimePicker
                   placeholder="Chọn giờ đóng cửa"
                   size="large"
@@ -284,7 +317,6 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
               </Form.Item>
             </div>
           </div>
-
 
           <hr className="col-span-2  border-gray-300" />
 
@@ -335,18 +367,16 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
             <p className="text-xs text-gray-500 mt-1">Tối đa 10.000 ký tự</p>
           </div>
         </div>
-
-     
       </Form>
-         {/* Next Button */}
-         <div className="flex justify-end">
+      {/* Next Button */}
+      <div className="flex justify-end">
         <button
           onClick={handleSubmit}
           className="flex items-center gap-2 bg-primary hover:bg-primary-light hover:cursor-pointer text-white font-medium px-5 py-2 rounded-md transition"
         >
           <span>Bước tiếp theo</span>
         </button>
-        </div>
+      </div>
     </div>
   );
 };

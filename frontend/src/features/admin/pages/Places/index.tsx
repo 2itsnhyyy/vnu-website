@@ -12,9 +12,9 @@ import { Plus } from "lucide-react";
 import type { ColumnsType } from "antd/es/table";
 import type { Place } from "../../types/place";
 import { mockPlace } from "../../types/place";
+import { placeService } from "../../services/PlaceService";
 
 const PAGE_SIZE = 10;
-
 
 const Places: React.FC = () => {
   const [filter, setFilter] = useState<string>("all");
@@ -27,60 +27,64 @@ const Places: React.FC = () => {
   const [isModalOpen, setModalOpen] = useState(false);
   const [placeToDelete, setPlaceToDelete] = useState<number | null>(null);
 
+  const navigate = useNavigate();
 
-   const navigate = useNavigate();
-  
-    useEffect(() => {
-      loadPlace();
-    }, []);
-  
-    function loadPlace() {
-      setLoading(true);
-      setTimeout(() => {
-        setPlace(mockPlace);
-        setLoading(false);
-      }, 300);
-    }
-  
-    function handleSearch() {
-      setLoading(true);
-      setTimeout(() => {
-        const filtered = mockPlace.filter((n) =>
+  useEffect(() => {
+    setLoading(true);
+    placeService
+      .getAll(currentPage, PAGE_SIZE)
+      .then((res) => {
+        console.log("API DATA:", res);
+        setPlace(res.data);
+      })
+      .catch((err) => {
+        console.error("API ERROR:", err);
+      })
+      .finally(() => setLoading(false));
+  }, [currentPage]);
+
+  function handleSearch() {
+    setLoading(true);
+
+    placeService
+      .getAll(1, PAGE_SIZE)
+      .then((res) => {
+        const filtered = res.data.filter((n) =>
           n.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
         setPlace(filtered);
         setCurrentPage(1);
-        setLoading(false);
-      }, 200);
-    }
-  
-    function handleView(place_id: number) {
-      navigate(`/admin/places/${place_id}`);
-    }
-  
-    function handleEdit(place_id: number) {
-      navigate(`/admin/places/edit/${place_id}`);
-    }
-  
-    function handleAdd() {
-      navigate("/admin/places/add");
-    }
-  
-    function handleDelete(place_id: number) {
-      setPlaceToDelete(place_id);
-      setModalOpen(true);
-    }
-  
-    function handleConfirmDelete() {
-      if (!placeToDelete) return;
-      setPlace((prev) => prev.filter((n) => n.place_id !== placeToDelete));
-      setModalOpen(false);
-    }
+      })
+      .finally(() => setLoading(false));
+  }
 
-    const totalItems = place.length;
-    const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+  function handleView(place_id: number) {
+    navigate(`/admin/places/${place_id}`);
+  }
 
-    const paginatedData = place.slice(
+  function handleEdit(place_id: number) {
+    navigate(`/admin/places/edit/${place_id}`);
+  }
+
+  function handleAdd() {
+    navigate("/admin/places/add");
+  }
+
+  function handleDelete(place_id: number) {
+    setPlaceToDelete(place_id);
+    setModalOpen(true);
+  }
+
+  function handleConfirmDelete() {
+    if (!placeToDelete) return;
+    setPlace((prev) => prev.filter((n) => n.place_id !== placeToDelete));
+    setModalOpen(false);
+  }
+
+  const totalItems = place.length;
+  const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+
+  const paginatedData = place.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE
   );
@@ -88,7 +92,7 @@ const Places: React.FC = () => {
   const columns: ColumnsType<Place> = [
     {
       title: "ID",
-      dataIndex: "place_id",
+      dataIndex: "placeId",
       key: "place_id",
       width: 60,
       align: "center",
@@ -139,14 +143,14 @@ const Places: React.FC = () => {
     },
     {
       title: "Giờ mở cửa",
-      dataIndex: "open_time",
+      dataIndex: "openTime",
       key: "open_time",
       align: "center",
       width: 110,
     },
     {
       title: "Giờ đóng cửa",
-      dataIndex: "close_time",
+      dataIndex: "closeTime",
       key: "close_time",
       align: "center",
       width: 120,
@@ -157,9 +161,22 @@ const Places: React.FC = () => {
       width: 200,
       render: (record: Place) => (
         <Space size="middle">
-          <Button onClick={() => handleView(record.place_id)} type="text" icon={<EyeOutlined />} />
-          <Button onClick={() => handleEdit(record.place_id)} type="text" icon={<EditOutlined />} />
-          <Button onClick={() => handleDelete(record.place_id)} type="text" danger icon={<DeleteOutlined />} />
+          <Button
+            onClick={() => handleView(record.place_id)}
+            type="text"
+            icon={<EyeOutlined />}
+          />
+          <Button
+            onClick={() => handleEdit(record.place_id)}
+            type="text"
+            icon={<EditOutlined />}
+          />
+          <Button
+            onClick={() => handleDelete(record.place_id)}
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+          />
         </Space>
       ),
       align: "center",
@@ -168,7 +185,7 @@ const Places: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-       <PageMeta
+      <PageMeta
         title="Locations | Admin Dashboard"
         description="This is Locations Dashboard"
       />
@@ -194,8 +211,8 @@ const Places: React.FC = () => {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     handleSearch();
-              }
-            }}
+                  }
+                }}
                 style={{ width: 300 }}
               />
               <Select
@@ -210,16 +227,20 @@ const Places: React.FC = () => {
                 ]}
               />
 
-              <button onClick={handleAdd} className="flex items-center gap-2 bg-primary hover:bg-primary-light hover:cursor-pointer text-white font-medium px-5 py-2 rounded-md transition">
+              <button
+                onClick={handleAdd}
+                className="flex items-center gap-2 bg-primary hover:bg-primary-light hover:cursor-pointer text-white font-medium px-5 py-2 rounded-md transition"
+              >
                 <Plus size={18} />
                 <span>Tạo điạ điểm</span>
               </button>
             </div>
           </div>
+          
 
           <Table
             columns={columns}
-            dataSource={place}
+            dataSource={paginatedData}
             pagination={{
               current: currentPage,
               pageSize: PAGE_SIZE,
