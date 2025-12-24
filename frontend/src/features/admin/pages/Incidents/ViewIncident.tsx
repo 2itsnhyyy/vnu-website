@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import type { Incident } from "../../types/incident";
-import { mockIncidents } from "../../types/incident";
 import PageMeta from "../../components/Common/PageMeta";
 import { GrFormPrevious } from "react-icons/gr";
+import { incidentService } from "../../services/IncidentService";
+import dayjs from "dayjs";
 
 export default function ViewIncident() {
   const { id } = useParams<{ id: string }>();
@@ -11,20 +12,21 @@ export default function ViewIncident() {
   const [incident, setIncident] = useState<Incident | null>(null);
 
   useEffect(() => {
-    if (id) loadNews(Number(id));
+    if (id) loadIncident(Number(id));
+    console.log(id);
   }, [id]);
 
-  const loadNews = (incidentId: number) => {
+  const loadIncident = async (incidentId: number) => {
     setLoading(true);
-
-    const found = mockIncidents.find((i) => i.incidentId === incidentId);
-
-    setTimeout(() => {
-      if (found) {
-        setIncident(found);
-      }
+    try {
+      const data = await incidentService.getById(incidentId);
+      setIncident(data);
+    } catch (err) {
+      console.error("Load post failed", err);
+      setIncident(null);
+    } finally {
       setLoading(false);
-    }, 300);
+    }
   };
 
   if (loading && !incident) {
@@ -78,9 +80,9 @@ export default function ViewIncident() {
                 Ngày tạo
               </label>
               <input
-                type="date"
+                type="text"
                 name="createdAt"
-                value={incident.createdAt || ""}
+                value={dayjs(incident.createdAt).format("DD/MM/YYYY") || ""}
                 disabled
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
               />
@@ -99,6 +101,20 @@ export default function ViewIncident() {
               />
             </div>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mã địa điểm
+            </label>
+            <input
+              type="text"
+              name="title"
+              value={incident.placeId || ""}
+              disabled
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
+            />
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Nội dung chi tiết
