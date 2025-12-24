@@ -1,20 +1,22 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { IncidentUpdateRequest } from "../../types/incident";
 import PageMeta from "../../components/Common/PageMeta";
 import { Save } from "lucide-react";
-import JoditEditor from "jodit-react";
 import { Link } from "react-router-dom";
 import { GrFormPrevious } from "react-icons/gr";
+import { incidentService } from "../../services/IncidentService";
+import type { IncidentCreateRequest } from "../../types/incident";
 
 export default function CreateIncident() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<IncidentUpdateRequest>({});
-  const editor = useRef(null);
-
-  const numberFields = ["status"];
+  const [formData, setFormData] = useState<IncidentCreateRequest>({
+    title: "",
+    content: "",
+    placeId: 0,
+    status: 0,
+  });
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -25,17 +27,27 @@ export default function CreateIncident() {
 
     setFormData((prev) => ({
       ...prev,
-      [name]: numberFields.includes(name) ? Number(value) : value,
+      [name]: name === "status" || name === "placeId" ? Number(value) : value,
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (
+      !formData.title ||
+      !formData.content ||
+      formData.placeId == null ||
+      formData.status == null
+    ) {
+      alert("Vui lòng nhập đầy đủ thông tin");
+      return;
+    }
 
     try {
       setLoading(true);
-      console.log("Created Incident:", formData);
-
+      const created = await incidentService.create(formData);
+      console.log("Created post:", created);
       navigate("/admin/incidents");
     } catch (error) {
       console.error("Error creating incident:", error);
@@ -86,23 +98,41 @@ export default function CreateIncident() {
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
             >
-              <option value="">Chọn tình trạng</option>
-              <option value="0">Mới</option>
-              <option value="1">Đã giải quyết</option>
+              <option value={0}>Mới</option>
+              <option value={1}>Đã giải quyết</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nội dung chi tiết <span className="text-red-500">*</span>
+              Tiêu đề <span className="text-red-500">*</span>
             </label>
+            <input
+              type="number"
+              name="placeId"
+              placeholder="1..."
+              value={formData.placeId || ""}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nội dung chi tiết
+              <span className="text-red-500">
+                <span className="text-red-500">*</span>
+              </span>
+            </label>
+
             <div className="border border-gray-300 rounded-lg p-2">
-              <JoditEditor
-                ref={editor}
+              <textarea
+                className="w-full p-2"
+                name="content"
                 value={formData.content || ""}
-                onChange={(newContent) =>
-                  setFormData((prev) => ({ ...prev, content: newContent }))
-                }
+                onChange={handleChange}
+                rows={4}
               />
             </div>
           </div>

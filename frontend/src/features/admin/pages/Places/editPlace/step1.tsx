@@ -72,6 +72,49 @@ const parseAddress = (address: string | undefined) => {
   return { province, district, ward, detail };
 };
 
+// Helper function to parse address
+const parseAddress = (address: string | undefined) => {
+  if (!address)
+    return {
+      province: undefined,
+      district: undefined,
+      ward: undefined,
+      detail: undefined,
+    };
+
+  const parts = address.split(",").map((s) => s.trim());
+
+  if (parts.length < 2) {
+    return {
+      province: undefined,
+      district: undefined,
+      ward: undefined,
+      detail: address,
+    };
+  }
+
+  // Lấy từ cuối lên đầu: Tỉnh/Thành phố (cuối cùng), Quận/Huyện (kế cuối), Phường/Xã, Chi tiết
+  const provinceLabel = parts[parts.length - 1];
+  const districtLabel = parts.length > 1 ? parts[parts.length - 2] : undefined;
+  const wardLabel = parts.length > 2 ? parts[parts.length - 3] : undefined;
+  const detail =
+    parts.length > 3 ? parts.slice(0, parts.length - 3).join(", ") : parts[0];
+
+  // Tìm value tương ứng với label
+  const province = provinces.find((p) => p.label === provinceLabel)?.value;
+  const district =
+    province && districtLabel
+      ? districtsByProvince[province]?.find((d) => d.label === districtLabel)
+          ?.value
+      : undefined;
+  const ward =
+    district && wardLabel
+      ? wardsByDistrict[district]?.find((w) => w.label === wardLabel)?.value
+      : undefined;
+
+  return { province, district, ward, detail };
+};
+
 const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
