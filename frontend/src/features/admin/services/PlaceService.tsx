@@ -15,7 +15,7 @@ export const placeService = {
   },
 
   getById(id: number): Promise<Place> {
-    return api.get(`/places/${id}`).then((res) => res.data.place);
+    return api.get(`/places/${id}`).then((res) => res.data);
   },
 
   create(data: Place): Promise<Place> {
@@ -26,7 +26,7 @@ export const placeService = {
     return api.patch(`/places/${id}`, data).then((res) => res.data.place);
   },
 
-  delete(id: number): Promise<{ success: boolean; message: string }> {
-    return api.delete(`/places/${id}`).then((res) => res.data.place);
+  delete(id: number): Promise<{ message: string }> {
+    return api.delete(`/places/${id}`).then((res) => res.data);
   },
 };

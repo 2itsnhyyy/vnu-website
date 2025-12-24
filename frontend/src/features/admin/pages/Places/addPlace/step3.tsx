@@ -21,20 +21,15 @@ interface Step3Props {
   data: Partial<PlaceCreateRequest>;
   onSubmit: (data: PlaceCreateRequest) => void;
   onBack: () => void;
+  loading?: boolean;
 }
 
-const Step3: React.FC<Step3Props> = ({ data, onSubmit, onBack }) => {
+const Step3: React.FC<Step3Props> = ({ data, onSubmit, onBack, loading = false }) => {
   const coordinates = data.boundaryGeom?.coordinates?.[0] || [];
   const coordinateCount = coordinates.length;
   const latLngPoints = coordinates.map(
     (coord: number[]) => [coord[1], coord[0]] as [number, number]
   );
-
-  if (latLngPoints.length >= 3) {
-  const firstPoint = latLngPoints[0];
-  const lastPoint = latLngPoints[latLngPoints.length - 1];
-
-
 
   const mapCenter: [number, number] =
     latLngPoints.length > 0
@@ -60,7 +55,7 @@ const Step3: React.FC<Step3Props> = ({ data, onSubmit, onBack }) => {
             <div className="mb-6">
               <h3 className="text-sm font-semibold mb-3">Hình ảnh địa điểm</h3>
               <img
-                src={data.image || "/placeholder.svg"}
+                src={data.image}
                 alt={data.name}
                 className="w-32 h-32 rounded-lg object-cover"
               />
@@ -110,7 +105,7 @@ const Step3: React.FC<Step3Props> = ({ data, onSubmit, onBack }) => {
             </div>
           )}
           {latLngPoints.length > 0 ? (
-            <div className="w-full h-full bg-gray-200 rounded-lg border border-gray-300 overflow-hidden">
+            <div className="w-full h-full min-h-80 bg-gray-200 rounded-lg border border-gray-300 overflow-hidden">
               <MapContainer
                 center={mapCenter}
                 zoom={15}
@@ -160,20 +155,20 @@ const Step3: React.FC<Step3Props> = ({ data, onSubmit, onBack }) => {
 
       {/* Action Buttons */}
       <div className="flex justify-end gap-3 mt-15">
-        <Button size="large" onClick={onBack}>
+        <Button size="large" onClick={onBack} disabled={loading}>
           Quay lại
         </Button>
         {/* Submit Button */}
         <button
           onClick={() => onSubmit(data as PlaceCreateRequest)}
-          className="flex items-center gap-2 bg-primary hover:bg-primary-light hover:cursor-pointer text-white font-medium px-5 py-2 rounded-md transition"
+          disabled={loading}
+          className="flex items-center gap-2 bg-primary hover:bg-primary-light hover:cursor-pointer text-white font-medium px-5 py-2 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <span>Hoàn tất</span>
+          <span>{loading ? "Đang xử lý..." : "Hoàn tất"}</span>
         </button>
       </div>
     </div>
   );
 };
-}
 
 export default Step3;

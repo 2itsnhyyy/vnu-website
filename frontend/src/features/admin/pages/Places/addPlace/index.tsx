@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import { Button } from "antd";
+import { Button, message } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import Step1 from "./step1";
 import Step2 from "./step2";
 import Step3 from "./step3";
-import type { PlaceCreateRequest } from "../../../types/place";
+import type { PlaceCreateRequest, PlaceCreateRequestWithFile } from "../../../types/place";
 import StepIndicator from "../../../components/Place/Step/StepIndicator";
 import { placeService } from "../../../services/PlaceService";
+import { imageService } from "../../../services/ImageService";
 import { useNavigate } from "react-router-dom";
 
 const AddPlace: React.FC = () => {
@@ -36,12 +37,12 @@ const AddPlace: React.FC = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
 
-  // Submit CREATE
-  const handleSubmit = async (data: PlaceCreateRequest) => {
-    const finalData: PlaceCreateRequest = {
+  // Submit CREATE with image upload
+  const handleSubmit = async (data: PlaceCreateRequestWithFile) => {
+    const finalData: PlaceCreateRequestWithFile = {
       ...formData,
       ...data,
-    } as PlaceCreateRequest;
+    } as PlaceCreateRequestWithFile;
 
     // --- Tự động đóng Polygon nếu cần ---
     if (finalData.boundaryGeom?.coordinates?.[0]?.length >= 3) {
@@ -59,16 +60,31 @@ const AddPlace: React.FC = () => {
       };
     }
 
-    console.log("Submitting place data:", finalData);
-
     try {
       setLoading(true);
+
+      // Upload image if imageFile exists
+      if (finalData.imageFile) {
+        message.loading({ content: "Đang tải ảnh lên...", key: "upload" });
+        const uploadedImages = await imageService.uploadImages([finalData.imageFile as File]);
+        finalData.image = uploadedImages[0].url;
+        message.success({ content: "Tải ảnh thành công!", key: "upload", duration: 2 });
+        
+        // Remove imageFile from final data
+        delete finalData.imageFile;
+      }
+
+      console.log("Submitting place data:", finalData);
+
+      message.loading({ content: "Đang tạo địa điểm...", key: "create" });
       const created = await placeService.create(finalData);
       console.log("Created place:", created);
+      
+      message.success({ content: "Tạo địa điểm thành công!", key: "create", duration: 2 });
       navigate("/admin/places");
     } catch (error) {
       console.error("Error creating place:", error);
-      alert("Có lỗi xảy ra khi tạo địa điểm");
+      message.error("Có lỗi xảy ra khi tạo địa điểm");
     } finally {
       setLoading(false);
     }
@@ -83,6 +99,7 @@ const AddPlace: React.FC = () => {
               type="text"
               icon={<ArrowLeftOutlined />}
               onClick={handleBack}
+              disabled={loading}
             >
               <span className="text-xl font-semibold ml-2">Quay lại</span>
             </Button>
@@ -98,7 +115,12 @@ const AddPlace: React.FC = () => {
           <Step2 data={formData} onNext={handleNext} onBack={handleBack} />
         )}
         {currentStep === 2 && (
-          <Step3 data={formData} onSubmit={handleSubmit} onBack={handleBack} />
+          <Step3 
+            data={formData} 
+            onSubmit={handleSubmit} 
+            onBack={handleBack}
+            loading={loading}
+          />
         )}
       </div>
     </div>

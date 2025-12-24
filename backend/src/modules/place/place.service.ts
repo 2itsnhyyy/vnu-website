@@ -108,7 +108,7 @@ export class PlaceService {
 
   async findOne(id: number) {
     const place = await this.prisma.place.findUnique({
-      where: { placeId: id },
+      where: { placeId: Number(id) },
       include: {
         buildings: true,
         entrances: true,
@@ -122,7 +122,7 @@ export class PlaceService {
     const geomResult = await this.prisma.$queryRaw<Array<{ geojson: any }>>`
       SELECT ST_AsGeoJSON(boundary_geom)::json as geojson
       FROM place
-      WHERE place_id = ${id}
+      WHERE place_id = ${Number(id)}
     `;
     const geometry = geomResult[0]?.geojson || null;
 
