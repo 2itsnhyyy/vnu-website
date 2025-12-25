@@ -23,6 +23,9 @@ import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { CommentResponseDto } from './dto/comment-response.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { PaginationParamsDto } from 'src/common/dto/pagination-params.dto';
+import { RoleGuard } from 'src/common/guards/role.guard';
+import { Roles } from 'src/common/decorators/role.decorator';
+import { Role } from 'src/common/constants/role.constant';
 
 @ApiTags('Comment')
 @Controller('comments')
@@ -70,7 +73,11 @@ export class CommentController {
     },
   })
   async deleteComment(@Param('commentId') commentId: number, @Req() req: any) {
-    return this.commentService.deleteComment(commentId, req.user.userId);
+    return this.commentService.deleteComment(
+      commentId,
+      req.user.userId,
+      req.user.role,
+    );
   }
 
   @Post(':commentId/like')
@@ -91,7 +98,8 @@ export class CommentController {
   }
 
   @Delete(':commentId/like')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles(Role.ADMIN, Role.USER)
   @ApiBearerAuth('jwt')
   @ApiOperation({
     summary: 'Unlike comment',
