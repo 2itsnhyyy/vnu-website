@@ -7,6 +7,7 @@ const IssuesRouters = [
     children: [
       { path: "", element: <Issues /> },          
       { path: "details", element: <IssueDetails /> }, 
+      
     ],
   },
 ];
