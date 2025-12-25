@@ -45,12 +45,12 @@ const Login: React.FC = () => {
 
       // Fetch and save user data to localStorage
       const me = await userService.getMe();
-      
-      console.log('User logged in:', me); // Debug log
+
+      console.log("User logged in:", me); // Debug log
 
       // Navigate based on role
       if (me.role === 1) {
-        navigate("/admin", { replace: true });
+        navigate("/admin/", { replace: true });
       } else {
         navigate("/users", { replace: true });
       }
@@ -67,11 +67,11 @@ const Login: React.FC = () => {
 
       try {
         const me = await userService.getMe();
-        
-        console.log('User data loaded:', me); // Debug log
+
+        console.log("User data loaded:", me); // Debug log
 
         if (me.role === 1) {
-          navigate("/admin", { replace: true });
+          navigate("/admin/", { replace: true });
         } else {
           navigate("/users", { replace: true });
         }
@@ -180,7 +180,6 @@ const Login: React.FC = () => {
             >
               Đăng ký ngay
             </NavLink>
-
             <div className="mt-6 text-center text-sm text-gray-600">
               Quên mật khẩu?{" "}
               <NavLink
