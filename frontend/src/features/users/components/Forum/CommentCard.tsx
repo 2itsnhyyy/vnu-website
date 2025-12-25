@@ -7,6 +7,7 @@ import { CommentInput } from "./CommentInput"
 import { ReplyCard } from "./ReplyCard"
 import forumService from "../../api/services/forumService"
 import authService from "../../api/services/authService"
+import { Modal } from "./utils/modal"
 
 interface CommentCardProps {
     comment: Comment
@@ -18,14 +19,14 @@ interface CommentCardProps {
     postId: number
 }
 
-export const CommentCard: React.FC<CommentCardProps> = ({ 
-    comment, 
-    onLike, 
-    onReply, 
+export const CommentCard: React.FC<CommentCardProps> = ({
+    comment,
+    onLike,
+    onReply,
     onUpdate,
     onDelete,
-    isAuthenticated, 
-    postId 
+    isAuthenticated,
+    postId
 }) => {
     const [showReplyInput, setShowReplyInput] = useState(false)
     const [replies, setReplies] = useState<Comment[]>([])
@@ -35,22 +36,34 @@ export const CommentCard: React.FC<CommentCardProps> = ({
     const [editContent, setEditContent] = useState(comment.content)
     const [isUpdating, setIsUpdating] = useState(false)
 
-    const currentUser = authService.getCurrentUser()
-    // Fix: Use userId (matches API response)
-    const isOwner = currentUser && Number(currentUser.userId) === Number(comment.author.userId)
-
-    // Debug log - Remove after fixing
-    console.log('CommentCard Debug:', {
-        currentUserId: currentUser?.userId,
-        commentAuthorId: comment.author.userId,
-        isOwner,
-        currentUserType: typeof currentUser?.userId,
-        authorIdType: typeof comment.author.userId
+    // ===== Modal state =====
+    const [modalOpen, setModalOpen] = useState(false)
+    const [modalConfig, setModalConfig] = useState<{
+        title?: string
+        message: string
+        type?: "info" | "success" | "error" | "warning" | "confirm"
+        onConfirm?: () => void
+    }>({
+        message: "",
     })
+
+    const openModal = (config: typeof modalConfig) => {
+        setModalConfig(config)
+        setModalOpen(true)
+    }
+    // =======================
+
+    const currentUser = authService.getCurrentUser()
+    const isOwner =
+        currentUser && Number(currentUser.userId) === Number(comment.author.userId)
 
     const handleLikeClick = () => {
         if (!isAuthenticated) {
-            alert('Bạn cần đăng nhập để thích bình luận')
+            openModal({
+                title: "Chưa đăng nhập",
+                message: "Bạn cần đăng nhập để thích bình luận.",
+                type: "warning",
+            })
             return
         }
         onLike(comment.commentId, comment.liked)
@@ -62,7 +75,9 @@ export const CommentCard: React.FC<CommentCardProps> = ({
                 ? {
                     ...reply,
                     liked: !isCurrentlyLiked,
-                    likesCount: isCurrentlyLiked ? reply.likesCount - 1 : reply.likesCount + 1
+                    likesCount: isCurrentlyLiked
+                        ? reply.likesCount - 1
+                        : reply.likesCount + 1
                 }
                 : reply
         ))
@@ -79,11 +94,18 @@ export const CommentCard: React.FC<CommentCardProps> = ({
                     ? {
                         ...reply,
                         liked: isCurrentlyLiked,
-                        likesCount: isCurrentlyLiked ? reply.likesCount + 1 : reply.likesCount - 1
+                        likesCount: isCurrentlyLiked
+                            ? reply.likesCount + 1
+                            : reply.likesCount - 1
                     }
                     : reply
             ))
-            alert(err.message || 'Có lỗi xảy ra')
+
+            openModal({
+                title: "Lỗi",
+                message: err.message || "Có lỗi xảy ra",
+                type: "error",
+            })
         }
     }
 
@@ -104,7 +126,7 @@ export const CommentCard: React.FC<CommentCardProps> = ({
             setReplies(response.comments)
             setShowReplies(true)
         } catch (err) {
-            console.error('Error loading replies:', err)
+            console.error("Error loading replies:", err)
         } finally {
             setLoadingReplies(false)
         }
@@ -113,6 +135,7 @@ export const CommentCard: React.FC<CommentCardProps> = ({
     const handleReplySubmit = async (content: string) => {
         await onReply(comment.commentId, content)
         setShowReplyInput(false)
+
         const response = await forumService.getComments(postId, {
             limit: 50,
             page: 1,
@@ -125,9 +148,7 @@ export const CommentCard: React.FC<CommentCardProps> = ({
 
     const handleUpdateReply = (replyId: number, content: string) => {
         setReplies(replies.map(reply =>
-            reply.commentId === replyId
-                ? { ...reply, content }
-                : reply
+            reply.commentId === replyId ? { ...reply, content } : reply
         ))
     }
 
@@ -157,23 +178,34 @@ export const CommentCard: React.FC<CommentCardProps> = ({
             onUpdate(comment.commentId, editContent)
             setIsEditing(false)
         } catch (err: any) {
-            alert(err.message || 'Không thể cập nhật bình luận')
+            openModal({
+                title: "Không thể cập nhật",
+                message: err.message || "Không thể cập nhật bình luận",
+                type: "error",
+            })
         } finally {
             setIsUpdating(false)
         }
     }
 
-    const handleDelete = async () => {
-        if (!window.confirm('Bạn có chắc chắn muốn xóa bình luận này?')) {
-            return
-        }
-
-        try {
-            await forumService.deleteComment(comment.commentId)
-            onDelete(comment.commentId)
-        } catch (err: any) {
-            alert(err.message || 'Không thể xóa bình luận')
-        }
+    const handleDelete = () => {
+        openModal({
+            title: "Xác nhận xóa",
+            message: "Bạn có chắc chắn muốn xóa bình luận này?",
+            type: "confirm",
+            onConfirm: async () => {
+                try {
+                    await forumService.deleteComment(comment.commentId)
+                    onDelete(comment.commentId)
+                } catch (err: any) {
+                    openModal({
+                        title: "Lỗi",
+                        message: err.message || "Không thể xóa bình luận",
+                        type: "error",
+                    })
+                }
+            },
+        })
     }
 
     return (
@@ -182,28 +214,34 @@ export const CommentCard: React.FC<CommentCardProps> = ({
                 <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                         <img
-                            src={comment.author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.author.name}`}
+                            src={
+                                comment.author.avatar ||
+                                `https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.author.name}`
+                            }
                             alt={comment.author.name}
                             className="w-10 h-10 rounded-full"
                         />
                         <div>
-                            <h4 className="font-semibold text-gray-900">{comment.author.name}</h4>
-                            <p className="text-xs text-gray-500">{formatTimeAgo(comment.createdAt)}</p>
+                            <h4 className="font-semibold text-gray-900">
+                                {comment.author.name}
+                            </h4>
+                            <p className="text-xs text-gray-500">
+                                {formatTimeAgo(comment.createdAt)}
+                            </p>
                         </div>
                     </div>
+
                     {isOwner && !isEditing && (
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={handleEdit}
                                 className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                                title="Chỉnh sửa"
                             >
                                 <Edit2 size={16} />
                             </button>
                             <button
                                 onClick={handleDelete}
                                 className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                                title="Xóa"
                             >
                                 <Trash2 size={16} />
                             </button>
@@ -224,15 +262,15 @@ export const CommentCard: React.FC<CommentCardProps> = ({
                             <button
                                 onClick={handleSaveEdit}
                                 disabled={isUpdating || !editContent.trim()}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                                className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50"
                             >
                                 <Check size={14} />
-                                {isUpdating ? 'Đang lưu...' : 'Lưu'}
+                                {isUpdating ? "Đang lưu..." : "Lưu"}
                             </button>
                             <button
                                 onClick={handleCancelEdit}
                                 disabled={isUpdating}
-                                className="flex items-center gap-1 px-3 py-1.5 text-gray-600 hover:bg-gray-100 text-sm rounded-lg transition-colors"
+                                className="flex items-center gap-1 px-3 py-1.5 text-gray-600 hover:bg-gray-100 text-sm rounded-lg"
                             >
                                 <X size={14} />
                                 Hủy
@@ -249,11 +287,15 @@ export const CommentCard: React.FC<CommentCardProps> = ({
                     <button
                         onClick={handleLikeClick}
                         className={`flex items-center gap-1 text-sm ${
-                            comment.liked ? "text-blue-600" : "text-gray-500 hover:text-blue-600"
+                            comment.liked
+                                ? "text-blue-600"
+                                : "text-gray-500 hover:text-blue-600"
                         } ${!isAuthenticated ? "cursor-not-allowed opacity-50" : ""}`}
-                        title={isAuthenticated ? (comment.liked ? "Bỏ thích" : "Thích") : "Đăng nhập để thích"}
                     >
-                        <ThumbsUp size={16} fill={comment.liked ? "currentColor" : "none"} />
+                        <ThumbsUp
+                            size={16}
+                            fill={comment.liked ? "currentColor" : "none"}
+                        />
                         {comment.likesCount}
                     </button>
 
@@ -269,15 +311,11 @@ export const CommentCard: React.FC<CommentCardProps> = ({
                     {comment.commentsCount > 0 && (
                         <button
                             onClick={loadReplies}
-                            className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                            className="text-sm text-blue-600 hover:underline"
                         >
-                            {loadingReplies ? (
-                                <span>Đang tải...</span>
-                            ) : (
-                                <>
-                                    {showReplies ? '▼' : '▶'} {comment.commentsCount} câu trả lời
-                                </>
-                            )}
+                            {loadingReplies
+                                ? "Đang tải..."
+                                : `${showReplies ? "▼" : "▶"} ${comment.commentsCount} câu trả lời`}
                         </button>
                     )}
                 </div>
@@ -297,7 +335,7 @@ export const CommentCard: React.FC<CommentCardProps> = ({
 
             {showReplies && replies.length > 0 && (
                 <div className="ml-12 mt-2 space-y-2">
-                    {replies.map((reply) => (
+                    {replies.map(reply => (
                         <ReplyCard
                             key={reply.commentId}
                             reply={reply}
@@ -312,6 +350,15 @@ export const CommentCard: React.FC<CommentCardProps> = ({
                     ))}
                 </div>
             )}
+
+            <Modal
+                isOpen={modalOpen}
+                onClose={() => setModalOpen(false)}
+                title={modalConfig.title}
+                message={modalConfig.message}
+                type={modalConfig.type}
+                onConfirm={modalConfig.onConfirm}
+            />
         </div>
     )
 }
