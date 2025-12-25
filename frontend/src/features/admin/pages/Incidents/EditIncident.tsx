@@ -10,14 +10,30 @@ import { Save } from "lucide-react";
 import { GrFormPrevious } from "react-icons/gr";
 import { Link } from "react-router-dom";
 import { incidentService } from "../../services/IncidentService";
+import type { Place } from "../../types/place";
+import { placeService } from "../../services/PlaceService";
 
 export default function EditIncident() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(false);
   const [incident, setIncident] = useState<Incident | null>(null);
+  const [places, setPlaces] = useState<Place[]>([]);
   const [formData, setFormData] = useState<IncidentUpdateRequest>({});
   const editorRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    loadPlaces();
+  }, []);
+
+  const loadPlaces = async () => {
+    try {
+      const data = await placeService.getAll();
+      setPlaces(data.data);
+    } catch (err) {
+      console.error("Load places failed", err);
+    }
+  };
 
   useEffect(() => {
     if (id) loadPost(Number(id));
@@ -31,7 +47,7 @@ export default function EditIncident() {
       setFormData({
         title: data.title,
         content: data.content,
-        placeId: data.placeId,
+        placeId: data.place.placeId,
         status: data.status,
       });
     } catch (err) {
@@ -83,7 +99,7 @@ export default function EditIncident() {
 
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "status" ? (Number(value) as IncidentStatus) : value,
+      [name]: name === "status" || name === "placeId" ? Number(value) : value,
     }));
   };
 
@@ -155,19 +171,24 @@ export default function EditIncident() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mã địa điểm
-              <span className="text-red-500">
-                <span className="text-red-500">*</span>
-              </span>
+              Địa điểm <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
-              name="title"
-              value={formData.placeId || ""}
+
+            <select
+              name="placeId"
+              value={formData.placeId ?? ""}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
-            />
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            >
+              <option value="">-- Chọn địa điểm --</option>
+
+              {places.map((place) => (
+                <option key={place.placeId} value={place.placeId}>
+                  {place.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>

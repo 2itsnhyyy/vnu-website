@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageMeta from "../../components/Common/PageMeta";
 import { Save } from "lucide-react";
@@ -6,17 +6,32 @@ import { Link } from "react-router-dom";
 import { GrFormPrevious } from "react-icons/gr";
 import { incidentService } from "../../services/IncidentService";
 import type { IncidentCreateRequest } from "../../types/incident";
+import type { Place } from "../../types/place";
+import { placeService } from "../../services/PlaceService";
 
 export default function CreateIncident() {
   const navigate = useNavigate();
-
+  const [places, setPlaces] = useState<Place[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<IncidentCreateRequest>({
     title: "",
     content: "",
-    placeId: 0,
-    status: 0,
+    placeId: undefined as any,
+    status: undefined as any,
   });
+
+  useEffect(() => {
+    loadPlaces();
+  }, []);
+
+  const loadPlaces = async () => {
+    try {
+      const data = await placeService.getAll();
+      setPlaces(data.data);
+    } catch (error) {
+      console.error("Load places failed", error);
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -98,6 +113,7 @@ export default function CreateIncident() {
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
             >
+              <option value="">-- Chọn tình trạng --</option>
               <option value={0}>Mới</option>
               <option value={1}>Đã giải quyết</option>
             </select>
@@ -105,17 +121,24 @@ export default function CreateIncident() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tiêu đề <span className="text-red-500">*</span>
+              Địa điểm <span className="text-red-500">*</span>
             </label>
-            <input
-              type="number"
+
+            <select
               name="placeId"
-              placeholder="1..."
               value={formData.placeId || ""}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 outline-0"
-            />
+            >
+              <option value="">-- Chọn địa điểm --</option>
+
+              {places.map((place) => (
+                <option key={place.placeId} value={place.placeId}>
+                  {place.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
@@ -130,6 +153,7 @@ export default function CreateIncident() {
               <textarea
                 className="w-full p-2"
                 name="content"
+                placeholder="Nội dung..."
                 value={formData.content || ""}
                 onChange={handleChange}
                 rows={4}

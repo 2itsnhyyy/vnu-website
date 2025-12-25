@@ -1,8 +1,9 @@
+import type { Place } from "./place";
 export interface Incident {
   incidentId: number;
   title: string;
   content: string;
-  placeId: number;
+  place: Place;
   status: IncidentStatus;
   createdAt: string;
   updatedAt: string;

@@ -5,6 +5,12 @@ import PageMeta from "../../components/Common/PageMeta";
 import { GrFormPrevious } from "react-icons/gr";
 import { incidentService } from "../../services/IncidentService";
 import dayjs from "dayjs";
+import { placeService } from "../../services/PlaceService";
+import type { Place } from "../../types/place";
+
+export interface IncidentView extends Omit<Incident, "placeId"> {
+  place: Place;
+}
 
 export default function ViewIncident() {
   const { id } = useParams<{ id: string }>();
@@ -16,14 +22,20 @@ export default function ViewIncident() {
     console.log(id);
   }, [id]);
 
-  const loadIncident = async (incidentId: number) => {
+  const loadIncident = async (id: number) => {
     setLoading(true);
     try {
-      const data = await incidentService.getById(incidentId);
-      setIncident(data);
+      const incident = await incidentService.getById(id);
+      const place = await placeService.getById(incident.place.placeId);
+
+      const view: IncidentView = {
+        ...incident,
+        place,
+      };
+
+      setIncident(view);
     } catch (err) {
-      console.error("Load post failed", err);
-      setIncident(null);
+      console.error("Load incident failed", err);
     } finally {
       setLoading(false);
     }
@@ -104,12 +116,25 @@ export default function ViewIncident() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mã địa điểm
+              Tên địa điểm
             </label>
             <input
               type="text"
               name="title"
-              value={incident.placeId || ""}
+              value={incident.place.name || ""}
+              disabled
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Địa chỉ
+            </label>
+            <input
+              type="text"
+              name="title"
+              value={incident.place.address || ""}
               disabled
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
             />
@@ -124,7 +149,6 @@ export default function ViewIncident() {
               name="content"
               value={incident.content || ""}
               disabled
-              rows={9}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-base-500/20 focus:border-base-500 outline-0"
             ></textarea>
           </div>
