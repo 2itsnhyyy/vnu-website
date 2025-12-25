@@ -1,5 +1,5 @@
 import React from 'react'
-import MyLikesPage from '../../../components/Forum/CreatePost'
+import MyLikesPage from '../../../components/Forum/MyLikes'
 
 const MyLikes = () => {
     return (
