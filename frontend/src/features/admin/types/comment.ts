@@ -1,15 +1,11 @@
-export interface CommentAuthor {
-  userId: number;
-  name: string;
-  avatar: string;
-}
+import type { User } from "./user";
 
 export interface Comment {
   commentId: number;
   content: string;
   parent: number | null;
   postId: number;
-  author: CommentAuthor;
+  author: number | User;
   createdAt: string;
   updatedAt: string;
 }
@@ -24,6 +20,6 @@ export interface GetCommentsResponse {
   };
 }
 
-export interface CommentUpdateRequest {
-  content?: string;
+export interface GetCommentResponse {
+  comment: Comment;
 }

@@ -1,7 +1,7 @@
 import api from "./api";
 import type {
   GetCommentsResponse,
-  CommentUpdateRequest,
+  GetCommentResponse,
   Comment,
 } from "../types/comment";
 
@@ -25,11 +25,13 @@ export const commentService = {
       .then((res) => res.data);
   },
 
-  update(id: number, data: CommentUpdateRequest): Promise<Comment> {
-    return api.patch(`/comments/${id}`, data).then((res) => res.data.comment);
+  getById(id: number): Promise<Comment> {
+    return api
+      .get<GetCommentResponse>(`/comments/${id}`)
+      .then((res) => res.data.comment);
   },
 
   delete(id: number): Promise<{ success: boolean; message: string }> {
-    return api.delete(`/comments/${id}`).then((res) => res.data.comment);
+    return api.delete(`/comments/${id}`).then((res) => res.data);
   },
 };
