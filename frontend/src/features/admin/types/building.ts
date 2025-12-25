@@ -14,6 +14,8 @@ export interface BuildingFormData {
   floors: number;
   place_id: number;
   image?: string;
+   enableDraw?: boolean; 
+  enableUpload?: boolean; 
   modelFile?: File;
   modelFileName?: string;
   modelUrl?: string;
@@ -21,6 +23,8 @@ export interface BuildingFormData {
   longitude?: number;
   modelScale?: number;
   modelRotation?: number;
+  shapes?: any[]; 
+  glbAssets?: any[]; 
 }
 
 
@@ -47,6 +51,14 @@ export interface GetAllBuildingResponse {
   buildings: Building[]; 
 }
 
+export interface UpdateBuildingRequest {
+  name: string;
+  placeId: number;
+  description?: string;
+  floors: number;
+  image?: string;
+}
+
 /* =======================
    BUILDING REQUEST
 ======================= */
@@ -61,7 +73,7 @@ export interface CreateBuildingRequest {
 }
 
 /* =======================
-   OBJECT TYPE (NO ENUM)
+   OBJECT TYPE 
 ======================= */
 
 export const Object3DType = {

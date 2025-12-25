@@ -7,21 +7,22 @@ import Step3 from "./step3";
 import type { BuildingFormData } from "../../../types/building";
 import StepIndicator from "../../../components/Place/Step/StepIndicator";
 import { useCreateBuilding } from "./hook";
+import { useNavigate } from "react-router-dom"
 
 const AddBuilding: React.FC = () => {
+  const navigate = useNavigate()
   const { createBuilding, loading } = useCreateBuilding();
-  
   const [currentStep, setCurrentStep] = useState(0);
   
   const steps = [
     { number: 1, label: "Nhập thông tin tòa nhà", icon: "info" as const },
-    { number: 2, label: "Tải lên file .glb", icon: "upload" as const },
+    { number: 2, label: "Lựa chọn cách tạo mô hình", icon: "box" as const },
     { number: 3, label: "Điều chỉnh vị trí trên bản đồ", icon: "location" as const },
   ];
 
   const [formData, setFormData] = useState<Partial<BuildingFormData>>({
-    latitude: 10.8231,
-    longitude: 106.6297,
+    latitude: 10.874334,
+    longitude: 106.80325,
     modelScale: 1,
     modelRotation: 0,
   });
@@ -54,17 +55,13 @@ const AddBuilding: React.FC = () => {
     if (result) {
       // Success - redirect to building list or detail page
       console.log("Created building:", result);
+      navigate("/admin/buildings");
       
-      // Option 1: Redirect to building list
-      window.location.href = "/admin/buildings";
-      
-      // Option 2: Redirect to building detail
-      // router.push(`/admin/buildings/${result.buildingId}`);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-full bg-gray-50">
       <div className="max-w-7xl mx-auto">
         {/* Loading Overlay */}
         {loading && (

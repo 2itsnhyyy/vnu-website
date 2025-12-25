@@ -18,14 +18,14 @@ export const buildingService = {
   },
 
   create(data: CreateBuildingRequest): Promise<any> {
-    return api.post("/building", data).then((res) => res.data.place);
+    return api.post("/building", data).then((res) => res.data);
   },
 
-  update(id: number, data: PlaceUpdateRequest): Promise<Place> {
-    return api.patch(`/places/${id}`, data).then((res) => res.data.place);
+  update(id: number, data: PlaceUpdateRequest): Promise<any> {
+    return api.patch(`/building/${id}`, data).then((res) => res.data);
   },
 
   delete(id: number): Promise<{ message: string }> {
-    return api.delete(`/places/${id}`).then((res) => res.data);
+    return api.delete(`/building/${id}`).then((res) => res.data);
   },
 };

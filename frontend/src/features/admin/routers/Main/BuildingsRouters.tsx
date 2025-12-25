@@ -1,5 +1,6 @@
 import Buildings from "../../pages/Buildings";
 import AddBuilding from "../../pages/Buildings/addBuilding/index";
+import EditBuilding from "../../pages/Buildings/editBuilding/index";
 
 const BuildingsRouters = [
   {
@@ -14,6 +15,10 @@ const BuildingsRouters = [
     {
     path: "buildings/add",
     element: <AddBuilding />,
+  },
+  {
+    path: "buildings/edit/:buildingId",
+    element: <EditBuilding />,
   },
 ];
 
