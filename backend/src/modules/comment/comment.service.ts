@@ -120,6 +120,16 @@ export class CommentService {
     };
   }
 
+  async getComment(commentId: number) {
+    const comment = await this.prisma.comment.findUnique({
+      where: { commentId: Number(commentId) },
+    });
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+    return { comment };
+  }
+
   async updateComment(
     commentId: number,
     updateCommentDto: UpdateCommentDto,

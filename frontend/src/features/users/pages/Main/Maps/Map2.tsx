@@ -158,10 +158,15 @@ export default function Map2() {
             {
               type: "extrude",
               size: prism.height,
-              material: { color: "#4E79A7" },
+              // Màu xám trắng đặc trưng của OSM 3D
+              material: {
+                color: [245, 245, 242, 1],
+              },
               edges: {
-                color: "white",
-                size: 1,
+                type: "solid",
+                // Viền xám mảnh giúp khối rõ nét nhưng không bị thô
+                color: [130, 130, 130, 0.6],
+                size: 0.5, // Độ dày nhỏ để thanh thoát
               } as any,
             },
           ],
@@ -305,10 +310,15 @@ export default function Map2() {
             {
               type: "extrude",
               size: prism.height,
-              material: { color: "#4E79A7" },
+              // 1. Đổi màu về xám trắng giống OSM
+              material: {
+                color: [245, 245, 242, 1],
+              },
+              // 2. Đổi viền trắng thô sang xám mảnh cho tinh tế
               edges: {
-                color: "white",
-                size: 1,
+                type: "solid",
+                color: [130, 130, 130, 0.6],
+                size: 0.5,
               } as any,
             },
           ],
