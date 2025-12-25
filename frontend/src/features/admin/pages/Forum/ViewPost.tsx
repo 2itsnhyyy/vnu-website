@@ -151,7 +151,7 @@ export default function ViewPost() {
             </div>
           </div>
         </form>
-        <div>
+        <div className="mt-10">
           <CommentTable postId={Number(id)} />
         </div>
       </div>

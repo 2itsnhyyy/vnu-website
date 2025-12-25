@@ -5,6 +5,7 @@ import NewsRouters from "./NewsRouters";
 import ForumRouters from "./ForumRouters";
 import DashboardRouters from "./DashboardRouters";
 import IncidentsRouters from "./IncidentsRouters";
+import CommentRouters from "./CommentRouters";
 
 const MainRouters = [
   ...DashboardRouters,
@@ -14,6 +15,7 @@ const MainRouters = [
   ...IncidentsRouters,
   ...BuildingsRouters,
   ...ForumRouters,
+  ...CommentRouters,
 ];
 
 export default MainRouters;

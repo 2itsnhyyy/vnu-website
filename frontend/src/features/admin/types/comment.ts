@@ -23,3 +23,7 @@ export interface GetCommentsResponse {
     limit: number;
   };
 }
+
+export interface CommentUpdateRequest {
+  content?: string;
+}
