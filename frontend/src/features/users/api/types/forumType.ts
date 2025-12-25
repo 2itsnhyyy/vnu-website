@@ -81,7 +81,7 @@ export interface DeletePostResponse {
 export interface GetPostsParams {
     limit?: number;
     page?: number;
-    sort?: "newest" | "answered" | "unanswered";
+    sort?: "newest" | "oldest" | "hottest";
 }
 
 export interface GetCommentsParams {

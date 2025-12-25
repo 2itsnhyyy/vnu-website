@@ -1,21 +1,32 @@
 import type React from "react"
-import { useNavigate, useLocation } from "react-router-dom"
-import { Search, Menu, Tag, User, MessageSquare, ThumbsUp } from "lucide-react"
+import { useSearchParams } from "react-router-dom"
+import { Search, Menu, User, MessageSquare, ThumbsUp } from "lucide-react"
 
-export const AuthenticatedSidebar: React.FC = () => {
-    const navigate = useNavigate()
-    const location = useLocation()
+interface NavigateHelper {
+    toList: (filter?: string) => void
+    toReplies: () => void
+    toLikes: () => void
+    toMyPosts: () => void
+}
 
-    const isActive = (path: string) => {
-        // Check both path and query params
-        if (path === '/users/forum' && location.pathname === '/users/forum') {
-            return !location.search 
+interface Props {
+    navigate: NavigateHelper
+}
+
+export const AuthenticatedSidebar: React.FC<Props> = ({ navigate }) => {
+    const [searchParams] = useSearchParams()
+    
+    const view = searchParams.get('view') || 'list'
+    const filter = searchParams.get('filter')
+
+    const isActive = (checkView: string, checkFilter?: string) => {
+        if (checkView === 'list' && !checkFilter) {
+            return view === 'list' && !filter
         }
-        return location.pathname + location.search === path
-    }
-
-    const handleNavigation = (path: string) => {
-        navigate(path)
+        if (checkView === 'list' && checkFilter) {
+            return view === 'list' && filter === checkFilter
+        }
+        return view === checkView
     }
 
     return (
@@ -30,9 +41,9 @@ export const AuthenticatedSidebar: React.FC = () => {
             <div className="mb-6">
                 <div className="text-xs text-gray-500 mb-3 font-semibold">MENU</div>
                 <button 
-                    onClick={() => handleNavigation('/users/forum')}
+                    onClick={() => navigate.toList()}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium ${
-                        isActive('/users/forum') 
+                        isActive('list') 
                             ? 'bg-blue-50 text-blue-600' 
                             : 'text-gray-700 hover:bg-gray-50'
                     }`}
@@ -44,9 +55,9 @@ export const AuthenticatedSidebar: React.FC = () => {
 
             <div className="mb-6">
                 <button 
-                    onClick={() => handleNavigation('/users/forum?filter=admin')}
+                    onClick={() => navigate.toList('admin')}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium ${
-                        isActive('/users/forum?filter=admin')
+                        isActive('list', 'admin')
                             ? 'bg-blue-50 text-blue-600'
                             : 'text-gray-700 hover:bg-gray-50'
                     }`}
@@ -59,9 +70,9 @@ export const AuthenticatedSidebar: React.FC = () => {
             <div className="border-t pt-6">
                 <div className="text-xs text-gray-500 mb-3 font-semibold">CỦA BẠN</div>
                 <button 
-                    onClick={() => handleNavigation('/users/forum?filter=my-posts')}
+                    onClick={() => navigate.toMyPosts()}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium ${
-                        isActive('/users/forum?filter=my-posts')
+                        isActive('list', 'my-posts')
                             ? 'bg-blue-50 text-blue-600'
                             : 'text-gray-700 hover:bg-gray-50'
                     }`}
@@ -70,9 +81,9 @@ export const AuthenticatedSidebar: React.FC = () => {
                     Bài đăng của bạn
                 </button>
                 <button 
-                    onClick={() => handleNavigation('/users/forum/my-replies')}
+                    onClick={() => navigate.toReplies()}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium ${
-                        isActive('/users/forum/my-replies')
+                        isActive('replies')
                             ? 'bg-blue-50 text-blue-600'
                             : 'text-gray-700 hover:bg-gray-50'
                     }`}
@@ -81,15 +92,73 @@ export const AuthenticatedSidebar: React.FC = () => {
                     Câu trả lời
                 </button>
                 <button 
-                    onClick={() => handleNavigation('/users/forum/my-likes')}
+                    onClick={() => navigate.toLikes()}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium ${
-                        isActive('/users/forum/my-likes')
+                        isActive('likes')
                             ? 'bg-blue-50 text-blue-600'
                             : 'text-gray-700 hover:bg-gray-50'
                     }`}
                 >
                     <ThumbsUp size={20} />
                     Lượt thích
+                </button>
+            </div>
+        </div>
+    )
+}
+
+// GuestSidebar.tsx
+export const GuestSidebar: React.FC<Props> = ({ navigate }) => {
+    const [searchParams] = useSearchParams()
+    
+    const view = searchParams.get('view') || 'list'
+    const filter = searchParams.get('filter')
+
+    const isActive = (checkView: string, checkFilter?: string) => {
+        if (checkView === 'list' && !checkFilter) {
+            return view === 'list' && !filter
+        }
+        if (checkView === 'list' && checkFilter) {
+            return view === 'list' && filter === checkFilter
+        }
+        return view === checkView
+    }
+
+    return (
+        <div className="w-76 bg-white border-r border-gray-200 p-6">
+            <div className="mb-6">
+                <div className="flex items-center gap-3 text-gray-600 mb-4 bg-gray-50 px-4 py-3 rounded-lg">
+                    <Search size={20} />
+                    <input type="text" placeholder="Tìm kiếm" className="outline-none text-sm flex-1 bg-transparent" />
+                </div>
+            </div>
+
+            <div className="mb-6">
+                <div className="text-xs text-gray-500 mb-3 font-semibold">MENU</div>
+                <button 
+                    onClick={() => navigate.toList()}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium ${
+                        isActive('list') 
+                            ? 'bg-blue-50 text-blue-600' 
+                            : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                    <Menu size={20} />
+                    Chủ đề
+                </button>
+            </div>
+
+            <div>
+                <button 
+                    onClick={() => navigate.toList('admin')}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium ${
+                        isActive('list', 'admin')
+                            ? 'bg-blue-50 text-blue-600'
+                            : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                    <User size={20} />
+                    Admin đăng tải
                 </button>
             </div>
         </div>

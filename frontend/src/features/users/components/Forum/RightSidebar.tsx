@@ -1,7 +1,10 @@
 import type React from "react"
 import { Star } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 export const RightSidebar: React.FC = () => {
+    const navigate = useNavigate()
+
     return (
         <div className="w-80 bg-white border-l border-gray-200 p-6">
             <div className="mb-6">
@@ -10,8 +13,18 @@ export const RightSidebar: React.FC = () => {
                     <h3 className="font-semibold">Các quy định</h3>
                 </div>
                 <ul className="space-y-2 text-sm text-blue-600">
-                    <li className="hover:underline cursor-pointer">• Các luật lệ quan trọng khi tham gia Forum của MyVNU</li>
-                    <li className="hover:underline cursor-pointer">• Tìm kiếm trợ giúp</li>
+                    <li 
+                        onClick={() => navigate('/users/forum?view=post&postId=14')}
+                        className="hover:underline cursor-pointer"
+                    >
+                        • Các luật lệ quan trọng khi tham gia Forum của MyVNU
+                    </li>
+                    <li 
+                        onClick={() => navigate('/users/contact')}
+                        className="hover:underline cursor-pointer"
+                    >
+                        • Tìm kiếm trợ giúp
+                    </li>
                 </ul>
             </div>
 
@@ -20,7 +33,7 @@ export const RightSidebar: React.FC = () => {
                 <ul className="space-y-2 text-sm text-blue-600">
                     <li className="hover:underline cursor-pointer">• Facebook chính thức</li>
                     <li className="hover:underline cursor-pointer">• Instagram chính thức</li>
-                    <li className="hover:underline cursor-pointer">• Twitter chính thức</li>
+                    <li className="hover:underline cursor-pointer">• X chính thức</li>
                 </ul>
             </div>
         </div>

@@ -8,8 +8,8 @@ interface FilterTabsProps {
 export const FilterTabs: React.FC<FilterTabsProps> = ({ activeTab, onTabChange }) => {
     const tabs = [
         { id: "newest", label: "Mới nhất" },
-        { id: "answered", label: "Đã trả lời" },
-        { id: "unanswered", label: "Chưa trả lời" },
+        { id: "oldest", label: "Cũ nhất" },
+        { id: "hottest", label: "Hot nhất" },
     ]
 
     return (

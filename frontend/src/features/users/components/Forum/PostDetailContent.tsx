@@ -1,21 +1,21 @@
 import type React from "react"
 import { useState, useEffect } from "react"
-import { useParams, useNavigate } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
-import { AuthenticatedSidebar } from "./AuthenticatedSidebar"
-import { GuestSidebar } from "./GuestSidebar"
-import { RightSidebar } from "./RightSidebar"
 import { Pagination } from "./Pagination"
 import { PostContent } from "./PostContent"
 import { CommentInput } from "./CommentInput"
 import { CommentCard } from "./CommentCard"
 import forumService from "../../api/services/forumService"
 import type { Post, Comment } from "../../api/types/forumType"
-import { STORAGE_KEYS } from "../../api/config"
+import { Modal } from "./utils/modal"
 
-const PostDetailPage: React.FC = () => {
-    const { postId } = useParams<{ postId: string }>()
-    const navigate = useNavigate()
+interface Props {
+    postId: number
+    navigate: any
+    isAuthenticated: boolean
+}
+
+const PostDetailContent: React.FC<Props> = ({ postId, navigate, isAuthenticated }) => {
     const [currentPage, setCurrentPage] = useState(1)
     const [post, setPost] = useState<Post | null>(null)
     const [comments, setComments] = useState<Comment[]>([])
@@ -23,12 +23,23 @@ const PostDetailPage: React.FC = () => {
     const [loading, setLoading] = useState(true)
     const [commentsLoading, setCommentsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
-    const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-    useEffect(() => {
-        const token = localStorage.getItem(STORAGE_KEYS.TOKEN)
-        setIsAuthenticated(!!token)
-    }, [])
+    // ===== Modal state =====
+    const [modalOpen, setModalOpen] = useState(false)
+    const [modalConfig, setModalConfig] = useState<{
+        title?: string
+        message: string
+        type?: "info" | "success" | "error" | "warning" | "confirm"
+        onConfirm?: () => void
+    }>({
+        message: "",
+    })
+
+    const openModal = (config: typeof modalConfig) => {
+        setModalConfig(config)
+        setModalOpen(true)
+    }
+    // =======================
 
     useEffect(() => {
         const fetchPost = async () => {
@@ -40,7 +51,7 @@ const PostDetailPage: React.FC = () => {
                     throw new Error('Post ID không hợp lệ')
                 }
 
-                const response = await forumService.getPostDetail(parseInt(postId))
+                const response = await forumService.getPostDetail(postId)
                 setPost(response.post)
             } catch (err: any) {
                 setError(err.message || 'Không thể tải bài viết')
@@ -59,14 +70,15 @@ const PostDetailPage: React.FC = () => {
 
             setCommentsLoading(true)
             try {
-                const response = await forumService.getComments(parseInt(postId), {
-                    limit: 10,
+                const response = await forumService.getComments(postId, {
+                    limit: 5,
                     page: currentPage,
                     parent: null,
                     sort: "newest",
                 })
                 const rootComments = response.comments.filter(c => c.parent === null)
                 setComments(rootComments)
+                setTotalPages(response.pagination.totalPages)
             } catch (err: any) {
                 console.error('Error loading comments:', err)
             } finally {
@@ -99,7 +111,11 @@ const PostDetailPage: React.FC = () => {
                 liked: wasLiked,
                 likesCount: wasLiked ? post.likesCount + 1 : post.likesCount - 1
             })
-            alert(err.message || 'Có lỗi xảy ra')
+            openModal({
+                title: "Lỗi",
+                message: err.message || 'Có lỗi xảy ra',
+                type: "error",
+            })
         }
     }
 
@@ -130,7 +146,11 @@ const PostDetailPage: React.FC = () => {
                     }
                     : comment
             ))
-            alert(err.message || 'Có lỗi xảy ra')
+            openModal({
+                title: "Lỗi",
+                message: err.message || 'Có lỗi xảy ra',
+                type: "error",
+            })
         }
     }
 
@@ -138,7 +158,7 @@ const PostDetailPage: React.FC = () => {
         if (!postId) return
 
         try {
-            const response = await forumService.createComment(parseInt(postId), {
+            const response = await forumService.createComment(postId, {
                 content: text,
             })
             if (response.comment.parent === null) {
@@ -152,7 +172,11 @@ const PostDetailPage: React.FC = () => {
                 })
             }
         } catch (err: any) {
-            alert(err.message || 'Có lỗi xảy ra khi tạo bình luận')
+            openModal({
+                title: "Lỗi",
+                message: err.message || 'Có lỗi xảy ra khi tạo bình luận',
+                type: "error",
+            })
         }
     }
 
@@ -160,7 +184,7 @@ const PostDetailPage: React.FC = () => {
         if (!postId) return
 
         try {
-            await forumService.createComment(parseInt(postId), {
+            await forumService.createComment(postId, {
                 content,
                 parent: parentId,
             })
@@ -178,7 +202,11 @@ const PostDetailPage: React.FC = () => {
                 })
             }
         } catch (err: any) {
-            alert(err.message || 'Có lỗi xảy ra khi trả lời bình luận')
+            openModal({
+                title: "Lỗi",
+                message: err.message || 'Có lỗi xảy ra khi trả lời bình luận',
+                type: "error",
+            })
         }
     }
 
@@ -202,12 +230,12 @@ const PostDetailPage: React.FC = () => {
     }
 
     const handleBack = () => {
-        navigate('/users/forum')
+        navigate.toList()
     }
 
     if (loading) {
         return (
-            <div className="flex h-screen bg-white items-center justify-center">
+            <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                     <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
                     <p className="mt-4 text-gray-600">Đang tải bài viết...</p>
@@ -218,7 +246,7 @@ const PostDetailPage: React.FC = () => {
 
     if (error || !post) {
         return (
-            <div className="flex h-screen bg-white items-center justify-center">
+            <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                     <p className="text-red-600 mb-4">{error || 'Không tìm thấy bài viết'}</p>
                     <button
@@ -233,65 +261,66 @@ const PostDetailPage: React.FC = () => {
     }
 
     return (
-        <div className="flex h-screen bg-white pt-8">
-            {isAuthenticated ? <AuthenticatedSidebar /> : <GuestSidebar />}
+        <div className="max-w-4xl mx-auto px-12 pt-8 pb-10">
+            <button
+                onClick={handleBack}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+            >
+                <ArrowLeft size={20} />
+                <span>Quay lại</span>
+            </button>
 
-            <div className="flex-1 overflow-auto bg-white">
-                <div className="max-w-4xl mx-auto px-12 pt-8 pb-10">
-                    <button
-                        onClick={handleBack}
-                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
-                    >
-                        <ArrowLeft size={20} />
-                        <span>Quay lại</span>
-                    </button>
+            <PostContent post={post} onLike={handleLikePost} isAuthenticated={isAuthenticated} />
 
-                    <PostContent post={post} onLike={handleLikePost} isAuthenticated={isAuthenticated} />
+            <CommentInput
+                onSubmit={handleSubmitComment}
+                isAuthenticated={isAuthenticated}
+            />
 
-                    <CommentInput
-                        onSubmit={handleSubmitComment}
-                        isAuthenticated={isAuthenticated}
-                    />
-
-                    {commentsLoading ? (
-                        <div className="text-center py-8">
-                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                            <p className="mt-2 text-gray-600">Đang tải bình luận...</p>
-                        </div>
-                    ) : comments.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                            Chưa có bình luận nào. Hãy là người đầu tiên bình luận!
-                        </div>
-                    ) : (
-                        <div>
-                            {comments.map((comment) => (
-                                <CommentCard
-                                    key={comment.commentId}
-                                    comment={comment}
-                                    onLike={handleLikeComment}
-                                    onReply={handleReplyComment}
-                                    onUpdate={handleUpdateComment}
-                                    onDelete={handleDeleteComment}
-                                    isAuthenticated={isAuthenticated}
-                                    postId={parseInt(postId!)}
-                                />
-                            ))}
-                        </div>
-                    )}
-
-                    {totalPages > 1 && (
-                        <Pagination
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            onPageChange={setCurrentPage}
-                        />
-                    )}
+            {commentsLoading ? (
+                <div className="text-center py-8">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                    <p className="mt-2 text-gray-600">Đang tải bình luận...</p>
                 </div>
-            </div>
+            ) : comments.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                    Chưa có bình luận nào. Hãy là người đầu tiên bình luận!
+                </div>
+            ) : (
+                <div>
+                    {comments.map((comment) => (
+                        <CommentCard
+                            key={comment.commentId}
+                            comment={comment}
+                            onLike={handleLikeComment}
+                            onReply={handleReplyComment}
+                            onUpdate={handleUpdateComment}
+                            onDelete={handleDeleteComment}
+                            isAuthenticated={isAuthenticated}
+                            postId={postId}
+                        />
+                    ))}
+                </div>
+            )}
 
-            <RightSidebar />
+            {totalPages > 1 && (
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                />
+            )}
+
+            <Modal
+                isOpen={modalOpen}
+                onClose={() => setModalOpen(false)}
+                title={modalConfig.title}
+                message={modalConfig.message}
+                type={modalConfig.type}
+                onConfirm={modalConfig.onConfirm}
+            />
         </div>
     )
 }
 
-export default PostDetailPage
+export default PostDetailContent
