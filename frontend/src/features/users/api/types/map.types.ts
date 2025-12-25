@@ -1,37 +1,47 @@
-export interface PointGeometry {
-  type: 'Point';
-  coordinates: [number, number, number?];
+export interface Geometry {
+  type: string;
+  coordinates: any;
 }
 
-export interface MeshObject {
+export interface MeshData {
   meshId: number;
   meshUrl: string;
-  pointGeometry: PointGeometry | null;
-  rotate: [number, number, number];
-  scale: [number, number, number];
+  pointGeometry: Geometry;
+  rotate: number[];
+  scale: number[];
 }
 
-export interface Building3D {
+export interface BodyData {
+  bodyId: number;
+  prisms: any[];
+  pyramids: any[];
+  cones: any[];
+  cylinders: any[];
+}
+
+export interface Object3D {
+  objectId: number;
+  objectType: number;
+  meshes: MeshData[];
+  bodies: BodyData[];
+}
+
+export interface Building {
   buildingId: number;
   name: string;
   description: string;
   floors: number;
-  image: string;
+  image?: string;
   placeId: number;
-  placeName: string;
-  distance?: number;
-  objects3d: {
-    objectId: number;
-    objectType: number;
-    meshes: MeshObject[];
-    bodies: any[];
-  }[];
+  placeName?: string;
+  objects3d: Object3D[];
 }
 
-export interface MapQueryParams {
-  lat: number;
-  lon: number;
-  zoom: number;
-  heading: number;
-  tilt: number;
+export interface PathResponse {
+  message: string;
+  path: {
+    pathGeometry: Geometry | null;
+    totalCost: number;
+    segments: any[];
+  };
 }
