@@ -70,10 +70,10 @@ export default function ViewComment() {
       />
 
       <div className="mb-6 flex items-center">
-        <Link to="/admin/forum">
+        <Link to={`/admin/forum/${comment.postId}`}>
           <GrFormPrevious className="w-6 h-6 mr-2 my-auto" />
         </Link>
-        <h2 className="text-xl font-semibold text-gray-800">Xem bài đăng</h2>
+        <h2 className="text-xl font-semibold text-gray-800">Xem bình luận</h2>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-200 p-6">
