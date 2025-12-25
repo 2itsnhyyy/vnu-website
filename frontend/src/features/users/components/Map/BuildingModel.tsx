@@ -9,25 +9,44 @@ export const BuildingModel = ({ building, origin, onClick }: any) => {
     <group>
       {building.objects3d.map((obj: any) => (
         <group key={obj.objectId}>
-          {obj.objectType === 0 && obj.meshes.map((mesh: any) => (
-            <SingleMesh 
-              key={mesh.meshId} 
-              data={mesh} 
-              origin={origin} 
-              scaleGis={SCALE_GIS} 
-              onSelect={() => onClick(building)} 
-            />
-          ))}
+          {/* Render Mesh (.glb) */}
+          {obj.objectType === 0 && obj.meshes.map((mesh: any) => {
+            const [lon, lat, alt] = mesh.pointGeometry.coordinates;
+            const pos = [
+              (lon - origin.lon) * SCALE_GIS,
+              alt,
+              (lat - origin.lat) * SCALE_GIS * -1
+            ];
+            return (
+              <SingleMesh 
+                key={mesh.meshId} 
+                url={mesh.meshUrl}
+                position={pos as [number, number, number]}
+                rotation={[0, (mesh.rotate * Math.PI) / 180, 0]}
+                scale={mesh.scale}
+                onSelect={onClick} 
+              />
+            );
+          })}
 
+          {/* Render Khối lăng trụ (Body Type 1) */}
           {obj.objectType === 1 && obj.bodies.map((body: any) => (
-            <group key={body.bodyId}>
-              {body.prisms?.map((prism: any) => (
-                <PrismMesh key={prism.prismId} data={prism} origin={origin} scaleGis={SCALE_GIS} />
-              ))}
-              {body.cones?.map((cone: any) => (
-                <ConeMesh key={cone.coneId} data={cone} origin={origin} scaleGis={SCALE_GIS} />
-              ))}
-            </group>
+            body.prisms?.map((prism: any) => {
+              const shape = new THREE.Shape();
+              const coords = prism.baseFaceGeometry.coordinates[0];
+              coords.forEach((c: any, i: number) => {
+                const x = (c[0] - origin.lon) * SCALE_GIS;
+                const z = (c[1] - origin.lat) * SCALE_GIS * -1;
+                if (i === 0) shape.moveTo(x, z); else shape.lineTo(x, z);
+              });
+
+              return (
+                <mesh key={prism.prismId} rotation={[-Math.PI / 2, 0, 0]} castShadow receiveShadow onClick={onClick}>
+                  <extrudeGeometry args={[shape, { depth: prism.height || 5, bevelEnabled: false }]} />
+                  <meshStandardMaterial color="#cccccc" roughness={0.5} metalness={0.2} />
+                </mesh>
+              );
+            })
           ))}
         </group>
       ))}
@@ -35,35 +54,22 @@ export const BuildingModel = ({ building, origin, onClick }: any) => {
   );
 };
 
-const PrismMesh = ({ data, origin, scaleGis }: any) => {
-  const shape = useMemo(() => {
-    const s = new THREE.Shape();
-    const coords = data.baseFaceGeometry.coordinates[0];
-    coords.forEach((c: any, i: number) => {
-      const x = (c[0] - origin.lon) * scaleGis;
-      const y = (c[1] - origin.lat) * scaleGis * -1;
-      if (i === 0) s.moveTo(x, y); else s.lineTo(x, y);
-    });
-    return s;
-  }, [data, origin, scaleGis]);
+const SingleMesh = ({ url, position, rotation, scale, onSelect }: any) => {
+  const { scene } = useGLTF(url);
+  const clonedScene = useMemo(() => scene.clone(), [scene]);
 
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]}>
-      <extrudeGeometry args={[shape, { depth: data.height || 5, bevelEnabled: false }]} />
-      <meshStandardMaterial color="#cccccc" />
-    </mesh>
-  );
-};
-
-const SingleMesh = ({ data, origin, scaleGis, onSelect }: any) => {
-  const { scene } = useGLTF(data.meshUrl);
-  const position = useMemo(() => [
-    (data.pointGeometry.coordinates[0] - origin.lon) * scaleGis,
-    data.pointGeometry.coordinates[2] || 0,
-    (data.pointGeometry.coordinates[1] - origin.lat) * scaleGis * -1
-  ], [data, origin, scaleGis]);
-
-  return (
-    <primitive object={scene.clone()} position={position} scale={data.scale} onClick={onSelect} />
+    <primitive 
+      object={clonedScene} 
+      position={position} 
+      rotation={rotation}
+      scale={[scale, scale, scale]}
+      castShadow
+      receiveShadow
+      onClick={(e: any) => {
+        e.stopPropagation();
+        onSelect();
+      }}
+    />
   );
 };
