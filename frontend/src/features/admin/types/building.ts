@@ -51,6 +51,14 @@ export interface GetAllBuildingResponse {
   buildings: Building[]; 
 }
 
+export interface UpdateBuildingRequest {
+  name: string;
+  placeId: number;
+  description?: string;
+  floors: number;
+  image?: string;
+}
+
 /* =======================
    BUILDING REQUEST
 ======================= */

@@ -78,11 +78,11 @@ const Buildings: React.FC = () => {
   }
 
   function handleView(buildingId: number) {
-    navigate(`/admin/building/${buildingId}`);
+    navigate(`/admin/buildings/${buildingId}`);
   }
 
   function handleEdit(buildingId: number) {
-    navigate(`/admin/building/edit/${buildingId}`);
+    navigate(`/admin/buildings/edit/${buildingId}`);
   }
 
   function handleAdd() {
@@ -265,26 +265,6 @@ const Buildings: React.FC = () => {
                 style={{ width: 160 }}
               />
 
-              <Button
-                size="large"
-                type="primary"
-                onClick={() => loadBuilding(1)}
-              >
-                Lọc
-              </Button>
-
-              <Select
-                defaultValue="all"
-                style={{ width: 150 }}
-                size="large"
-                onChange={setFilter}
-                options={[
-                  { value: "all", label: "Sắp xếp theo" },
-                  { value: "new-to-old", label: "Ngày tạo gần nhất" },
-                  { value: "old-to-new", label: "Ngày tạo xa nhất" },
-                ]}
-              />
-
               <button
                 onClick={handleAdd}
                 className="flex items-center gap-2 bg-primary hover:bg-primary-light hover:cursor-pointer text-white font-medium p-2 rounded-md transition"
@@ -306,6 +286,7 @@ const Buildings: React.FC = () => {
               total: pagination.totalItems,
               showSizeChanger: false,
               placement: ["bottomCenter"],
+              showLessItems: true,
               onChange: (page) => loadBuilding(page),
             }}
           />

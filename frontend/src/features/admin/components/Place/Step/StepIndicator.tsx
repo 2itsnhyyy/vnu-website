@@ -1,10 +1,10 @@
 import React from "react";
-import { Info, MapPin, Gift, Upload } from "lucide-react";
+import { Info, MapPin, Gift, Upload, Box } from "lucide-react";
 
 interface Step {
   number: number;
   label: string;
-  icon: "info" | "location" | "gift" | "upload";
+  icon: "info" | "location" | "gift" | "upload" | "box";
 }
 
 interface StepIndicatorProps {
@@ -29,6 +29,8 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({
         return <Gift className={iconClass} size={size} />;
       case "upload":
         return <Upload className={iconClass} size={size} />;
+      case "box":
+        return <Box className={iconClass} size={size} />;
       default:
         return null;
     }

@@ -36,14 +36,8 @@ const Step2: React.FC<Step2Props> = ({ initialData, onNext, onBack }) => {
         return false
       }
       
-      // Read file and convert to base64 for localStorage
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const base64 = e.target?.result as string
-        localStorage.setItem(`model_${file.name}`, base64)
-        message.success("Đã lưu file vào localStorage")
-      }
-      reader.readAsDataURL(file)
+      // Do not store in localStorage; keep file in uploader state and upload on submit
+      message.success("Đã chọn file .glb")
       
       return false // Prevent auto upload
     },
@@ -52,9 +46,8 @@ const Step2: React.FC<Step2Props> = ({ initialData, onNext, onBack }) => {
       setFileList(newFileList)
     },
     onRemove: (file) => {
-      localStorage.removeItem(`model_${file.name}`)
       setFileList([])
-      message.info("Đã xóa file khỏi localStorage")
+      message.info("Đã xóa file")
     },
     fileList: fileList,
   }
@@ -83,22 +76,16 @@ const Step2: React.FC<Step2Props> = ({ initialData, onNext, onBack }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+    <div className="bg-white rounded-lg border border-gray-200  p-8">
       <div className="max-w-3xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold mb-2">Chọn cách tạo mô hình 3D</h2>
-          <p className="text-gray-500">Bạn có thể chọn 1 hoặc kết hợp cả 2 phương thức</p>
-        </div>
-
         {/* Method Selection */}
-        <div className="space-y-4 mb-6">
+        <div className="grid grid-cols-2 gap-4 mb-6">
           {/* Draw Option */}
           <div 
             className={`border-2 rounded-lg p-4 cursor-pointer transition ${
               enableDraw 
-                ? 'border-blue-500 bg-blue-50' 
-                : 'border-gray-300 hover:border-gray-400'
+                ? 'border-primary bg-blue-50' 
+                : 'border-gray-300 hover:border-blue-400'
             }`}
             onClick={() => { setEnableDraw(!enableDraw); if (!enableDraw) setEnableUpload(false) }}
           >
@@ -110,21 +97,11 @@ const Step2: React.FC<Step2Props> = ({ initialData, onNext, onBack }) => {
               />
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-2xl">🎨</span>
-                  <span className="font-medium text-lg">Vẽ khối hình 3D</span>
-                  <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                    ✨ Khuyến nghị
-                  </span>
+                  <span className="font-semibold text-lg text-primary">Vẽ khối hình 3D</span>
                 </div>
                 <p className="text-sm text-gray-600 mb-2">
-                  Tự vẽ các khối hình đơn giản như hộp, trụ, lăng trụ và ghép cửa sổ/cửa ra vào
+                  Vẽ đa giác trên bản đồ bằng cách <br />chấm tọa độ
                 </p>
-                <ul className="text-xs text-gray-500 space-y-1 ml-4">
-                  <li>• Vẽ hộp chữ nhật, khối trụ, lăng trụ</li>
-                  <li>• Upload file .glb nhỏ (cửa sổ, cửa...) để ghép vào</li>
-                  <li>• Điều chỉnh kích thước, vị trí từng khối</li>
-                  <li>• Preview 3D real-time</li>
-                </ul>
               </div>
             </div>
           </div>
@@ -133,8 +110,8 @@ const Step2: React.FC<Step2Props> = ({ initialData, onNext, onBack }) => {
           <div 
             className={`border-2 rounded-lg p-4 cursor-pointer transition ${
               enableUpload 
-                ? 'border-blue-500 bg-blue-50' 
-                : 'border-gray-300 hover:border-gray-400'
+                ? 'border-primary bg-blue-50' 
+                : 'border-gray-300 hover:border-blue-400'
             }`}
             onClick={() => { setEnableUpload(!enableUpload); if (!enableUpload) setEnableDraw(false) }}
           >
@@ -146,19 +123,14 @@ const Step2: React.FC<Step2Props> = ({ initialData, onNext, onBack }) => {
               />
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-2xl">📦</span>
-                  <span className="font-medium text-lg">Upload file .glb có sẵn</span>
-                  <span className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
-                    💾 Lưu local
-                  </span>
+                  <span className="font-semibold text-lg text-primary">Upload file .glb</span>
                 </div>
                 <p className="text-sm text-gray-600 mb-2">
-                  Tải lên file mô hình 3D có sẵn - file sẽ được lưu trong trình duyệt
+                  Tải lên file mô hình 3D có sẵn để sử dụng
                 </p>
-                <ul className="text-xs text-gray-500 space-y-1 ml-4">
-                  <li>• File .glb/.gltf tối đa 50MB</li>
-                  <li>• Lưu trong localStorage (không upload cloud)</li>
-                  <li>• Phù hợp cho model phức tạp đã có sẵn</li>
+                <ul className="text-sm text-gray-500 space-y-1 ml-4">
+                  <li>• File .glb có kích thước tối đa 10MB</li>
+                  <li>• Phù hợp cho model phức tạp</li>
                 </ul>
               </div>
             </div>
@@ -169,28 +141,24 @@ const Step2: React.FC<Step2Props> = ({ initialData, onNext, onBack }) => {
         {enableUpload && (
           <>
             <div className="mb-6">
-              <label className="block text-lg font-medium mb-4">📦 Tải lên file mô hình 3D</label>
-              <Dragger {...uploadProps} className="mb-4">
+              <Dragger {...uploadProps} showUploadList={false} className="mb-4">
                 <p className="ant-upload-drag-icon">
                   <InboxOutlined style={{ fontSize: 48, color: "#1890ff" }} />
                 </p>
-                <p className="ant-upload-text text-lg">Nhấp hoặc kéo thả file vào khu vực này</p>
-                <p className="ant-upload-hint">Hỗ trợ: .glb, .gltf (tối đa 50MB) - Lưu trong localStorage</p>
+                <p className="ant-upload-text text-lg">Nhấp hoặc kéo thả file vào khu vực này để tải lên</p>
+                <p className="ant-upload-hint">Hỗ trợ: .glb (tối đa 10MB)</p>
               </Dragger>
 
               {fileList.length > 0 && (
-                <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="mt-4 p-4 bg-blue-50 border border-primary rounded-lg">
                   <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-green-800 font-medium">File đã lưu: {fileList[0].name}</span>
+                    <span className="text-primary font-medium">File đã tải lên: {fileList[0].name}</span>
                   </div>
-                  <p className="text-sm text-green-600 mt-1">
+                  <p className="text-sm text-primary mt-1 ml-7">
                     Kích thước: {((fileList[0].size || 0) / 1024 / 1024).toFixed(2)} MB
-                  </p>
-                  <p className="text-xs text-green-700 mt-1">
-                    ✓ Đã lưu vào localStorage của trình duyệt
                   </p>
                 </div>
               )}
@@ -198,16 +166,6 @@ const Step2: React.FC<Step2Props> = ({ initialData, onNext, onBack }) => {
           </>
         )}
 
-        {/* Info Box */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <h3 className="font-medium text-blue-900 mb-2">💡 Gợi ý:</h3>
-          <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-            <li><strong>Chỉ vẽ:</strong> Nhanh chóng cho tòa nhà đơn giản</li>
-            <li><strong>Chỉ upload:</strong> Phù hợp cho model phức tạp có sẵn</li>
-            <li><strong>Kết hợp cả 2:</strong> Upload model chính + vẽ thêm chi tiết</li>
-            <li>File lưu trong localStorage (không upload cloud, miễn phí)</li>
-          </ul>
-        </div>
 
         {/* Action Buttons */}
         <div className="flex justify-between">

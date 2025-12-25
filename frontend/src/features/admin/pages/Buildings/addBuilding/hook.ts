@@ -58,7 +58,7 @@ interface BuildingFormData {
   modelType?: 'upload' | 'draw'
   modelFile?: File
   modelFileName?: string
-  useLocalStorage?: boolean
+
   latitude?: number
   longitude?: number
   shapes?: Shape[]
@@ -144,33 +144,29 @@ export const useCreateBuilding = () => {
     const meshes = []
 
     for (const asset of glbAssets) {
-      // Store GLB file in localStorage
-      const reader = new FileReader()
-      const base64Promise = new Promise<string>((resolve) => {
-        reader.onload = (e) => {
-          const base64 = e.target?.result as string
-          localStorage.setItem(`glb_asset_${asset.id}`, base64)
-          resolve(base64)
-        }
-      })
-      reader.readAsDataURL(asset.file)
-      await base64Promise
+      // Upload GLB file via imageService to obtain a public URL
+      try {
+        const uploaded = await imageService.uploadImages([asset.file])
+        const url = uploaded && uploaded[0] && uploaded[0].url ? uploaded[0].url : ''
 
-      // Create mesh entry for each instance
-      for (const instance of asset.instances) {
-        meshes.push({
-          meshUrl: `localStorage://glb_asset_${asset.id}`, // Custom protocol for localStorage
-          point: {
-            type: 'Point' as const,
-            coordinates: [
-              longitude + instance.position.x / 111320,
-              latitude + instance.position.z / 110540,
-              instance.position.y
-            ]
-          },
-          rotate: instance.rotation.y * (180 / Math.PI), // Convert to degrees
-          scale: instance.scale.x
-        })
+        // Create mesh entry for each instance using the uploaded URL
+        for (const instance of asset.instances) {
+          meshes.push({
+            meshUrl: url,
+            point: {
+              type: 'Point' as const,
+              coordinates: [
+                longitude + instance.position.x / 111320,
+                latitude + instance.position.z / 110540,
+                instance.position.y
+              ]
+            },
+            rotate: instance.rotation.y * (180 / Math.PI), // Convert to degrees
+            scale: instance.scale.x
+          })
+        }
+      } catch (err) {
+        // Failed to upload GLB asset
       }
     }
 
@@ -218,8 +214,8 @@ export const useCreateBuilding = () => {
         throw new Error('Vui lòng vẽ khối hình hoặc tải file model');
       }
 
-      const latitude = formData.latitude || 10.8231
-      const longitude = formData.longitude || 106.6297
+      const latitude = formData.latitude || 10.874334
+      const longitude = formData.longitude || 106.803250
 
       // Step 3: Prepare 3D objects
       const objects3d: (Geometry3DObject | Mesh3DObject)[] = []
@@ -240,47 +236,53 @@ export const useCreateBuilding = () => {
         message.success({ content: 'Đã xử lý GLB assets!', key: 'process-glb', duration: 2 });
       }
 
-      // Add uploaded model if upload mode
-      if (formData.modelFile && formData.useLocalStorage) {
-        message.loading({ content: 'Đang lưu model vào localStorage...', key: 'save-model' });
+      // Add uploaded model if provided
+      if (formData.modelFile) {
+        message.loading({ content: 'Đang xử lý model...', key: 'save-model' });
         
-        // Store model in localStorage
-        const reader = new FileReader()
-        const base64Promise = new Promise<string>((resolve) => {
-          reader.onload = (e) => {
-            const base64 = e.target?.result as string
-            const modelKey = `model_${formData.modelFileName}`
-            localStorage.setItem(modelKey, base64)
-            resolve(modelKey)
+          // Upload model file (GLB) via imageService and use returned URL
+          try {
+            const uploaded = await imageService.uploadImages([formData.modelFile as File])
+            const modelUrl = uploaded && uploaded[0] && uploaded[0].url ? uploaded[0].url : ''
+            const meshObject: Mesh3DObject = {
+              objectType: 0,
+              meshes: [{
+                meshUrl: modelUrl,
+                point: {
+                  type: 'Point',
+                  coordinates: [longitude, latitude, 0]
+                },
+                rotate: 0,
+                scale: 1
+              }]
+            }
+            objects3d.push(meshObject)
+            message.success({ content: 'Đã lưu model!', key: 'save-model', duration: 2 });
+          } catch (err) {
+            message.warning({ content: 'Không thể lưu model lên server, tiếp tục không có model', key: 'save-model', duration: 2 })
           }
-        })
-        reader.readAsDataURL(formData.modelFile)
-        const modelKey = await base64Promise
-
-        const meshObject: Mesh3DObject = {
-          objectType: 0,
-          meshes: [{
-            meshUrl: `localStorage://${modelKey}`,
-            point: {
-              type: 'Point',
-              coordinates: [longitude, latitude, 0]
-            },
-            rotate: 0,
-            scale: 1
-          }]
-        }
-        objects3d.push(meshObject)
-        message.success({ content: 'Đã lưu model!', key: 'save-model', duration: 2 });
       }
 
       // Step 4: Create building request
+      // Normalize objects3d: remove any empty entries
+      const normalizedObjects3d = objects3d.filter(obj => {
+        if (!obj) return false
+        if ((obj as any).objectType === 0) {
+          return Array.isArray((obj as any).meshes) && (obj as any).meshes.length > 0
+        }
+        if ((obj as any).objectType === 1) {
+          return (obj as any).body && Array.isArray((obj as any).body.prisms) && (obj as any).body.prisms.length > 0
+        }
+        return false
+      })
+      // Normalized objects3d successfully
       const buildingData: CreateBuildingRequest = {
         name: formData.name,
         description: formData.description || '',
         floors: formData.floors,
         image: imageUrl,
         placeId: formData.place_id,
-        objects3d
+        objects3d: normalizedObjects3d
       };
 
       // Step 5: Create building via API
@@ -289,7 +291,7 @@ export const useCreateBuilding = () => {
       const createdBuilding = await buildingService.create(buildingData);
       
       message.success({ 
-        content: '✅ Tạo tòa nhà thành công!', 
+        content: 'Tạo tòa nhà thành công!', 
         key: 'create-building',
         duration: 3 
       });
@@ -301,11 +303,10 @@ export const useCreateBuilding = () => {
       setError(errorMessage);
       
       message.error({
-        content: `❌ Tạo tòa nhà thất bại: ${errorMessage}`,
+        content: `Tạo tòa nhà thất bại: ${errorMessage}`,
         duration: 5
       });
       
-      console.error('Create building error:', err);
       return null;
     } finally {
       setLoading(false);

@@ -26,7 +26,6 @@ const EditPlace: React.FC = () => {
     { number: 3, label: "Preview", icon: "gift" as const },
   ]
 
-  console.log("Editing placeId:", placeIdNumber)
 
   const [formData, setFormData] = useState<Partial<PlaceCreateRequest>>({
     name: "",

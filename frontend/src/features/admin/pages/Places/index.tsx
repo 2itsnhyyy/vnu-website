@@ -290,6 +290,7 @@ const Places: React.FC = () => {
               current: currentPage,
               pageSize: PAGE_SIZE,
               total: totalItems,
+              showLessItems: true,
               showSizeChanger: false,
               placement: ["bottomCenter"],
               onChange: (page) => setCurrentPage(page),
