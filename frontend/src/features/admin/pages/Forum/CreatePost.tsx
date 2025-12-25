@@ -17,7 +17,7 @@ export default function CreatePost() {
     contentMarkdown: "",
   });
   const [files, setFiles] = useState<File[]>([]);
-  const editorRef = useRef<HTMLDivElement>(null); // dùng để gắn paste event
+  const editorRef = useRef<HTMLDivElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

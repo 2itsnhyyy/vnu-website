@@ -1,13 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import PageMeta from "../../components/Common/PageMeta";
-import { Save } from "lucide-react";
+import { Save, UploadCloudIcon } from "lucide-react";
+import MDEditor, { type ICommand } from "@uiw/react-md-editor";
 import { Link } from "react-router-dom";
 import { GrFormPrevious } from "react-icons/gr";
 import { incidentService } from "../../services/IncidentService";
 import type { IncidentCreateRequest } from "../../types/incident";
 import type { Place } from "../../types/place";
 import { placeService } from "../../services/PlaceService";
+import apiClient from "../../../users/api/apiClient";
 
 export default function CreateIncident() {
   const navigate = useNavigate();
@@ -19,6 +21,115 @@ export default function CreateIncident() {
     placeId: undefined as any,
     status: undefined as any,
   });
+  const [files, setFiles] = useState<File[]>([]);
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  const uploadImages = async (files: File[]) => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
+    const response = await apiClient.post("/cloudinary/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (
+      !formData.title ||
+      !formData.content ||
+      formData.placeId == null ||
+      formData.status == null
+    ) {
+      alert("Vui lòng nhập đầy đủ thông tin");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      if (files.length > 0) {
+        const uploadedImages = await uploadImages(files);
+        const imagesMarkdown = uploadedImages
+          .map((img: { url: any }) => `![image](${img.url})`)
+          .join("\n");
+        formData.content += `\n${imagesMarkdown}`;
+      }
+
+      await incidentService.create(formData);
+      navigate("/admin/incidents");
+    } catch (err) {
+      console.error(err);
+      alert("Có lỗi xảy ra khi tạo bài đăng");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const insertImageCommand: ICommand = {
+    name: "insert-image",
+    keyCommand: "insert-image",
+    buttonProps: { "aria-label": "Insert image" },
+    icon: <UploadCloudIcon className="w-4 h-4" />,
+    execute: async (state, api) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+
+      input.onchange = async () => {
+        if (!input.files?.length) return;
+        const file = input.files[0];
+
+        const formData = new FormData();
+        formData.append("files", file);
+
+        try {
+          const response = await apiClient.post(
+            "/cloudinary/upload",
+            formData,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+            }
+          );
+          const url = response.data[0].url;
+          api.replaceSelection(`![image](${url})`);
+        } catch (err) {
+          console.error(err);
+          alert("Upload ảnh thất bại");
+        }
+      };
+
+      input.click();
+    },
+  };
+
+  useEffect(() => {
+    const handlePaste = async (e: ClipboardEvent) => {
+      if (!e.clipboardData) return;
+      const items = e.clipboardData.items;
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (!file) continue;
+          try {
+            const response = await uploadImages([file]);
+            const url = response[0].url;
+            setFormData((prev) => ({
+              ...prev,
+              content: prev.content + `\n![image](${url})\n`,
+            }));
+          } catch (err) {
+            console.error(err);
+            alert("Upload ảnh từ clipboard thất bại");
+          }
+        }
+      }
+    };
+
+    const editorDiv = editorRef.current;
+    editorDiv?.addEventListener("paste", handlePaste as any);
+    return () => editorDiv?.removeEventListener("paste", handlePaste as any);
+  }, []);
 
   useEffect(() => {
     loadPlaces();
@@ -44,32 +155,6 @@ export default function CreateIncident() {
       ...prev,
       [name]: name === "status" || name === "placeId" ? Number(value) : value,
     }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (
-      !formData.title ||
-      !formData.content ||
-      formData.placeId == null ||
-      formData.status == null
-    ) {
-      alert("Vui lòng nhập đầy đủ thông tin");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const created = await incidentService.create(formData);
-      console.log("Created post:", created);
-      navigate("/admin/incidents");
-    } catch (error) {
-      console.error("Error creating incident:", error);
-      alert("Có lỗi xảy ra khi tạo sự cố");
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
@@ -143,20 +228,46 @@ export default function CreateIncident() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nội dung chi tiết
-              <span className="text-red-500">
-                <span className="text-red-500">*</span>
-              </span>
+              Nội dung chi tiết <span className="text-red-500">*</span>
             </label>
-
-            <div className="border border-gray-300 rounded-lg p-2">
-              <textarea
-                className="w-full p-2"
-                name="content"
-                placeholder="Nội dung..."
-                value={formData.content || ""}
-                onChange={handleChange}
-                rows={4}
+            <div
+              ref={editorRef}
+              className="border border-gray-300 rounded-lg p-2"
+            >
+              <MDEditor
+                value={formData.content}
+                onChange={(value) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    content: value || "",
+                  }))
+                }
+                extraCommands={[insertImageCommand]}
+                textareaProps={{
+                  onPaste: async (
+                    e: React.ClipboardEvent<HTMLTextAreaElement>
+                  ) => {
+                    const items = e.clipboardData.items;
+                    for (let i = 0; i < items.length; i++) {
+                      const item = items[i];
+                      if (!item.type.startsWith("image/")) continue;
+                      const file = item.getAsFile();
+                      if (!file) continue;
+                      try {
+                        const response = await uploadImages([file]);
+                        const url = response[0].url;
+                        setFormData((prev) => ({
+                          ...prev,
+                          contentMarkdown:
+                            prev.content + `\n![image](${url})\n`,
+                        }));
+                      } catch (err) {
+                        console.error(err);
+                        alert("Upload ảnh từ clipboard thất bại");
+                      }
+                    }
+                  },
+                }}
               />
             </div>
           </div>
