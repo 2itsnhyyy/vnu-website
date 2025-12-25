@@ -1,67 +1,113 @@
 import React, { useState } from "react";
-import { Button } from "antd";
+import { Button, message } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import Step1 from "./step1";
 import Step2 from "./step2";
 import Step3 from "./step3";
-import type { Place } from "../../../types/place";
+import type { PlaceCreateRequest, PlaceCreateRequestWithFile } from "../../../types/place";
 import StepIndicator from "../../../components/Place/Step/StepIndicator";
-
+import { placeService } from "../../../services/PlaceService";
+import { imageService } from "../../../services/ImageService";
+import { useNavigate } from "react-router-dom";
 
 const AddPlace: React.FC = () => {
-   const [currentStep, setCurrentStep] = useState(0);
-   const steps = [
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+
+  const steps = [
     { number: 1, label: "Thông tin địa điểm", icon: "info" as const },
     { number: 2, label: "Chọn vị trí trên bản đồ", icon: "location" as const },
     { number: 3, label: "Preview", icon: "gift" as const },
-  ]  
+  ];
 
-
-  const [formData, setFormData] = useState<Partial<Place>>({
+  const [formData, setFormData] = useState<Partial<PlaceCreateRequest>>({
     name: "",
     description: "",
     address: "",
     image: "",
   });
 
-  const handleNext = (data: Partial<Place>) => {
-    setFormData({ ...formData, ...data });
-    setCurrentStep(currentStep + 1);
+  const handleNext = (data: Partial<PlaceCreateRequest>) => {
+    setFormData((prev) => ({ ...prev, ...data }));
+    setCurrentStep((prev) => prev + 1);
   };
 
   const handleBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
+    setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
 
-  const handleSubmit = async (data: Partial<Place>) => {
-    const finalData = { ...formData, ...data };
-    console.log("Submitting place data:", finalData);
-    // Handle API submission here
+  // Submit CREATE with image upload
+  const handleSubmit = async (data: PlaceCreateRequestWithFile) => {
+    const finalData: PlaceCreateRequestWithFile = {
+      ...formData,
+      ...data,
+    } as PlaceCreateRequestWithFile;
+
+    // --- Tự động đóng Polygon nếu cần ---
+    if (finalData.boundaryGeom?.coordinates?.[0]?.length >= 3) {
+      const coords = [...finalData.boundaryGeom.coordinates[0]]; // copy mảng
+      const firstPoint = coords[0];
+      const lastPoint = coords[coords.length - 1];
+
+      if (firstPoint[0] !== lastPoint[0] || firstPoint[1] !== lastPoint[1]) {
+        coords.push(firstPoint); // thêm điểm đầu vào cuối
+      }
+
+      finalData.boundaryGeom = {
+        ...finalData.boundaryGeom,
+        coordinates: [coords],
+      };
+    }
+
+    try {
+      setLoading(true);
+
+      // Upload image if imageFile exists
+      if (finalData.imageFile) {
+        message.loading({ content: "Đang tải ảnh lên...", key: "upload" });
+        const uploadedImages = await imageService.uploadImages([finalData.imageFile as File]);
+        finalData.image = uploadedImages[0].url;
+        message.success({ content: "Tải ảnh thành công!", key: "upload", duration: 2 });
+        
+        // Remove imageFile from final data
+        delete finalData.imageFile;
+      }
+
+      console.log("Submitting place data:", finalData);
+
+      message.loading({ content: "Đang tạo địa điểm...", key: "create" });
+      const created = await placeService.create(finalData);
+      console.log("Created place:", created);
+      
+      message.success({ content: "Tạo địa điểm thành công!", key: "create", duration: 2 });
+      navigate("/admin/places");
+    } catch (error) {
+      console.error("Error creating place:", error);
+      message.error("Có lỗi xảy ra khi tạo địa điểm");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto">
-        {/* Back Button */}
         {currentStep > 0 && (
-        <div className="mb-6">
-          <Button
-            type="text"
-            icon={<ArrowLeftOutlined />}
-            onClick={handleBack}
-            className="text-gray-700 hover:text-gray-900"
-          >
-            <span className="text-xl font-semibold ml-2">Quay lại</span>
-          </Button>
-        </div>
+          <div className="mb-6">
+            <Button
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              onClick={handleBack}
+              disabled={loading}
+            >
+              <span className="text-xl font-semibold ml-2">Quay lại</span>
+            </Button>
+          </div>
         )}
-         {/* Step Indicator */}
-        <StepIndicator currentStep={currentStep} steps={steps} />
-        
 
-        {/* Step Content */}
+        <StepIndicator currentStep={currentStep} steps={steps} />
+
         {currentStep === 0 && (
           <Step1 initialData={formData} onNext={handleNext} />
         )}
@@ -69,7 +115,12 @@ const AddPlace: React.FC = () => {
           <Step2 data={formData} onNext={handleNext} onBack={handleBack} />
         )}
         {currentStep === 2 && (
-          <Step3 data={formData} onSubmit={handleSubmit} onBack={handleBack} />
+          <Step3 
+            data={formData} 
+            onSubmit={handleSubmit} 
+            onBack={handleBack}
+            loading={loading}
+          />
         )}
       </div>
     </div>

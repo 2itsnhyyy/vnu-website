@@ -1,6 +1,8 @@
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Form, Input, Button, Upload, Select, TimePicker, message } from "antd";
+import { provinces, districtsByProvince, wardsByDistrict } from "../../../../../assets/data/location";
+import dayjs from "dayjs";
 import {
   SmileOutlined,
   BoldOutlined,
@@ -9,144 +11,152 @@ import {
   OrderedListOutlined,
   LinkOutlined,
   InboxOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import type { UploadFile } from "antd/es/upload/interface";
-import type { Place } from "../../../types/place";
-import type { UploadProps } from "antd";
-import dayjs from "dayjs";
+import type {
+  PlaceCreateRequestWithFile,
+  PlaceDraft,
+} from "../../../types/place";
+import type { RcFile } from "antd/es/upload";
 
 const { TextArea } = Input;
 const { Dragger } = Upload;
 
-const props: UploadProps = {
-  name: "file",
-  multiple: true,
-  action: "https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload",
-  onChange(info) {
-    const { status } = info.file;
-    if (status !== "uploading") {
-      console.log(info.file, info.fileList);
-    }
-    if (status === "done") {
-      message.success(`${info.file.name} file uploaded successfully.`);
-    } else if (status === "error") {
-      message.error(`${info.file.name} file upload failed.`);
-    }
-  },
-  onDrop(e) {
-    console.log("Dropped files", e.dataTransfer.files);
-  },
-};
-
 interface Step1Props {
-  initialData: Partial<Place>;
-  onNext: (data: Partial<Place>) => void;
+  initialData: Partial<PlaceDraft>;
+  onNext: (data: Partial<PlaceCreateRequestWithFile>) => void;
 }
 
-const provinces = [
-  { value: "tp-hcm", label: "TP. Hồ Chí Minh" },
-  { value: "ha-noi", label: "Hà Nội" },
-  { value: "da-nang", label: "Đà Nẵng" },
-];
 
-const districtsByProvince: Record<string, { value: string; label: string }[]> =
-  {
-    "tp-hcm": [
-      { value: "thu-duc", label: "Thủ Đức" },
-      { value: "quan-1", label: "Quận 1" },
-      { value: "quan-10", label: "Quận 10" },
-      { value: "binh-thanh", label: "Bình Thạnh" },
-    ],
-    "ha-noi": [
-      { value: "hoan-kiem", label: "Hoàn Kiếm" },
-      { value: "ba-dinh", label: "Ba Đình" },
-    ],
-    "da-nang": [
-      { value: "hai-chau", label: "Hải Châu" },
-      { value: "thanh-khe", label: "Thanh Khê" },
-    ],
-  };
+// Helper function to parse address
+const parseAddress = (address: string | undefined) => {
+  if (!address)
+    return {
+      province: undefined,
+      district: undefined,
+      ward: undefined,
+      detail: undefined,
+    };
 
-const wardsByDistrict: Record<string, { value: string; label: string }[]> = {
-  "thu-duc": [
-    { value: "linh-trung", label: "Linh Trung" },
-    { value: "linh-xuan", label: "Linh Xuân" },
-    { value: "dong-hoa", label: "Đông Hòa" },
-  ],
-  "quan-1": [
-    { value: "ben-nghe", label: "Bến Nghé" },
-    { value: "ben-thanh", label: "Bến Thành" },
-  ],
+  const parts = address.split(",").map((s) => s.trim());
+
+  if (parts.length < 2) {
+    return {
+      province: undefined,
+      district: undefined,
+      ward: undefined,
+      detail: address,
+    };
+  }
+
+  // Lấy từ cuối lên đầu: Tỉnh/Thành phố (cuối cùng), Quận/Huyện (kế cuối), Phường/Xã, Chi tiết
+  const provinceLabel = parts[parts.length - 1];
+  const districtLabel = parts.length > 1 ? parts[parts.length - 2] : undefined;
+  const wardLabel = parts.length > 2 ? parts[parts.length - 3] : undefined;
+  const detail =
+    parts.length > 3 ? parts.slice(0, parts.length - 3).join(", ") : parts[0];
+
+  // Tìm value tương ứng với label
+  const province = provinces.find((p) => p.label === provinceLabel)?.value;
+  const district =
+    province && districtLabel
+      ? districtsByProvince[province]?.find((d) => d.label === districtLabel)
+          ?.value
+      : undefined;
+  const ward =
+    district && wardLabel
+      ? wardsByDistrict[district]?.find((w) => w.label === wardLabel)?.value
+      : undefined;
+
+  return { province, district, ward, detail };
 };
 
 const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>(initialData.image || "");
   const [description, setDescription] = useState(initialData.description || "");
+
+  // Parse address nếu có
+  const parsedAddress = parseAddress(initialData.address);
+
   const [selectedProvince, setSelectedProvince] = useState<string | undefined>(
-    initialData.province
+    initialData.province || parsedAddress.province
   );
   const [selectedDistrict, setSelectedDistrict] = useState<string | undefined>(
-    initialData.district
+    initialData.district || parsedAddress.district
   );
   const [districts, setDistricts] = useState<
     { value: string; label: string }[]
-  >(selectedProvince ? districtsByProvince[selectedProvince] || [] : []);
+  >(
+    initialData.province || parsedAddress.province
+      ? districtsByProvince[
+          initialData.province || parsedAddress.province || ""
+        ] || []
+      : []
+  );
   const [wards, setWards] = useState<{ value: string; label: string }[]>(
-    selectedDistrict ? wardsByDistrict[selectedDistrict] || [] : []
+    initialData.district || parsedAddress.district
+      ? wardsByDistrict[initialData.district || parsedAddress.district || ""] ||
+          []
+      : []
   );
 
-  useEffect(() => {
-    if (!initialData) return;
+  // Prepare initial values cho Form
+  const formInitialValues = {
+    name: initialData.name,
+    province: initialData.province || parsedAddress.province,
+    district: initialData.district || parsedAddress.district,
+    ward: initialData.ward || parsedAddress.ward,
+    address_detail: initialData.address_detail || parsedAddress.detail,
+    phone: initialData.phone,
+    open_time: initialData.openTime
+      ? dayjs(initialData.openTime, "HH:mm")
+      : undefined,
+    close_time: initialData.closeTime
+      ? dayjs(initialData.closeTime, "HH:mm")
+      : undefined,
+  };
 
-    form.setFieldsValue({
-      ...initialData,
-      open_time: initialData.open_time
-        ? dayjs(initialData.open_time, "HH:mm")
-        : null,
-      close_time: initialData.close_time
-        ? dayjs(initialData.close_time, "HH:mm")
-        : null,
-    });
-  }, [initialData]);
-
-  useEffect(() => {
-    if (!initialData.address) return;
-
-    const parts = initialData.address.split(",").map((p) => p.trim());
-
-    const provinceLabel = parts[parts.length - 1];
-    const districtLabel = parts[parts.length - 2];
-    const wardLabel = parts[parts.length - 3];
-    const addressDetail = parts.slice(0, parts.length - 3).join(", ");
-
-    const province = provinces.find((p) => p.label === provinceLabel)?.value;
-    const district = districtsByProvince[province || ""]?.find(
-      (d) => d.label === districtLabel
-    )?.value;
-    const ward = wardsByDistrict[district || ""]?.find(
-      (w) => w.label === wardLabel
-    )?.value;
-
-    setSelectedProvince(province);
-    setSelectedDistrict(district);
-    setDistricts(districtsByProvince[province || ""] || []);
-    setWards(wardsByDistrict[district || ""] || []);
-
-    form.setFieldsValue({
-      name: initialData.name,
-      province,
-      district,
-      ward,
-      address_detail: addressDetail,
-    });
-  }, [initialData]);
-
-  const handleUploadChange = (info: any) => {
-    setFileList(info.fileList.slice(-1));
-    if (info.file.status === "done") {
-      message.success("Upload thành công");
+  const handleBeforeUpload = (file: RcFile) => {
+    // Validate file type
+    const isImage = file.type.startsWith("image/");
+    if (!isImage) {
+      message.error("Chỉ được tải lên file ảnh!");
+      return Upload.LIST_IGNORE;
     }
+
+    // Validate file size (e.g., max 5MB)
+    const isLt5M = file.size / 1024 / 1024 < 5;
+    if (!isLt5M) {
+      message.error("Ảnh phải nhỏ hơn 5MB!");
+      return Upload.LIST_IGNORE;
+    }
+
+    // Save file to state
+    setImageFile(file);
+
+    // Create preview URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPreviewUrl(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Update file list for display
+    setFileList([
+      {
+        uid: file.uid,
+        name: file.name,
+        status: "done",
+        originFileObj: file,
+      },
+    ]);
+
+    // Prevent auto upload
+    return false;
   };
 
   const handleProvinceChange = (value: string) => {
@@ -165,58 +175,81 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
 
   const handleSubmit = () => {
     form.validateFields().then((values) => {
-      const imageUrl = fileList[0]?.url || fileList[0]?.thumbUrl || "";
       const addressParts = [
         values.address_detail,
-        values.ward ? wards.find((w) => w.value === values.ward)?.label : "",
-        values.district
-          ? districts.find((d) => d.value === values.district)?.label
-          : "",
-        values.province
-          ? provinces.find((p) => p.value === values.province)?.label
-          : "",
+        wards.find((w) => w.value === values.ward)?.label,
+        districts.find((d) => d.value === values.district)?.label,
+        provinces.find((p) => p.value === values.province)?.label,
       ].filter(Boolean);
 
       onNext({
         name: values.name,
         address: addressParts.join(", "),
-        description: description,
-        image: imageUrl,
-        open_time: values.open_time
-          ? values.open_time.format("HH:mm")
-          : undefined,
-        close_time: values.close_time
-          ? values.close_time.format("HH:mm")
-          : undefined,
+        description,
+        imageFile: imageFile,
+        image: previewUrl,
+        openTime: values.open_time?.format("HH:mm"),
+        closeTime: values.close_time?.format("HH:mm"),
+        phone: values.phone,
       });
     });
   };
 
+  const handleRemoveImage = () => {
+    setFileList([]);
+    setImageFile(null);
+    setPreviewUrl("");
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-      <Form form={form} layout="vertical">
+      <Form form={form} layout="vertical" initialValues={formInitialValues}>
         {/* Image Upload */}
-        <div className="flex flex-row mb-6 justify-between">
-          <div>
+        <div className="flex flex-row mb-6 justify-between gap-6">
+          <div className="flex-1">
             <label className="block text-lg font-medium mb-2">
               Hình ảnh địa điểm
             </label>
-            <p className="text-md w-50 text-justify text-gray-500 mb-4">
+            <p className="text-md text-justify text-gray-500 mb-4">
               Hình ảnh này sẽ được hiển thị công khai. Chỉ được tải lên 1 ảnh.
             </p>
+
+            {/* Preview Image */}
+            {previewUrl && (
+              <div className="mt-4 border border-gray-300 rounded-lg overflow-hidden relative">
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  className="w-full h-64 object-cover"
+                />
+                <CloseOutlined
+                  onClick={handleRemoveImage}
+                  className="absolute top-2 right-2 text-white bg-white bg-opacity-50 rounded-full p-1 cursor-pointer hover:bg-gray-300"
+                  style={{ fontSize: 16 }}
+                />
+              </div>
+            )}
           </div>
 
-          <Dragger {...props}>
-            <p className="ant-upload-drag-icon">
-              <InboxOutlined />
-            </p>
-            <p className="ant-upload-text">
-              Nhấp hoặc kéo thả ảnh vào khu vực này
-            </p>
-            <p className="ant-upload-hint">
-              Hỗ trợ tải một ảnh (PNG, JPG, SVG, tối đa 400×400px)
-            </p>
-          </Dragger>
+          <div className="flex-1">
+            <Dragger
+              multiple={false}
+              accept="image/*"
+              beforeUpload={handleBeforeUpload}
+              fileList={[]}
+              showUploadList={false}
+            >
+              <p className="ant-upload-drag-icon">
+                <InboxOutlined />
+              </p>
+              <p className="ant-upload-text">
+                Nhấp hoặc kéo thả ảnh vào khu vực này
+              </p>
+              <p className="ant-upload-hint">
+                Hỗ trợ tải một ảnh (PNG, JPG, SVG) - tối đa 5MB
+              </p>
+            </Dragger>
+          </div>
         </div>
 
         <hr className="col-span-2 my-6 border-gray-300" />
@@ -249,13 +282,7 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
             </Form.Item>
 
             {/* Province */}
-            <Form.Item
-              name="province"
-              label="Tỉnh/Thành phố"
-              rules={[
-                { required: true, message: "Vui lòng chọn tỉnh/thành phố" },
-              ]}
-            >
+            <Form.Item name="province" label="Tỉnh/Thành phố">
               <Select
                 placeholder="Chọn tỉnh/thành phố"
                 size="large"
@@ -265,11 +292,7 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
             </Form.Item>
 
             {/* District */}
-            <Form.Item
-              name="district"
-              label="Quận/Huyện"
-              rules={[{ required: true, message: "Vui lòng chọn quận/huyện" }]}
-            >
+            <Form.Item name="district" label="Quận/Huyện">
               <Select
                 placeholder="Chọn quận/huyện"
                 size="large"
@@ -280,11 +303,7 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
             </Form.Item>
 
             {/* Ward */}
-            <Form.Item
-              name="ward"
-              label="Phường/Xã"
-              rules={[{ required: true, message: "Vui lòng chọn phường/xã" }]}
-            >
+            <Form.Item name="ward" label="Phường/Xã">
               <Select
                 placeholder="Chọn phường/xã"
                 size="large"
@@ -294,15 +313,23 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
             </Form.Item>
 
             {/* Address Detail */}
-            <Form.Item
-              name="address_detail"
-              label="Địa chỉ chi tiết"
-              rules={[
-                { required: true, message: "Vui lòng nhập địa chỉ chi tiết" },
-              ]}
-            >
+            <Form.Item name="address_detail" label="Địa chỉ chi tiết">
               <Input placeholder="Số nhà, tên đường" size="large" />
             </Form.Item>
+            {/* Phone */}
+            <Form.Item
+              name="phone"
+              label="Số điện thoại"
+              rules={[
+                {
+                  pattern: /^\d{10,11}$/,
+                  message: "Số điện thoại không hợp lệ",
+                },
+              ]}
+            >
+              <Input placeholder="Nhập số điện thoại" size="large" />
+            </Form.Item>
+
             {/* Opening and Closing Hours */}
             <div className="grid grid-cols-2 gap-4">
               <Form.Item name="open_time" label="Giờ mở cửa">

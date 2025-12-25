@@ -1,6 +1,6 @@
 import type React from "react";
 import { Button } from "antd";
-import type { Place } from "../../../types/place";
+import type { PlaceCreateRequest } from "../../../types/place";
 import { MapContainer, TileLayer, Polygon, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -18,18 +18,17 @@ const DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 interface Step3Props {
-  data: Partial<Place>;
-  onSubmit: (data: Partial<Place>) => void;
+  data: Partial<PlaceCreateRequest>;
+  onSubmit: (data: PlaceCreateRequest) => void;
   onBack: () => void;
+  loading?: boolean;
 }
 
-const Step3: React.FC<Step3Props> = ({ data, onSubmit, onBack }) => {
-  const coordinates = data.boundary?.geom
-    ? JSON.parse(data.boundary.geom).coordinates[0]
-    : [];
+const Step3: React.FC<Step3Props> = ({ data, onSubmit, onBack, loading = false }) => {
+  const coordinates = data.boundaryGeom?.coordinates?.[0] || [];
   const coordinateCount = coordinates.length;
   const latLngPoints = coordinates.map(
-    (coord: [number, number]) => [coord[1], coord[0]] as [number, number]
+    (coord: number[]) => [coord[1], coord[0]] as [number, number]
   );
 
   const mapCenter: [number, number] =
@@ -52,11 +51,11 @@ const Step3: React.FC<Step3Props> = ({ data, onSubmit, onBack }) => {
         {/* Left Column - Place Details */}
         <div>
           {/* Image */}
-          {1 && (
+          {data.image && (
             <div className="mb-6">
               <h3 className="text-sm font-semibold mb-3">Hình ảnh địa điểm</h3>
               <img
-                src={data.image || "/placeholder.svg"}
+                src={data.image}
                 alt={data.name}
                 className="w-32 h-32 rounded-lg object-cover"
               />
@@ -80,21 +79,33 @@ const Step3: React.FC<Step3Props> = ({ data, onSubmit, onBack }) => {
               </div>
             </div>
           )}
+
+          {/* Opening Hours */}
+          {(data.openTime || data.closeTime) && (
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold mb-2">Giờ hoạt động</h3>
+              <div className="border border-gray-300 p-2">
+                <p className="text-gray-700">
+                  {data.openTime} - {data.closeTime}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Column - Map Preview with Polygon */}
         <div>
-                {/* Coordinates Summary */}
-      {coordinateCount > 0 && (
-        <div className="flex flex-row gap-1">
-          <p className="text-sm font-semibold mb-2">Vị trí ranh giới:</p>
-          <p className="text-gray-700 text-sm">
-            Đã chọn {coordinateCount} điểm tọa độ
-          </p>
-        </div>
-      )}
+          {/* Coordinates Summary */}
+          {coordinateCount > 0 && (
+            <div className="flex flex-row gap-1">
+              <p className="text-sm font-semibold mb-2">Vị trí ranh giới:</p>
+              <p className="text-gray-700 text-sm">
+                Đã chọn {coordinateCount} điểm tọa độ
+              </p>
+            </div>
+          )}
           {latLngPoints.length > 0 ? (
-            <div className="w-full h-full bg-gray-200 rounded-lg border border-gray-300 overflow-hidden">
+            <div className="w-full h-full min-h-80 bg-gray-200 rounded-lg border border-gray-300 overflow-hidden">
               <MapContainer
                 center={mapCenter}
                 zoom={15}
@@ -143,18 +154,19 @@ const Step3: React.FC<Step3Props> = ({ data, onSubmit, onBack }) => {
       </div>
 
       {/* Action Buttons */}
-            <div className="flex justify-end gap-3 mt-15">
-              <Button size="large" onClick={onBack}>
-                Quay lại
-              </Button>
-              {/* Next Button */}
-              <button
-                onClick={() => onSubmit({})}
-                className="flex items-center gap-2 bg-primary hover:bg-primary-light hover:cursor-pointer text-white font-medium px-5 py-2 rounded-md transition"
-              >
-                <span>Lưu thay đổi</span>
-              </button>
-            </div>
+      <div className="flex justify-end gap-3 mt-15">
+        <Button size="large" onClick={onBack} disabled={loading}>
+          Quay lại
+        </Button>
+        {/* Submit Button */}
+        <button
+          onClick={() => onSubmit(data as PlaceCreateRequest)}
+          disabled={loading}
+          className="flex items-center gap-2 bg-primary hover:bg-primary-light hover:cursor-pointer text-white font-medium px-5 py-2 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span>{loading ? "Đang xử lý..." : "Hoàn tất"}</span>
+        </button>
+      </div>
     </div>
   );
 };

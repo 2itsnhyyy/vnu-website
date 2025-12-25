@@ -10,6 +10,10 @@ import { CommentModule } from './modules/comment/comment.module';
 import { NewsModule } from './modules/news/news.module';
 import { PlaceModule } from './modules/place/place.module';
 import { IncidentModule } from './modules/incident/incident.module';
+import { BuildingModule } from './modules/building/building.module';
+import { RoadModule } from './modules/road/road.module';
+import { RoutingModule } from './modules/routing/routing.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -24,6 +28,10 @@ import { IncidentModule } from './modules/incident/incident.module';
     NewsModule,
     PlaceModule,
     IncidentModule,
+    BuildingModule,
+    RoadModule,
+    RoutingModule,
+    DashboardModule,
   ],
 })
 export class AppModule {}

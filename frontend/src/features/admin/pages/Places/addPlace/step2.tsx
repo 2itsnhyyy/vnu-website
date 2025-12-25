@@ -1,20 +1,18 @@
 import type React from "react";
 import { useState, useEffect } from "react";
-import { Button, Input, InputNumber, Modal } from "antd";
+import { Button, Input, InputNumber, Modal, message } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import leftClickIcon from "../../../../../assets/icons/left-click.png";
 import rightClickIcon from "../../../../../assets/icons/right-click.png";
-import type { Place } from "../../../types/place";
+import type { PlaceCreateRequest } from "../../../types/place";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
 import L from "leaflet";
 import icon from "leaflet/dist/images/marker-icon.png";
-import iconShadow from "leaflet/dist/images/marker-shadow.png";
 
 const DefaultIcon = L.icon({
   iconUrl: icon,
-  shadowUrl: iconShadow,
   iconSize: [25, 41],
   iconAnchor: [12, 41],
 });
@@ -22,8 +20,8 @@ const DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 interface Step2Props {
-  data: Partial<Place>;
-  onNext: (data: Partial<Place>) => void;
+  data: Partial<PlaceCreateRequest>;
+  onNext: (data: Partial<PlaceCreateRequest>) => void;
   onBack: () => void;
 }
 
@@ -47,7 +45,7 @@ function MapClickHandler({
 
 const Step2: React.FC<Step2Props> = ({ data, onNext, onBack }) => {
   const [coordinates, setCoordinates] = useState<string>("");
-  const [selectedPoints, setSelectedPoints] = useState<[number, number][]>([]);
+  const [selectedPoints, setSelectedPoints] = useState<number[][]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [manualLng, setManualLng] = useState<number | null>(null);
   const [manualLat, setManualLat] = useState<number | null>(null);
@@ -61,7 +59,7 @@ const Step2: React.FC<Step2Props> = ({ data, onNext, onBack }) => {
   const handleCoordinateInput = (value: string) => {
     setCoordinates(value);
     const lines = value.split("\n").filter((line) => line.trim());
-    const points: [number, number][] = [];
+    const points: number[][] = [];
 
     lines.forEach((line) => {
       const parts = line.split(",").map((p) => Number.parseFloat(p.trim()));
@@ -74,7 +72,7 @@ const Step2: React.FC<Step2Props> = ({ data, onNext, onBack }) => {
   };
 
   const handleMapDoubleClick = (lat: number, lng: number) => {
-    const newPoints = [...selectedPoints, [lng, lat] as [number, number]];
+    const newPoints = [...selectedPoints, [lng, lat]];
     setSelectedPoints(newPoints);
     setCoordinates(
       newPoints
@@ -118,10 +116,7 @@ const Step2: React.FC<Step2Props> = ({ data, onNext, onBack }) => {
 
   const handleModalOk = () => {
     if (manualLng !== null && manualLat !== null) {
-      const newPoints = [
-        ...selectedPoints,
-        [manualLng, manualLat] as [number, number],
-      ];
+      const newPoints = [...selectedPoints, [manualLng, manualLat]];
       setSelectedPoints(newPoints);
       setCoordinates(
         newPoints
@@ -153,14 +148,15 @@ const Step2: React.FC<Step2Props> = ({ data, onNext, onBack }) => {
   };
 
   const handleNext = () => {
-    const geojsonPolygon = {
-      type: "Polygon",
-      coordinates: [selectedPoints],
-    };
+    if (selectedPoints.length < 3) {
+      message.error("Vui lòng chọn tối thiểu 3 điểm tọa độ");
+      return;
+    }
 
     onNext({
-      boundary: {
-        geom: JSON.stringify(geojsonPolygon),
+      boundaryGeom: {
+        type: "Polygon",
+        coordinates: [selectedPoints],
       },
     });
   };
