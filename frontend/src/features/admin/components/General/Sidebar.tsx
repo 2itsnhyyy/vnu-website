@@ -106,7 +106,7 @@ const Sidebar: React.FC = () => {
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
         }`}
       >
-        <Link to={basePath}>
+        <Link to={`${basePath}/`}>
           <img src={logo} alt="logo" className="w-[70%] ml-7" />
         </Link>
       </div>
