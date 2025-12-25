@@ -8,6 +8,11 @@ interface PaginationProps {
 }
 
 export const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange }) => {
+    // Không hiển thị pagination nếu chỉ có 1 trang hoặc không có trang nào
+    if (totalPages <= 1) {
+        return null
+    }
+
     const renderPageNumbers = () => {
         const pages = []
 

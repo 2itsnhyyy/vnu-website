@@ -30,6 +30,17 @@ export default function IncidentTable() {
   const [isModalOpen, setModalOpen] = useState(false);
   const [incidentToDelete, setIncidentToDelete] = useState<number | null>(null);
 
+  const markdownToPlainText = (markdown?: string) => {
+    if (!markdown) return "";
+
+    return markdown
+      .replace(/[#_*`>~-]/g, "")
+      .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+      .replace(/\r?\n|\r/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  };
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -154,12 +165,6 @@ export default function IncidentTable() {
                 isHeader
                 className="py-3 font-medium text-gray-500 text-center px-3 text-theme-sm"
               >
-                Mã tòa nhà
-              </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-center px-3 text-theme-sm"
-              >
                 Ngày tạo
               </TableCell>
               <TableCell
@@ -187,13 +192,12 @@ export default function IncidentTable() {
                   {incident.incidentId}
                 </TableCell>
                 <TableCell className="py-6 text-gray-500 text-theme-sm px-3">
-                  <div className="">{incident.title.slice(0, 100)}...</div>
+                  <div className="max-w-[200px] truncate mx-auto">
+                    {markdownToPlainText(incident.title).slice(0, 100)}...
+                  </div>
                 </TableCell>
                 <TableCell className="py-6 text-gray-500 text-theme-sm px-3">
-                  <div className="">{incident.content.slice(0, 200)}...</div>
-                </TableCell>
-                <TableCell className="py-6 text-gray-500 text-center text-theme-sm px-3">
-                  {incident.placeId}
+                  {markdownToPlainText(incident.content).slice(0, 240)}...
                 </TableCell>
                 <TableCell className="py-6 text-gray-500 text-theme-sm px-3 text-center">
                   {dayjs(incident.createdAt).format("DD/MM/YYYY")}

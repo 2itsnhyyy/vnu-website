@@ -1,7 +1,22 @@
 import type React from "react"
+import { useNavigate, useLocation } from "react-router-dom"
 import { Search, Menu, Tag, User } from "lucide-react"
 
 export const GuestSidebar: React.FC = () => {
+    const navigate = useNavigate()
+    const location = useLocation()
+
+    const isActive = (path: string) => {
+        if (path === '/users/forum' && location.pathname === '/users/forum') {
+            return !location.search
+        }
+        return location.pathname + location.search === path
+    }
+
+    const handleNavigation = (path: string) => {
+        navigate(path)
+    }
+
     return (
         <div className="w-76 bg-white border-r border-gray-200 p-6">
             <div className="mb-6">
@@ -13,21 +28,28 @@ export const GuestSidebar: React.FC = () => {
 
             <div className="mb-6">
                 <div className="text-xs text-gray-500 mb-3 font-semibold">MENU</div>
-                <button className="w-full flex items-center gap-3 bg-blue-50 text-blue-600 px-4 py-3 rounded-lg text-sm font-medium">
+                <button 
+                    onClick={() => handleNavigation('/users/forum')}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium ${
+                        isActive('/users/forum') 
+                            ? 'bg-blue-50 text-blue-600' 
+                            : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
                     <Menu size={20} />
                     Chủ đề
                 </button>
             </div>
 
-            <div className="mb-6">
-                <button className="w-full flex items-center gap-3 text-gray-700 px-4 py-3 rounded-lg text-sm hover:bg-gray-50 font-medium">
-                    <Tag size={20} />
-                    Tags
-                </button>
-            </div>
-
             <div>
-                <button className="w-full flex items-center gap-3 text-gray-700 px-4 py-3 rounded-lg text-sm hover:bg-gray-50 font-medium">
+                <button 
+                    onClick={() => handleNavigation('/users/forum?filter=admin')}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium ${
+                        isActive('/users/forum?filter=admin')
+                            ? 'bg-blue-50 text-blue-600'
+                            : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
                     <User size={20} />
                     Admin đăng tải
                 </button>

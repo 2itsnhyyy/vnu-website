@@ -6,6 +6,7 @@ import { formatTimeAgo, renderCommentContent } from "./utils/formatters"
 import { CommentInput } from "./CommentInput"
 import forumService from "../../api/services/forumService"
 import authService from "../../api/services/authService"
+import { Modal } from "./utils/modal"
 
 interface ReplyCardProps {
     reply: Comment
@@ -33,18 +34,25 @@ export const ReplyCard: React.FC<ReplyCardProps> = ({
     const [editContent, setEditContent] = useState(reply.content)
     const [isUpdating, setIsUpdating] = useState(false)
 
-    const currentUser = authService.getCurrentUser()
-    // Fix: Use userId (matches API response)
-    const isOwner = currentUser && Number(currentUser.userId) === Number(reply.author.userId)
-
-    // Debug log - Remove after fixing
-    console.log('ReplyCard Debug:', {
-        currentUserId: currentUser?.userId,
-        replyAuthorId: reply.author.userId,
-        isOwner,
-        currentUserType: typeof currentUser?.userId,
-        authorIdType: typeof reply.author.userId
+    // ===== Modal state =====
+    const [modalOpen, setModalOpen] = useState(false)
+    const [modalConfig, setModalConfig] = useState<{
+        title?: string
+        message: string
+        type?: "info" | "success" | "error" | "warning" | "confirm"
+        onConfirm?: () => void
+    }>({
+        message: "",
     })
+
+    const openModal = (config: typeof modalConfig) => {
+        setModalConfig(config)
+        setModalOpen(true)
+    }
+    // =======================
+
+    const currentUser = authService.getCurrentUser()
+    const isOwner = currentUser && Number(currentUser.userId) === Number(reply.author.userId)
 
     const handleReplySubmit = async (content: string) => {
         await onReply(parentCommentId, content)
@@ -73,23 +81,34 @@ export const ReplyCard: React.FC<ReplyCardProps> = ({
             onUpdate(reply.commentId, editContent)
             setIsEditing(false)
         } catch (err: any) {
-            alert(err.message || 'Không thể cập nhật bình luận')
+            openModal({
+                title: "Lỗi",
+                message: err.message || 'Không thể cập nhật bình luận',
+                type: "error",
+            })
         } finally {
             setIsUpdating(false)
         }
     }
 
     const handleDelete = async () => {
-        if (!window.confirm('Bạn có chắc chắn muốn xóa câu trả lời này?')) {
-            return
-        }
-
-        try {
-            await forumService.deleteComment(reply.commentId)
-            onDelete(reply.commentId)
-        } catch (err: any) {
-            alert(err.message || 'Không thể xóa câu trả lời')
-        }
+        openModal({
+            title: "Xác nhận xóa",
+            message: "Bạn có chắc chắn muốn xóa câu trả lời này?",
+            type: "confirm",
+            onConfirm: async () => {
+                try {
+                    await forumService.deleteComment(reply.commentId)
+                    onDelete(reply.commentId)
+                } catch (err: any) {
+                    openModal({
+                        title: "Lỗi",
+                        message: err.message || 'Không thể xóa câu trả lời',
+                        type: "error",
+                    })
+                }
+            },
+        })
     }
 
     return (
@@ -198,6 +217,15 @@ export const ReplyCard: React.FC<ReplyCardProps> = ({
                     />
                 </div>
             )}
+
+            <Modal
+                isOpen={modalOpen}
+                onClose={() => setModalOpen(false)}
+                title={modalConfig.title}
+                message={modalConfig.message}
+                type={modalConfig.type}
+                onConfirm={modalConfig.onConfirm}
+            />
         </>
     )
 }

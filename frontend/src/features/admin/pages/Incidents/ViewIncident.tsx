@@ -26,7 +26,7 @@ export default function ViewIncident() {
     setLoading(true);
     try {
       const incident = await incidentService.getById(id);
-      const place = await placeService.getById(incident.place.placeId);
+      const place = await placeService.getById(incident.placeId);
 
       const view: IncidentView = {
         ...incident,

@@ -182,7 +182,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
                         <ImageIcon size={18} />
                     </button>
                     <span className="text-xs text-gray-500">
-                        Paste ảnh vào ô nhập
+                        Paste ảnh vào ô nhập (nếu có)
                     </span>
                 </div>
 

@@ -1,15 +1,9 @@
 import type React from "react"
-import { useState, useMemo } from "react"
-
-interface Incident {
-    id: number
-    title: string
-    description: string
-    location: string
-    date: string
-    status: "pending" | "resolved"
-    category: string
-}
+import { useState, useMemo, useEffect } from "react"
+import issuesService from "../../api/services/issuesService"
+import { getCategoryFromTitle, INCIDENT_STATUS } from "../../api/types/issues.types"
+import type { Incident, PaginationInfo } from "../../api/types/issues.types"
+import { useNavigate } from "react-router-dom"
 
 interface Category {
     label: string
@@ -20,72 +14,6 @@ interface CategoryCounts {
     [key: string]: number
 }
 
-const mockIncidents: Incident[] = [
-    {
-        id: 1,
-        title: "Cúp điện",
-        description: "Mất điện tại tòa E-Đại học...",
-        location: "Tòa E",
-        date: "24/03/2025", 
-        status: "pending",
-        category: "Mất điện",
-    },
-    {
-        id: 2,
-        title: "Cúp nước",
-        description: "Cúp nước tại tòa B-Đại học...",
-        location: "Tòa B",
-        date: "20/03/2025", 
-        status: "resolved",
-        category: "Cúp nước",
-    },
-    {
-        id: 3,
-        title: "Đang sửa chữa",
-        description: "Tòa A và C của trường Đại h...",
-        location: "Tòa A, C",
-        date: "12/03/2025", 
-        status: "resolved",
-        category: "Đang sửa chữa",
-    },
-    {
-        id: 4,
-        title: "Cúp điện",
-        description: "Mất điện tại tòa B-Đại học...",
-        location: "Tòa B",
-        date: "28/02/2025", 
-        status: "pending",
-        category: "Cúp điện",
-    },
-    {
-        id: 5,
-        title: "Mất nước",
-        description: "Khu vực tòa D-Đại học Côn...",
-        location: "Tòa D",
-        date: "10/02/2025", 
-        status: "resolved",
-        category: "Mất nước",
-    },
-    {
-        id: 6,
-        title: "Cúp điện",
-        description: "Mất điện tại tòa F-Đại học...",
-        location: "Tòa F",
-        date: "15/01/2025", 
-        status: "pending",
-        category: "Cúp điện",
-    },
-    {
-        id: 7,
-        title: "Sửa chữa",
-        description: "Tòa G cần sửa chữa khẩn cấp...",
-        location: "Tòa G",
-        date: "08/01/2025", 
-        status: "resolved",
-        category: "Đang sửa chữa",
-    },
-]
-
 interface CategoryTabsProps {
     categories: Category[]
     activeTab: string
@@ -93,7 +21,6 @@ interface CategoryTabsProps {
     counts: CategoryCounts
 }
 
-//Categoty Tabs
 const CategoryTabs: React.FC<CategoryTabsProps> = ({ categories, activeTab, onTabChange, counts }) => {
     return (
         <div className="flex gap-8 border-b border-gray-200">
@@ -101,8 +28,9 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({ categories, activeTab, onTa
                 <button
                     key={category.value}
                     onClick={() => onTabChange(category.value)}
-                    className={`pb-4 relative transition-all duration-200 text-[18px] ${activeTab === category.value ? "text-blue-600 font-bold" : "text-[#7C8493] hover:text-gray-900 font-bold"
-                        }`}
+                    className={`pb-4 relative transition-all duration-200 text-[18px] ${
+                        activeTab === category.value ? "text-blue-600 font-bold" : "text-[#7C8493] hover:text-gray-900 font-bold"
+                    }`}
                 >
                     <span>
                         {category.label} ({counts[category.value] || 0})
@@ -114,7 +42,6 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({ categories, activeTab, onTa
     )
 }
 
-// SearchAndFilter Component
 interface SearchAndFilterProps {
     searchTerm: string
     onSearchChange: (value: string) => void
@@ -161,7 +88,6 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({ searchTerm, onSearchC
     )
 }
 
-// TableHeader Component
 const TableHeader: React.FC = () => {
     return (
         <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 rounded-t-lg border-b border-gray-200">
@@ -175,17 +101,16 @@ const TableHeader: React.FC = () => {
     )
 }
 
-// IncidentRow Component
 interface IncidentRowProps {
     incident: Incident
     index: number
-    currentPage: number
-    itemsPerPage: number
 }
 
-const IncidentRow: React.FC<IncidentRowProps> = ({ incident, index, currentPage, itemsPerPage }) => {
-    const getStatusConfig = (status: "pending" | "resolved") => {
-        if (status === "pending") {
+const IncidentRow: React.FC<IncidentRowProps> = ({ incident, index }) => {
+    const navigate = useNavigate()
+    
+    const getStatusConfig = (status: number) => {
+        if (status === INCIDENT_STATUS.PENDING) {
             return {
                 text: "Đang xử lý",
                 className: "bg-orange-50 text-orange-600 border-orange-200",
@@ -197,15 +122,27 @@ const IncidentRow: React.FC<IncidentRowProps> = ({ incident, index, currentPage,
         }
     }
 
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString)
+        return date.toLocaleDateString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        })
+    }
+
     const statusConfig = getStatusConfig(incident.status)
-    const displayIndex = (currentPage - 1) * itemsPerPage + index + 1
+
+    const handleViewDetails = () => {
+        navigate(`/users/issues/${incident.incidentId}`)
+    }
 
     return (
         <div className="grid grid-cols-12 gap-4 px-6 py-5 border-b border-gray-100 hover:bg-gray-50 transition-colors items-center">
-            <div className="col-span-1 text-gray-700">{displayIndex}</div>
+            <div className="col-span-1 text-gray-700">{index + 1}</div>
             <div className="col-span-2 font-medium text-gray-800">{incident.title}</div>
-            <div className="col-span-4 text-gray-600 truncate">{incident.description}</div>
-            <div className="col-span-2 text-gray-600">{incident.date}</div>
+            <div className="col-span-4 text-gray-600 truncate">{incident.content}</div>
+            <div className="col-span-2 text-gray-600">{formatDate(incident.createdAt)}</div>
             <div className="col-span-2">
                 <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium border ${statusConfig.className}`}>
                     {statusConfig.text}
@@ -213,7 +150,7 @@ const IncidentRow: React.FC<IncidentRowProps> = ({ incident, index, currentPage,
             </div>
             <div className="col-span-1 flex justify-end">
                 <button
-                    onClick={() => (window.location.href = `/issues/${incident.id}`)}
+                    onClick={handleViewDetails}
                     className="p-2 hover:bg-blue-50 rounded-lg transition-colors group"
                     title="Xem chi tiết"
                 >
@@ -237,7 +174,6 @@ const IncidentRow: React.FC<IncidentRowProps> = ({ incident, index, currentPage,
     )
 }
 
-// Pagination Component
 interface PaginationProps {
     currentPage: number
     totalPages: number
@@ -296,12 +232,13 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
                     key={index}
                     onClick={() => typeof page === "number" && onPageChange(page)}
                     disabled={page === "..."}
-                    className={`min-w-[40px] h-10 flex items-center justify-center rounded-lg transition-colors ${currentPage === page
+                    className={`min-w-[40px] h-10 flex items-center justify-center rounded-lg transition-colors ${
+                        currentPage === page
                             ? "bg-blue-600 text-white font-medium"
                             : page === "..."
                                 ? "cursor-default"
                                 : "hover:bg-gray-100 border border-gray-300"
-                        }`}
+                    }`}
                 >
                     {page}
                 </button>
@@ -320,11 +257,15 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
     )
 }
 
-// Main Component
 const IssuesList: React.FC = () => {
     const [activeTab, setActiveTab] = useState<string>("all")
     const [searchTerm, setSearchTerm] = useState<string>("")
     const [currentPage, setCurrentPage] = useState<number>(1)
+    const [incidents, setIncidents] = useState<Incident[]>([])
+    const [pagination, setPagination] = useState<PaginationInfo | null>(null)
+    const [loading, setLoading] = useState<boolean>(false)
+    const [error, setError] = useState<string | null>(null)
+    
     const itemsPerPage = 5
 
     const categories: Category[] = [
@@ -335,48 +276,72 @@ const IssuesList: React.FC = () => {
         { label: "Khác", value: "Khác" },
     ]
 
+    useEffect(() => {
+        const fetchIncidents = async () => {
+            setLoading(true)
+            setError(null)
+            
+            try {
+                const filters: any = {
+                    limit: itemsPerPage,
+                    page: currentPage,
+                }
+                
+                if (searchTerm.trim()) {
+                    filters.search = searchTerm
+                }
+
+                const response = await issuesService.getIncidents(filters)
+                setIncidents(response.incidents)
+                setPagination(response.pagination)
+            } catch (err: any) {
+                console.error('Error fetching incidents:', err)
+                setError(err.message || 'Không thể tải dữ liệu')
+                setIncidents([])
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchIncidents()
+    }, [currentPage, searchTerm])
+
+    // Calculate category counts from fetched data
     const categoryCounts: CategoryCounts = useMemo(() => {
         const counts: CategoryCounts = {
-            all: mockIncidents.length,
+            all: incidents.length,
             "Mất điện": 0,
             "Cúp nước": 0,
             "Đang sửa chữa": 0,
-            Khác: 0,
+            "Khác": 0,
         }
 
-        mockIncidents.forEach((incident) => {
-            if (counts[incident.category] !== undefined) {
-                counts[incident.category]++
+        incidents.forEach((incident) => {
+            const category = getCategoryFromTitle(incident.title)
+            if (counts[category] !== undefined) {
+                counts[category]++
             }
         })
 
+        if (pagination) {
+            counts.all = pagination.totalItems
+        }
+
         return counts
-    }, [])
+    }, [incidents, pagination])
 
+    // Filter incidents by category (client-side)
     const filteredIncidents: Incident[] = useMemo(() => {
-        let filtered = mockIncidents
-
-        if (activeTab !== "all") {
-            filtered = filtered.filter((incident) => incident.category === activeTab)
+        if (activeTab === "all") {
+            return incidents
         }
+        
+        return incidents.filter((incident) => {
+            const category = getCategoryFromTitle(incident.title)
+            return category === activeTab
+        })
+    }, [activeTab, incidents])
 
-        if (searchTerm.trim()) {
-            filtered = filtered.filter(
-                (incident) =>
-                    incident.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    incident.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    incident.location.toLowerCase().includes(searchTerm.toLowerCase()),
-            )
-        }
-
-        return filtered
-    }, [activeTab, searchTerm])
-
-    // Pagination
-    const totalPages = Math.ceil(filteredIncidents.length / itemsPerPage)
-    const paginatedIncidents = filteredIncidents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-
-    // Reset pages when filters change
     const handleTabChange = (tab: string) => {
         setActiveTab(tab)
         setCurrentPage(1)
@@ -386,6 +351,8 @@ const IssuesList: React.FC = () => {
         setSearchTerm(value)
         setCurrentPage(1)
     }
+
+    const totalPages = pagination?.totalPages || 1
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
@@ -413,15 +380,24 @@ const IssuesList: React.FC = () => {
                     {/* Table */}
                     <div className="px-6">
                         <TableHeader />
-                        {paginatedIncidents.length > 0 ? (
+                        
+                        {loading ? (
+                            <div className="text-center py-16">
+                                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                                <p className="mt-4 text-gray-500">Đang tải dữ liệu...</p>
+                            </div>
+                        ) : error ? (
+                            <div className="text-center py-16 text-red-500">
+                                <p className="text-lg">Có lỗi xảy ra</p>
+                                <p className="text-sm mt-2">{error}</p>
+                            </div>
+                        ) : filteredIncidents.length > 0 ? (
                             <div>
-                                {paginatedIncidents.map((incident, index) => (
+                                {filteredIncidents.map((incident, index) => (
                                     <IncidentRow
-                                        key={incident.id}
+                                        key={incident.incidentId}
                                         incident={incident}
-                                        index={index}
-                                        currentPage={currentPage}
-                                        itemsPerPage={itemsPerPage}
+                                        index={(currentPage - 1) * itemsPerPage + index}
                                     />
                                 ))}
                             </div>
@@ -434,8 +410,12 @@ const IssuesList: React.FC = () => {
                     </div>
 
                     {/* Pagination */}
-                    {totalPages > 1 && (
-                        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+                    {!loading && totalPages > 1 && (
+                        <Pagination 
+                            currentPage={currentPage} 
+                            totalPages={totalPages} 
+                            onPageChange={setCurrentPage} 
+                        />
                     )}
                 </div>
             </div>
