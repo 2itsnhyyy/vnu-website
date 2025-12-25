@@ -22,6 +22,10 @@ export const API_CONFIG = {
     // Comment endpoints
     COMMENTS: (postId: number) => `posts/${postId}/comments`,
     LIKE_COMMENT: (commentId: number) => `comments/${commentId}/like`,
+    
+    // Incident endpoints
+    INCIDENTS: 'incident',
+    INCIDENT_DETAIL: (id: number) => `incident/${id}`,
   }
 }
 

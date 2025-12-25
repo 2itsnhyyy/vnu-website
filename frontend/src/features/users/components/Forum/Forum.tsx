@@ -1,18 +1,23 @@
 import type React from "react"
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom"
 import { Plus, Edit, Trash2 } from "lucide-react"
 import { GuestSidebar } from "./GuestSidebar"
+import { AuthenticatedSidebar } from "./AuthenticatedSidebar"
 import { RightSidebar } from "./RightSidebar"
 import { Pagination } from "./Pagination"
 import { FilterTabs } from "./FilterTabs"
 import { PostCard } from "./PostCard"
 import forumService from "../../api/services/forumService"
+import authService from "../../api/services/authService"
 import type { Post } from "../../api/types/forumType"
 import { STORAGE_KEYS } from "../../api/config"
 
 const ForumInterface: React.FC = () => {
     const navigate = useNavigate()
+    const [searchParams] = useSearchParams()
+    const filter = searchParams.get('filter') // 'admin', 'my-posts', or null
+    
     const [activeTab, setActiveTab] = useState<"newest" | "answered" | "unanswered">("newest")
     const [currentPage, setCurrentPage] = useState(1)
     const [posts, setPosts] = useState<Post[]>([])
@@ -24,15 +29,11 @@ const ForumInterface: React.FC = () => {
 
     useEffect(() => {
         const token = localStorage.getItem(STORAGE_KEYS.TOKEN)
-        const userStr = localStorage.getItem(STORAGE_KEYS.USER)
         setIsAuthenticated(!!token)
-        if (userStr) {
-            try {
-                const user = JSON.parse(userStr)
-                setCurrentUserId(user.userId)
-            } catch (e) {
-                console.error("Error parsing user:", e)
-            }
+        
+        const currentUser = authService.getCurrentUser()
+        if (currentUser) {
+            setCurrentUserId(currentUser.userId)
         }
     }, [])
 
@@ -45,7 +46,17 @@ const ForumInterface: React.FC = () => {
                 page: currentPage,
                 sort: activeTab,
             })
-            setPosts(response.posts)
+            
+            let filteredPosts = response.posts
+            
+            // Apply filter based on query param
+            if (filter === 'admin') {
+                filteredPosts = response.posts.filter(post => post.author.role === 1)
+            } else if (filter === 'my-posts' && currentUserId) {
+                filteredPosts = response.posts.filter(post => post.author.userId === currentUserId)
+            }
+            
+            setPosts(filteredPosts)
             setTotalPages(response.pagination.totalPages)
         } catch (err: any) {
             setError(err.message || 'Có lỗi xảy ra khi tải bài đăng')
@@ -57,7 +68,7 @@ const ForumInterface: React.FC = () => {
 
     useEffect(() => {
         fetchPosts()
-    }, [currentPage, activeTab])
+    }, [currentPage, activeTab, filter, currentUserId])
 
     const handleLike = async (postId: number, isCurrentlyLiked: boolean) => {
         setPosts(posts.map(post =>
@@ -129,15 +140,29 @@ const ForumInterface: React.FC = () => {
         }
     }
 
+    // Get page title based on filter
+    const getPageTitle = () => {
+        if (filter === 'admin') return 'Bài đăng của Admin'
+        if (filter === 'my-posts') return 'Bài đăng của bạn'
+        return 'Các bài đăng'
+    }
+
+    // Get empty message based on filter
+    const getEmptyMessage = () => {
+        if (filter === 'admin') return 'Chưa có bài đăng nào từ Admin'
+        if (filter === 'my-posts') return 'Bạn chưa có bài đăng nào'
+        return 'Chưa có bài đăng nào'
+    }
+
     return (
         <div className="flex h-screen bg-white pt-8">
-            <GuestSidebar />
+            {isAuthenticated ? <AuthenticatedSidebar /> : <GuestSidebar />}
 
             <div className="flex-1 overflow-auto bg-white">
                 <div className="max-w-5xl mx-auto px-12 pt-8 pb-10">
                     <div className="flex items-center justify-between mb-6">
-                        <h1 className="text-3xl font-bold text-gray-900">Các bài đăng</h1>
-                        {isAuthenticated ? (
+                        <h1 className="text-3xl font-bold text-gray-900">{getPageTitle()}</h1>
+                        {isAuthenticated && !filter && (
                             <button
                                 onClick={handleCreatePost}
                                 className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
@@ -145,13 +170,6 @@ const ForumInterface: React.FC = () => {
                                 <Plus size={20} />
                                 Đăng bài của bạn
                             </button>
-                        ) : (
-                            <div className="text-sm text-gray-500">
-                                <a href="/users/login" className="text-blue-500 hover:underline">
-                                    Đăng nhập
-                                </a>
-                                {" "}để đăng bài viết
-                            </div>
                         )}
                     </div>
 
@@ -172,7 +190,7 @@ const ForumInterface: React.FC = () => {
 
                     {!loading && !error && posts.length === 0 && (
                         <div className="text-center py-8">
-                            <p className="text-gray-600">Chưa có bài đăng nào</p>
+                            <p className="text-gray-600">{getEmptyMessage()}</p>
                         </div>
                     )}
 
@@ -184,32 +202,9 @@ const ForumInterface: React.FC = () => {
                                         post={post} 
                                         onLike={handleLike}
                                         onPostClick={handlePostClick}
+                                        onDelete={handleDeletePost}
                                         isAuthenticated={isAuthenticated}
                                     />
-                                    {isAuthenticated && currentUserId === post.author.userId && (
-                                        <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    handleEditPost(post.postId)
-                                                }}
-                                                className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
-                                                title="Chỉnh sửa"
-                                            >
-                                                <Edit size={16} className="text-blue-600" />
-                                            </button>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    handleDeletePost(post.postId)
-                                                }}
-                                                className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
-                                                title="Xóa"
-                                            >
-                                                <Trash2 size={16} className="text-red-600" />
-                                            </button>
-                                        </div>
-                                    )}
                                 </div>
                             ))}
                         </div>

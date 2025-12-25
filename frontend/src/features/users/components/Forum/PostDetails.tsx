@@ -3,6 +3,7 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 import { AuthenticatedSidebar } from "./AuthenticatedSidebar"
+import { GuestSidebar } from "./GuestSidebar"
 import { RightSidebar } from "./RightSidebar"
 import { Pagination } from "./Pagination"
 import { PostContent } from "./PostContent"
@@ -233,7 +234,7 @@ const PostDetailPage: React.FC = () => {
 
     return (
         <div className="flex h-screen bg-white pt-8">
-            <AuthenticatedSidebar />
+            {isAuthenticated ? <AuthenticatedSidebar /> : <GuestSidebar />}
 
             <div className="flex-1 overflow-auto bg-white">
                 <div className="max-w-4xl mx-auto px-12 pt-8 pb-10">
