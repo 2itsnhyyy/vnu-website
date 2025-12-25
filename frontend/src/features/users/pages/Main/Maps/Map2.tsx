@@ -7,24 +7,24 @@ import Graphic from "@arcgis/core/Graphic";
 
 import Point from "@arcgis/core/geometry/Point";
 import Polygon from "@arcgis/core/geometry/Polygon";
+import Polyline from "@arcgis/core/geometry/Polyline"; // Thêm để vẽ đường đi
 import Mesh from "@arcgis/core/geometry/Mesh";
+import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
+import Search from "@arcgis/core/widgets/Search";
+import "@arcgis/core/assets/esri/themes/light/main.css";
 
 import { mapService } from "../../../api/services/mapService";
 
-// Utility: debounce function
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedValue(value);
     }, delay);
-
     return () => {
       clearTimeout(handler);
     };
   }, [value, delay]);
-
   return debouncedValue;
 }
 
@@ -32,6 +32,8 @@ export default function Map2() {
   const mapDiv = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<SceneView | null>(null);
   const graphicsLayerRef = useRef<GraphicsLayer | null>(null);
+  const routeLayerRef = useRef<GraphicsLayer | null>(null); // Layer riêng cho đường đi
+  const placesCacheRef = useRef<Map<string, any>>(new Map());
 
   const [buildings, setBuildings] = useState<any[]>([]);
   const [mapCenter, setMapCenter] = useState({ lat: 10.8709, lon: 106.8023 });
@@ -39,369 +41,312 @@ export default function Map2() {
   const [mapHeading, setMapHeading] = useState(0);
   const [mapTilt, setMapTilt] = useState(65);
 
-  // Debounce để tránh gọi API quá nhiều
+  // State cho chức năng tìm đường mới
+  const [startQuery, setStartQuery] = useState("");
+  const [endQuery, setEndQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<{ type: 'start' | 'end', list: any[] } | null>(null);
+  const [selectedStart, setSelectedStart] = useState<any>(null);
+  const [selectedEnd, setSelectedEnd] = useState<any>(null);
+
   const debouncedCenter = useDebounce(mapCenter, 500);
   const debouncedZoom = useDebounce(mapZoom, 500);
   const debouncedHeading = useDebounce(mapHeading, 500);
   const debouncedTilt = useDebounce(mapTilt, 500);
 
-  // Track rendered buildings để tránh duplicate
   const renderedBuildingIdsRef = useRef<Set<number>>(new Set());
 
-  // Load buildings từ API
+  /* ================= NEW: ROUTING LOGIC ================= */
+const handleSearchInputChange = async (text: string, type: "start" | "end") => {
+    if (type === "start") { setStartQuery(text); setSelectedStart(null); } 
+    else { setEndQuery(text); setSelectedEnd(null); }
+
+    if (text.length > 1) {
+      try {
+        const results = await mapService.searchPlaces(text);
+        setSuggestions({ type, list: results });
+      } catch (e) { console.error(e); }
+    } else {
+      setSuggestions(null);
+    }
+  };
+
+  const selectPlace = (place: any, type: "start" | "end") => {
+    if (type === "start") { setStartQuery(place.name); setSelectedStart(place); } 
+    else { setEndQuery(place.name); setSelectedEnd(place); }
+    setSuggestions(null);
+  };
+
+  const findRoute = async () => {
+    if (!selectedStart || !selectedEnd) return;
+    try {
+      const response = await mapService.findPath(selectedStart.placeId, selectedEnd.placeId);
+      
+      // Lấy tọa độ từ path.pathGeometry.coordinates theo JSON bạn cung cấp
+      const coords = response?.path?.pathGeometry?.coordinates;
+
+      if (coords && routeLayerRef.current) {
+        routeLayerRef.current.removeAll();
+
+        const polyline = new Polyline({
+          paths: coords, // MultiLineString format [[[lon, lat],...]]
+          spatialReference: { wkid: 4326 }
+        });
+
+        const routeGraphic = new Graphic({
+          geometry: polyline,
+          symbol: {
+            type: "simple-line",
+            color: [0, 122, 255, 0.9],
+            width: 5,
+            cap: "round",
+            join: "round"
+          } as any
+        });
+
+        routeLayerRef.current.add(routeGraphic);
+        viewRef.current?.goTo({ target: polyline.extent.expand(1.5), tilt: 45 }, { duration: 1000 });
+      }
+    } catch (e) {
+      console.error("Lỗi tìm đường:", e);
+      alert("Không tìm thấy dữ liệu đường đi.");
+    }
+  };
+
+  /* ================= POPUP TEMPLATE CONFIG (GIỮ NGUYÊN) ================= */
+  const buildingPopupTemplate = {
+    title: `<div style="font-size: 1.2em; font-weight: bold; color: #1a5276;">{name}</div>`,
+    content: [
+      { type: "text", text: `<b>Mô tả:</b> {description}<br><b>Vị trí:</b> {placeName}<br><b>Số tầng:</b> {floors} tầng` },
+      { type: "media", mediaInfos: [{ title: "Hình ảnh thực tế", type: "image", value: { sourceURL: "{imageUrl}" } }] },
+      { type: "fields", fieldInfos: [{ fieldName: "buildingId", label: "ID Tòa nhà" }, { fieldName: "height", label: "Chiều cao (m)" }, { fieldName: "objectType", label: "Loại mô hình" }] }
+    ]
+  };
+
+  /* ================= UTILITY: ADD PRISM & GLTF (GIỮ NGUYÊN) ================= */
+  const addPrism = (prism: any, building: any) => {
+    const polygon = new Polygon({ rings: prism.baseFaceGeometry.coordinates[0], spatialReference: { wkid: 4326 } });
+    const graphic = new Graphic({
+      geometry: polygon,
+      symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: prism.height, material: { color: "#4E79A7" }, edges: { type: "solid", color: "white", size: 1 } as any }] } as any,
+      attributes: { name: building.name, description: building.description || "N/A", floors: building.floors || 0, placeName: building.placeName || "N/A", imageUrl: building.image, buildingId: building.buildingId, height: prism.height, objectType: "Khối lăng trụ (Extrude)" },
+      popupTemplate: buildingPopupTemplate
+    });
+    graphicsLayerRef.current?.add(graphic);
+  };
+
+  const addMeshFromGLTF = async (mesh: any, building: any) => {
+    try {
+      const point = new Point({ longitude: mesh.pointGeometry.coordinates[0], latitude: mesh.pointGeometry.coordinates[1], z: mesh.pointGeometry.coordinates[2] || 0, spatialReference: { wkid: 4326 } });
+      const gltfMesh = await Mesh.createFromGLTF(point, mesh.meshUrl);
+      const rotationZ = Array.isArray(mesh.rotate) ? mesh.rotate[2] : (mesh.rotate || 0);
+      const scaleValue = Array.isArray(mesh.scale) ? mesh.scale[0] : (mesh.scale || 1);
+      gltfMesh.rotate(0, 0, rotationZ);
+      gltfMesh.scale(scaleValue);
+      const graphic = new Graphic({
+        geometry: gltfMesh,
+        symbol: { type: "mesh-3d", symbolLayers: [{ type: "fill", material: { color: "white" } }] } as any,
+        attributes: { name: building.name, description: building.description || "N/A", floors: building.floors || 0, placeName: building.placeName || "N/A", imageUrl: building.image, buildingId: building.buildingId, height: "Theo mô hình 3D", objectType: "Mô hình chi tiết (GLB)" },
+        popupTemplate: buildingPopupTemplate
+      });
+      graphicsLayerRef.current?.add(graphic);
+    } catch (error) { console.error(error); }
+  };
+
+  /* ================= API DATA LOADING (GIỮ NGUYÊN) ================= */
   useEffect(() => {
     const loadBuildings = async () => {
       try {
-        const data = await mapService.getBuildings(
-          debouncedCenter.lat,
-          debouncedCenter.lon,
-          Math.floor(debouncedZoom),
-          debouncedHeading ?? 0,
-          debouncedTilt ?? 0
-        );
-
+        const data = await mapService.getBuildings(debouncedCenter.lat, debouncedCenter.lon, Math.floor(debouncedZoom), debouncedHeading ?? 0, debouncedTilt ?? 0);
         setBuildings((prev) => {
           const existingIds = new Set(prev.map((b) => b.buildingId));
-          const uniqueNew = data.filter(
-            (b: any) => !existingIds.has(b.buildingId)
-          );
+          const uniqueNew = data.filter((b: any) => !existingIds.has(b.buildingId));
           return [...prev, ...uniqueNew];
         });
-      } catch (error) {
-        console.error("Lỗi nạp tòa nhà:", error);
-      }
+      } catch (error) { console.error("Lỗi nạp tòa nhà:", error); }
     };
-
     loadBuildings();
   }, [debouncedCenter, debouncedZoom, debouncedHeading, debouncedTilt]);
 
+  /* ================= VIEW INITIALIZATION (GIỮ NGUYÊN TOÀN BỘ LOGIC CŨ) ================= */
   useEffect(() => {
     if (!mapDiv.current) return;
-
-    /* ================= MAP 3D ================= */
-    const map = new Map({
-      basemap: "osm",
-      ground: "world-elevation",
-    });
-
+    const map = new Map({ basemap: "osm", ground: "world-elevation" });
     const view = new SceneView({
       container: mapDiv.current,
       map,
-      camera: {
-        position: {
-          longitude: 106.8023,
-          latitude: 10.8709,
-          z: 300,
-        },
-        tilt: 65,
-      },
-      environment: {
-        lighting: {
-          directShadowsEnabled: true,
-        } as any,
-      },
+      camera: { position: { longitude: 106.8023, latitude: 10.8709, z: 300 }, tilt: 65 },
+      environment: { lighting: { directShadowsEnabled: true } as any },
     });
+
+    const graphicsLayer = new GraphicsLayer({ elevationInfo: { mode: "relative-to-ground" } });
+    const routeLayer = new GraphicsLayer({ elevationInfo: { mode: "on-the-ground" } });
+    map.addMany([graphicsLayer, routeLayer]);
 
     viewRef.current = view;
+    graphicsLayerRef.current = graphicsLayer;
+    routeLayerRef.current = routeLayer;
 
-    /* ================= GRAPHICS LAYER ================= */
-    const graphicsLayer = new GraphicsLayer({
-      elevationInfo: {
-        mode: "relative-to-ground",
+    // Logic resolveLonLat gốc của bạn
+    const resolveLonLat = (p: any): { lon: number; lat: number } | null => {
+      const pickNum = (v: any) => (typeof v === "string" ? parseFloat(v) : v);
+      const tryPairs: Array<[any, any]> = [[p?.longitude, p?.latitude], [p?.lon, p?.lat], [p?.lng, p?.lat], [p?.x, p?.y], [p?.location?.lon, p?.location?.lat], [p?.center?.lon, p?.center?.lat]];
+      for (const [lo, la] of tryPairs) {
+        const lon = pickNum(lo); const lat = pickNum(la);
+        if (typeof lon === "number" && typeof lat === "number") return { lon, lat };
+      }
+      const arrays: any[] = [p?.coordinates, p?.location?.coordinates, p?.center, p?.geometry?.coordinates, p?.geom?.coordinates, p?.point?.coordinates, p?.geoJSON?.coordinates];
+      for (const arr of arrays) {
+        if (Array.isArray(arr) && arr.length >= 2) {
+          const lon = pickNum(arr[0]); const lat = pickNum(arr[1]);
+          if (typeof lon === "number" && typeof lat === "number") return { lon, lat };
+        }
+      }
+      return null;
+    };
+
+    const placeSource: any = {
+      name: "Địa điểm nội bộ",
+      placeholder: "Tìm địa điểm nội bộ...",
+      getSuggestions: async (params: any) => {
+        const term = params?.suggestTerm ?? params?.searchTerm ?? "";
+        if (!term || term.trim().length === 0) return [];
+        try {
+          const places = await mapService.searchPlaces(term.trim());
+          return places.map((p: any) => {
+            const id = String(p.placeId ?? p.id ?? p._id ?? p.uuid ?? p.code ?? p.name);
+            placesCacheRef.current.set(id, p);
+            return { key: id, text: p.name || p.placeName || "(không tên)" };
+          });
+        } catch (e) { return []; }
       },
+      getResults: async (params: any) => {
+        const key = String(params?.suggestResult?.key ?? params?.searchTerm ?? "");
+        let p = placesCacheRef.current.get(key);
+        if (!p && params?.searchTerm) { try { const list = await mapService.searchPlaces(String(params.searchTerm)); p = list?.[0]; } catch {} }
+        if (!p) return [];
+        const ll = resolveLonLat(p);
+        if (!ll) return [];
+        const point = new Point({ longitude: ll.lon, latitude: ll.lat, spatialReference: { wkid: 4326 } });
+        const feature = new Graphic({
+          geometry: point,
+          attributes: { name: p.name || p.placeName || key },
+          symbol: { type: "simple-marker", color: [0, 122, 255, 0.9], size: 10, outline: { color: "white", width: 1 } } as any,
+          popupTemplate: { title: "{name}", content: p.description ? `<div>${p.description}</div>` : undefined },
+        });
+        return [{ feature, name: p.name || p.placeName || key }];
+      },
+    };
+
+    const searchWidget = new Search({
+      view,
+      includeDefaultSources: false,
+      sources: [placeSource],
+      container: "search-container" // Đặt vào container riêng bên phải
     });
 
-    map.add(graphicsLayer);
-    graphicsLayerRef.current = graphicsLayer;
+    searchWidget.on("select-result", (event: any) => {
+      const geom = event?.result?.feature?.geometry;
+      if (geom) view.goTo({ target: geom, zoom: 19, tilt: 65 });
+    });
 
-    /* ================= UPDATE MAP STATE ================= */
-    const updateMapState = () => {
-      const center = view.center;
-      if (
-        center &&
-        typeof center.latitude === "number" &&
-        typeof center.longitude === "number"
-      ) {
-        setMapCenter({ lat: center.latitude, lon: center.longitude });
-      }
+    const handle = reactiveUtils.watch(() => [view.center, view.zoom, view.camera], () => {
+      if (view.center) setMapCenter({ lat: view.center.latitude, lon: view.center.longitude });
+      setMapZoom(view.zoom);
+      setMapHeading(view.camera.heading);
+      setMapTilt(view.camera.tilt);
+    });
 
-      const zoom = view.zoom;
-      if (typeof zoom === "number") {
-        setMapZoom(zoom);
-      }
+    view.on("pointer-move", async (event) => {
+      const response = await view.hitTest(event);
+      const hit = response.results.some((res) => res.type === "graphic");
+      if (mapDiv.current) mapDiv.current.style.cursor = hit ? "pointer" : "default";
+    });
 
-      const camera = view.camera;
-      if (camera) {
-        const heading = typeof camera.heading === "number" ? camera.heading : 0;
-        const tilt = typeof camera.tilt === "number" ? camera.tilt : 0;
-        setMapHeading(heading);
-        setMapTilt(tilt);
-      }
-    };
+    return () => { handle.remove(); searchWidget.destroy(); view.destroy(); };
+  }, []);
 
-    view.watch("center", updateMapState);
-    view.watch("zoom", updateMapState);
-    view.watch("camera", updateMapState);
-
-    /* ================= ADD PRISM (EXTRUDE) ================= */
-    const addPrism = (prism: any, building: any) => {
-      const polygon = new Polygon({
-        rings: prism.baseFaceGeometry.coordinates[0],
-        spatialReference: { wkid: 4326 },
-      });
-
-      const graphic = new Graphic({
-        geometry: polygon,
-        symbol: {
-          type: "polygon-3d",
-          symbolLayers: [
-            {
-              type: "extrude",
-              size: prism.height,
-              // Màu xám trắng đặc trưng của OSM 3D
-              material: {
-                color: [245, 245, 242, 1],
-              },
-              edges: {
-                type: "solid",
-                // Viền xám mảnh giúp khối rõ nét nhưng không bị thô
-                color: [130, 130, 130, 0.6],
-                size: 0.5, // Độ dày nhỏ để thanh thoát
-              } as any,
-            },
-          ],
-        },
-        attributes: {
-          name: building.name,
-          height: prism.height,
-          buildingId: building.buildingId,
-        },
-      });
-
-      graphicsLayer.add(graphic);
-    };
-
-    /* ================= ADD MESH (GLTF → Mesh Geometry) ================= */
-    const addMeshFromGLTF = async (mesh: any, building: any) => {
-      try {
-        const point = new Point({
-          longitude: mesh.pointGeometry.coordinates[0],
-          latitude: mesh.pointGeometry.coordinates[1],
-          z: mesh.pointGeometry.coordinates[2] || 0,
-          spatialReference: { wkid: 4326 },
-        });
-
-        // 🔥 CORE: createFromGLTF
-        const gltfMesh = await Mesh.createFromGLTF(point, mesh.meshUrl);
-
-        gltfMesh.rotate(0, 0, mesh.rotate || 0);
-        gltfMesh.scale(mesh.scale || 1);
-
-        const graphic = new Graphic({
-          geometry: gltfMesh,
-          symbol: {
-            type: "mesh-3d",
-            symbolLayers: [
-              {
-                type: "fill",
-                material: {
-                  color: "white",
-                },
-              },
-            ],
-          },
-          attributes: {
-            meshId: mesh.meshId,
-            name: building.name,
-            buildingId: building.buildingId,
-          },
-        });
-
-        graphicsLayer.add(graphic);
-      } catch (error) {
-        console.error(`Lỗi load GLB mesh ${mesh.meshUrl}:`, error);
-      }
-    };
-
-    /* ================= RENDER BUILDINGS ================= */
-    const renderBuildings = (buildingsToRender: any[]) => {
-      if (!graphicsLayer) return;
-
-      const renderedIds = renderedBuildingIdsRef.current;
-      const newBuildings = buildingsToRender.filter(
-        (b) => !renderedIds.has(b.buildingId)
-      );
-
-      if (newBuildings.length === 0) return;
-
-      console.log(
-        `🏗️ Rendering ${newBuildings.length} new buildings out of ${buildingsToRender.length} total`
-      );
-
-      newBuildings.forEach((building: any) => {
-        if (!building.objects3d || building.objects3d.length === 0) {
-          console.warn(`⚠️ Building "${building.name}" has no objects3d`);
-          return;
-        }
-
-        building.objects3d.forEach((obj: any) => {
-          // GLTF Mesh
-          if (obj.objectType === 0 && obj.meshes) {
-            obj.meshes.forEach((mesh: any) => {
-              addMeshFromGLTF(mesh, building); // ⚠ async
-            });
-          }
-
-          // Extrude
-          if (obj.objectType === 1 && obj.bodies) {
-            obj.bodies.forEach((body: any) => {
-              body.prisms?.forEach((prism: any) => {
-                addPrism(prism, building);
-              });
-            });
-          }
-        });
-
-        renderedIds.add(building.buildingId);
-      });
-    };
-
-    // Render buildings khi có data mới
-    if (buildings.length > 0) {
-      renderBuildings(buildings);
-    }
-
-    /* ================= POPUP ================= */
-    // Popup sẽ được set trên từng graphic riêng lẻ
-
-    return () => {
-      view.destroy();
-    };
-  }, []); // Chỉ chạy một lần khi mount
-
-  // Render buildings khi buildings state thay đổi
+  /* ================= RENDER BUILDINGS (GIỮ NGUYÊN) ================= */
   useEffect(() => {
     if (!graphicsLayerRef.current || buildings.length === 0) return;
-
-    const graphicsLayer = graphicsLayerRef.current;
-    const renderedIds = renderedBuildingIdsRef.current;
-    const newBuildings = buildings.filter(
-      (b) => !renderedIds.has(b.buildingId)
-    );
-
-    if (newBuildings.length === 0) return;
-
-    console.log(
-      `🏗️ Rendering ${newBuildings.length} new buildings out of ${buildings.length} total`
-    );
-
-    /* ================= ADD PRISM (EXTRUDE) ================= */
-    const addPrism = (prism: any, building: any) => {
-      const polygon = new Polygon({
-        rings: prism.baseFaceGeometry.coordinates[0],
-        spatialReference: { wkid: 4326 },
+    const newBuildings = buildings.filter(b => !renderedBuildingIdsRef.current.has(b.buildingId));
+    newBuildings.forEach((building) => {
+      building.objects3d?.forEach((obj: any) => {
+        if (obj.objectType === 0 && obj.meshes) obj.meshes.forEach((mesh: any) => addMeshFromGLTF(mesh, building));
+        if (obj.objectType === 1 && obj.bodies) obj.bodies.forEach((body: any) => body.prisms?.forEach((p: any) => addPrism(p, building)));
       });
-
-      const graphic = new Graphic({
-        geometry: polygon,
-        symbol: {
-          type: "polygon-3d",
-          symbolLayers: [
-            {
-              type: "extrude",
-              size: prism.height,
-              // 1. Đổi màu về xám trắng giống OSM
-              material: {
-                color: [245, 245, 242, 1],
-              },
-              // 2. Đổi viền trắng thô sang xám mảnh cho tinh tế
-              edges: {
-                type: "solid",
-                color: [130, 130, 130, 0.6],
-                size: 0.5,
-              } as any,
-            },
-          ],
-        },
-        attributes: {
-          name: building.name,
-          height: prism.height,
-          buildingId: building.buildingId,
-        },
-      });
-
-      graphicsLayer.add(graphic);
-    };
-
-    /* ================= ADD MESH (GLTF → Mesh Geometry) ================= */
-    const addMeshFromGLTF = async (mesh: any, building: any) => {
-      try {
-        const point = new Point({
-          longitude: mesh.pointGeometry.coordinates[0],
-          latitude: mesh.pointGeometry.coordinates[1],
-          z: mesh.pointGeometry.coordinates[2] || 0,
-          spatialReference: { wkid: 4326 },
-        });
-
-        // 🔥 CORE: createFromGLTF
-        const gltfMesh = await Mesh.createFromGLTF(point, mesh.meshUrl);
-
-        gltfMesh.rotate(0, 0, mesh.rotate || 0);
-        gltfMesh.scale(mesh.scale || 1);
-
-        const graphic = new Graphic({
-          geometry: gltfMesh,
-          symbol: {
-            type: "mesh-3d",
-            symbolLayers: [
-              {
-                type: "fill",
-                material: {
-                  color: "white",
-                },
-              },
-            ],
-          },
-          attributes: {
-            meshId: mesh.meshId,
-            name: building.name,
-            buildingId: building.buildingId,
-          },
-        });
-
-        graphicsLayer.add(graphic);
-      } catch (error) {
-        console.error(`Lỗi load GLB mesh ${mesh.meshUrl}:`, error);
-      }
-    };
-
-    newBuildings.forEach((building: any) => {
-      if (!building.objects3d || building.objects3d.length === 0) {
-        console.warn(`⚠️ Building "${building.name}" has no objects3d`);
-        return;
-      }
-
-      building.objects3d.forEach((obj: any) => {
-        // GLTF Mesh
-        if (obj.objectType === 0 && obj.meshes) {
-          obj.meshes.forEach((mesh: any) => {
-            addMeshFromGLTF(mesh, building); // ⚠ async
-          });
-        }
-
-        // Extrude
-        if (obj.objectType === 1 && obj.bodies) {
-          obj.bodies.forEach((body: any) => {
-            body.prisms?.forEach((prism: any) => {
-              addPrism(prism, building);
-            });
-          });
-        }
-      });
-
       renderedBuildingIdsRef.current.add(building.buildingId);
     });
   }, [buildings]);
 
-  return <div ref={mapDiv} style={{ width: "100%", height: "100vh" }} />;
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden" }}>
+      
+      {/* Panel bên phải tích hợp Search và Chỉ đường */}
+      <div style={{
+        position: "absolute", top: "15px", right: "15px", zIndex: 100,
+        width: "320px", display: "flex", flexDirection: "column", gap: "10px"
+      }}>
+        {/* Container cho ArcGIS Search Widget */}
+        <div id="search-container" style={{ width: "100%" }} />
+
+        {/* Panel Chỉ đường */}
+        <div style={{
+          background: "white", padding: "15px", borderRadius: "8px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.15)", fontFamily: "Arial, sans-serif"
+        }}>
+          <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "10px", color: "#1a5276" }}>Chỉ đường</div>
+          
+          <div style={{ marginBottom: "10px", position: "relative" }}>
+            <input
+              placeholder="Chọn điểm đi..."
+              value={startQuery}
+              onChange={(e) => handleSearchInputChange(e.target.value, 'start')}
+              style={inputStyle}
+            />
+            {suggestions?.type === 'start' && (
+              <div style={suggestionBoxStyle}>
+                {suggestions.list.map(p => <div key={p.placeId} onClick={() => selectPlace(p, 'start')} style={itemStyle}>{p.name}</div>)}
+              </div>
+            )}
+          </div>
+
+          <div style={{ marginBottom: "15px", position: "relative" }}>
+            <input
+              placeholder="Chọn điểm đến..."
+              value={endQuery}
+              onChange={(e) => handleSearchInputChange(e.target.value, 'end')}
+              style={inputStyle}
+            />
+            {suggestions?.type === 'end' && (
+              <div style={suggestionBoxStyle}>
+                {suggestions.list.map(p => <div key={p.placeId} onClick={() => selectPlace(p, 'end')} style={itemStyle}>{p.name}</div>)}
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button 
+              onClick={findRoute}
+              disabled={!selectedStart || !selectedEnd}
+              style={{ flex: 2, padding: "10px", backgroundColor: (selectedStart && selectedEnd) ? "#007aff" : "#ccc", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}
+            >
+              Tìm đường
+            </button>
+            <button 
+              onClick={() => { routeLayerRef.current?.removeAll(); setStartQuery(""); setEndQuery(""); setSelectedStart(null); setSelectedEnd(null); }}
+              style={{ flex: 1, padding: "10px", background: "#f0f0f0", border: "1px solid #ccc", borderRadius: "4px", cursor: "pointer" }}
+            >
+              Xóa
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div ref={mapDiv} style={{ width: "100%", height: "100%", outline: "none" }} />
+    </div>
+  );
 }
+
+const inputStyle = { width: "100%", padding: "10px", borderRadius: "4px", border: "1px solid #ddd", boxSizing: "border-box" as any };
+const suggestionBoxStyle = { position: "absolute" as any, top: "40px", left: 0, right: 0, background: "white", border: "1px solid #ddd", zIndex: 101, maxHeight: "150px", overflowY: "auto" as any, boxShadow: "0 4px 6px rgba(0,0,0,0.1)" };
+const itemStyle = { padding: "10px", cursor: "pointer", borderBottom: "1px solid #eee", fontSize: "13px" };
