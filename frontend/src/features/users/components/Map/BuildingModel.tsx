@@ -4,6 +4,8 @@ import * as THREE from 'three';
 
 export const BuildingModel = ({ building, origin, onClick }: any) => {
   const SCALE_GIS = 100000;
+  const onHover = () => (document.body.style.cursor = 'pointer');
+  const onUnhover = () => (document.body.style.cursor = 'auto');
 
   return (
     <group>
@@ -25,6 +27,8 @@ export const BuildingModel = ({ building, origin, onClick }: any) => {
                 rotation={[0, (mesh.rotate * Math.PI) / 180, 0]}
                 scale={mesh.scale}
                 onSelect={onClick} 
+                onPointerOver={onHover}
+                onPointerOut={onUnhover}
               />
             );
           })}
@@ -54,7 +58,7 @@ export const BuildingModel = ({ building, origin, onClick }: any) => {
   );
 };
 
-const SingleMesh = ({ url, position, rotation, scale, onSelect }: any) => {
+const SingleMesh = ({ url, position, rotation, scale, onSelect, onPointerOver, onPointerOut }: any) => {
   const { scene } = useGLTF(url);
   const clonedScene = useMemo(() => scene.clone(), [scene]);
 
@@ -70,6 +74,8 @@ const SingleMesh = ({ url, position, rotation, scale, onSelect }: any) => {
         e.stopPropagation();
         onSelect();
       }}
+      onPointerOver={onPointerOver}
+      onPointerOut={onPointerOut}
     />
   );
 };

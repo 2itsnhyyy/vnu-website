@@ -24,7 +24,15 @@ export const mapService = {
       params: { fromPlaceId: fromId, toPlaceId: toId, includeGeometry: true }
     });
     return res.data;
-  }
+  },
+
+  // Lấy danh sách địa điểm để tra cứu (hỗ trợ search theo tên)
+  searchPlaces: async (name: string): Promise<any[]> => {
+    const res = await axios.get(`${API_BASE}/places`, { 
+      params: { search: name, page: 1, limit: 10 } 
+    });
+    return res.data.data; // Trả về mảng places từ PlaceService
+  },
 };
 
 export default mapService;
