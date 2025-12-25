@@ -2,11 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { News, NewsUpdateRequest } from "../../types/news";
 import PageMeta from "../../components/Common/PageMeta";
-import { Save } from "lucide-react";
+import { Save, UploadCloudIcon } from "lucide-react";
 import { GrFormPrevious } from "react-icons/gr";
-import MDEditor from "@uiw/react-md-editor";
 import { Link } from "react-router-dom";
 import { newsService } from "../../services/NewsService";
+import MDEditor, { type ICommand } from "@uiw/react-md-editor";
+import apiClient from "../../../users/api/apiClient";
 
 export default function EditNews() {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ export default function EditNews() {
   const [loading, setLoading] = useState(false);
   const [news, setNews] = useState<News | null>(null);
   const [formData, setFormData] = useState<NewsUpdateRequest>({});
-
+  const [files, setFiles] = useState<File[]>([]);
   const editorRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -38,34 +39,69 @@ export default function EditNews() {
     }
   };
 
+  const uploadImages = async (files: File[]) => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
+    const response = await apiClient.post("/cloudinary/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id) return;
 
     try {
       setLoading(true);
+
+      if (files.length > 0) {
+        const uploadedImages = await uploadImages(files);
+        const imagesMarkdown = uploadedImages
+          .map((img: { url: any }) => `![image](${img.url})`)
+          .join("\n");
+        formData.contentMarkdown += `\n${imagesMarkdown}`;
+      }
+
       const updated = await newsService.update(Number(id), {
         title: formData.title,
         contentMarkdown: formData.contentMarkdown,
       });
       console.log("Updated news:", updated);
       navigate("/admin/news");
-    } catch (error: any) {
-      if (error.response) {
-        console.error("Error response data:", error.response.data);
-        console.error("Error status:", error.response.status);
-        console.error("Error headers:", error.response.headers);
-        alert(`Có lỗi xảy ra: ${JSON.stringify(error.response.data)}`);
-      } else if (error.request) {
-        console.error("No response received:", error.request);
-        alert("Không nhận được phản hồi từ server");
-      } else {
-        console.error("Error message:", error.message);
-        alert(`Lỗi: ${error.message}`);
-      }
+    } catch (err) {
+      console.error(err);
+      alert("Có lỗi xảy ra khi cập nhật bài đăng");
     } finally {
       setLoading(false);
     }
+  };
+
+  const insertImageCommand: ICommand = {
+    name: "insert-image",
+    keyCommand: "insert-image",
+    buttonProps: { "aria-label": "Insert image" },
+    icon: <UploadCloudIcon className="w-4 h-4" />,
+    execute: async (state, api) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+
+      input.onchange = async () => {
+        if (!input.files?.length) return;
+        const file = input.files[0];
+        try {
+          const response = await uploadImages([file]);
+          const url = response[0].url;
+          api.replaceSelection(`![image](${url})`);
+        } catch (err) {
+          console.error(err);
+          alert("Upload ảnh thất bại");
+        }
+      };
+
+      input.click();
+    },
   };
 
   const handleChange = (
@@ -148,6 +184,32 @@ export default function EditNews() {
                     contentMarkdown: value || "",
                   }))
                 }
+                extraCommands={[insertImageCommand]}
+                textareaProps={{
+                  onPaste: async (
+                    e: React.ClipboardEvent<HTMLTextAreaElement>
+                  ) => {
+                    const items = e.clipboardData.items;
+                    for (let i = 0; i < items.length; i++) {
+                      const item = items[i];
+                      if (!item.type.startsWith("image/")) continue;
+                      const file = item.getAsFile();
+                      if (!file) continue;
+                      try {
+                        const response = await uploadImages([file]);
+                        const url = response[0].url;
+                        setFormData((prev) => ({
+                          ...prev,
+                          contentMarkdown:
+                            prev.contentMarkdown + `\n![image](${url})\n`,
+                        }));
+                      } catch (err) {
+                        console.error(err);
+                        alert("Upload ảnh từ clipboard thất bại");
+                      }
+                    }
+                  },
+                }}
               />
             </div>
           </div>
