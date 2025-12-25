@@ -19,7 +19,7 @@ const PlacesRouters = [
     element: <AddPlace />,
   },
   {
-    path: "places/edit/:id",
+    path: "places/edit/:placeId",
     element: <EditPlace />,
   },
   // {

@@ -11,10 +11,10 @@ import {
 import { Plus } from "lucide-react";
 import type { ColumnsType } from "antd/es/table";
 import type { Place } from "../../types/place";
-import { mockPlace } from "../../types/place";
+import { placeService } from "../../services/PlaceService";
+import DeleteConfirmModal from "../../components/Common/DeleteConfirmModal";
 
 const PAGE_SIZE = 10;
-
 
 const Places: React.FC = () => {
   const [filter, setFilter] = useState<string>("all");
@@ -26,72 +26,99 @@ const Places: React.FC = () => {
 
   const [isModalOpen, setModalOpen] = useState(false);
   const [placeToDelete, setPlaceToDelete] = useState<number | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
+  const navigate = useNavigate();
 
-   const navigate = useNavigate();
-  
-    useEffect(() => {
-      loadPlace();
-    }, []);
-  
-    function loadPlace() {
-      setLoading(true);
-      setTimeout(() => {
-        setPlace(mockPlace);
-        setLoading(false);
-      }, 300);
-    }
-  
-    function handleSearch() {
-      setLoading(true);
-      setTimeout(() => {
-        const filtered = mockPlace.filter((n) =>
+  useEffect(() => {
+    setLoading(true);
+    placeService
+      .getAll(currentPage, PAGE_SIZE)
+      .then((res) => {
+        console.log("API DATA:", res);
+        setPlace(res.data);
+      })
+      .catch((err) => {
+        console.error("API ERROR:", err);
+      })
+      .finally(() => setLoading(false));
+  }, [currentPage]);
+
+  function handleSearch() {
+    setLoading(true);
+
+    placeService
+      .getAll(1, PAGE_SIZE)
+      .then((res) => {
+        const filtered = res.data.filter((n) =>
           n.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
         setPlace(filtered);
         setCurrentPage(1);
-        setLoading(false);
-      }, 200);
-    }
-  
-    function handleView(place_id: number) {
-      navigate(`/admin/places/${place_id}`);
-    }
-  
-    function handleEdit(place_id: number) {
-      navigate(`/admin/places/edit/${place_id}`);
-    }
-  
-    function handleAdd() {
-      navigate("/admin/places/add");
-    }
-  
-    function handleDelete(place_id: number) {
-      setPlaceToDelete(place_id);
-      setModalOpen(true);
-    }
-  
-    function handleConfirmDelete() {
-      if (!placeToDelete) return;
-      setPlace((prev) => prev.filter((n) => n.place_id !== placeToDelete));
+      })
+      .finally(() => setLoading(false));
+  }
+
+  function handleView(placeId: number) {
+    navigate(`/admin/places/${placeId}`);
+  }
+
+  function handleEdit(placeId: number) {
+    navigate(`/admin/places/edit/${placeId}`);
+  }
+
+  function handleAdd() {
+    navigate("/admin/places/add");
+  }
+
+  function handleDelete(placeId: number) {
+    setPlaceToDelete(placeId);
+    setModalOpen(true);
+  }
+
+  async function handleConfirmDelete() {
+    if (!placeToDelete) return;
+    
+    setDeleteLoading(true);
+    try {
+      await placeService.delete(placeToDelete);
+      setPlace((prev) => prev.filter((n) => n.placeId !== placeToDelete));
       setModalOpen(false);
+      setPlaceToDelete(null);
+    } finally {
+      setDeleteLoading(false);
     }
+  }
 
-    const totalItems = place.length;
-    const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+  function handleCancelDelete() {
+    setModalOpen(false);
+    setPlaceToDelete(null);
+  }
 
-    const paginatedData = place.slice(
+  const totalItems = place.length;
+  const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+
+  const paginatedData = place.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE
   );
 
+  // Helper function to display "./" for empty fields
+  const displayValue = (value: any) => {
+    if (value === null || value === undefined || value === "") {
+      return "./";
+    }
+    return value;
+  };
+
   const columns: ColumnsType<Place> = [
     {
       title: "ID",
-      dataIndex: "place_id",
+      dataIndex: "placeId",
       key: "place_id",
       width: 60,
       align: "center",
+      render: (value) => displayValue(value),
     },
     {
       title: "Tên địa điểm",
@@ -101,27 +128,32 @@ const Places: React.FC = () => {
       ellipsis: {
         showTitle: false,
       },
-      render: (text: string, record: Place) => (
-        <div className="flex items-center gap-3">
-          <img
-            src={record.image}
-            alt={text}
-            className="w-12 h-12 rounded object-cover"
-          />
-          <div>
-            <Tooltip placement="topLeft" title={text}>
-              {text}
-            </Tooltip>
+      render: (text: string, record: Place) => {
+        const displayText = displayValue(text);
+        if (displayText === "./") {
+          return <span className="text-gray-400">./</span>;
+        }
+        return (
+          <div className="flex items-center gap-3">
+            {record.image ? (
+              <img
+                src={record.image}
+                alt={text}
+                className="w-12 h-12 rounded object-cover"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded bg-gray-200 flex items-center justify-center">
+                <span className="text-gray-400 text-xs">N/A</span>
+              </div>
+            )}
+            <div>
+              <Tooltip placement="topLeft" title={displayText}>
+                {displayText}
+              </Tooltip>
+            </div>
           </div>
-        </div>
-      ),
-    },
-    {
-      title: "Ngày tạo",
-      dataIndex: "created_at",
-      key: "created_at",
-      align: "center",
-      width: 110,
+        );
+      },
     },
     {
       title: "Địa chỉ",
@@ -131,25 +163,40 @@ const Places: React.FC = () => {
       ellipsis: {
         showTitle: false,
       },
-      render: (address) => (
-        <Tooltip placement="topLeft" title={address}>
-          {address}
-        </Tooltip>
-      ),
+      render: (address) => {
+        const displayAddr = displayValue(address);
+        return (
+          <Tooltip placement="topLeft" title={displayAddr}>
+            <span className={!address ? "text-gray-400" : ""}>
+              {displayAddr}
+            </span>
+          </Tooltip>
+        );
+      },
     },
     {
       title: "Giờ mở cửa",
-      dataIndex: "open_time",
+      dataIndex: "openTime",
       key: "open_time",
       align: "center",
       width: 110,
+      render: (value) => (
+        <span className={!value ? "text-gray-400" : ""}>
+          {displayValue(value)}
+        </span>
+      ),
     },
     {
       title: "Giờ đóng cửa",
-      dataIndex: "close_time",
+      dataIndex: "closeTime",
       key: "close_time",
       align: "center",
       width: 120,
+      render: (value) => (
+        <span className={!value ? "text-gray-400" : ""}>
+          {displayValue(value)}
+        </span>
+      ),
     },
     {
       title: "Thao tác",
@@ -157,9 +204,22 @@ const Places: React.FC = () => {
       width: 200,
       render: (record: Place) => (
         <Space size="middle">
-          <Button onClick={() => handleView(record.place_id)} type="text" icon={<EyeOutlined />} />
-          <Button onClick={() => handleEdit(record.place_id)} type="text" icon={<EditOutlined />} />
-          <Button onClick={() => handleDelete(record.place_id)} type="text" danger icon={<DeleteOutlined />} />
+          <Button
+            onClick={() => handleView(record.placeId)}
+            type="text"
+            icon={<EyeOutlined />}
+          />
+          <Button
+            onClick={() => handleEdit(record.placeId)}
+            type="text"
+            icon={<EditOutlined />}
+          />
+          <Button
+            onClick={() => handleDelete(record.placeId)}
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+          />
         </Space>
       ),
       align: "center",
@@ -168,7 +228,7 @@ const Places: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-       <PageMeta
+      <PageMeta
         title="Locations | Admin Dashboard"
         description="This is Locations Dashboard"
       />
@@ -194,8 +254,8 @@ const Places: React.FC = () => {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     handleSearch();
-              }
-            }}
+                  }
+                }}
                 style={{ width: 300 }}
               />
               <Select
@@ -210,26 +270,45 @@ const Places: React.FC = () => {
                 ]}
               />
 
-              <button onClick={handleAdd} className="flex items-center gap-2 bg-primary hover:bg-primary-light hover:cursor-pointer text-white font-medium px-5 py-2 rounded-md transition">
+              <button
+                onClick={handleAdd}
+                className="flex items-center gap-2 bg-primary hover:bg-primary-light hover:cursor-pointer text-white font-medium px-5 py-2 rounded-md transition"
+              >
                 <Plus size={18} />
                 <span>Tạo điạ điểm</span>
               </button>
             </div>
           </div>
+          
 
           <Table
             columns={columns}
-            dataSource={place}
+            dataSource={paginatedData}
+            loading={loading}
+            rowKey="place_id"
             pagination={{
               current: currentPage,
               pageSize: PAGE_SIZE,
-              total: totalPages,
+              total: totalItems,
               showSizeChanger: false,
               placement: ["bottomCenter"],
+              onChange: (page) => setCurrentPage(page),
             }}
           />
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        open={isModalOpen}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        loading={deleteLoading}
+        title="Xóa địa điểm này?"
+        description="Hành động này sẽ xóa vĩnh viễn địa điểm này ra khỏi hệ thống và không thể khôi phục lại được."
+        successMessage="Xóa địa điểm thành công!"
+        errorMessage="Xóa địa điểm thất bại. Vui lòng thử lại!"
+      />
     </div>
   );
 };

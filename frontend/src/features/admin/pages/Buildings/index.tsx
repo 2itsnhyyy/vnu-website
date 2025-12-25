@@ -10,14 +10,24 @@ import {
 } from "@ant-design/icons";
 import { Plus } from "lucide-react";
 import type { ColumnsType } from "antd/es/table";
-import type { Building } from "../../types/building";
-import { mockBuilding } from "../../types/building";
+import type {
+  Building,
+  GetAllBuildingParams,
+  GetAllBuildingResponse,
+} from "../../types/building";
+import { buildingService } from "../../services/BuildingService";
 
 const PAGE_SIZE = 10;
 
-
 const Buildings: React.FC = () => {
   const [filter, setFilter] = useState<string>("all");
+  const [minFloors, setMinFloors] = useState<number | undefined>();
+  const [maxFloors, setMaxFloors] = useState<number | undefined>();
+
+  const [pagination, setPagination] = useState({
+    totalItems: 0,
+    totalPages: 0,
+  });
 
   const [building, setBuilding] = useState<Building[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,69 +37,77 @@ const Buildings: React.FC = () => {
   const [isModalOpen, setModalOpen] = useState(false);
   const [buildingToDelete, setBuildingToDelete] = useState<number | null>(null);
 
+  const navigate = useNavigate();
 
-   const navigate = useNavigate();
-  
-    useEffect(() => {
-      loadBuilding();
-    }, []);
-  
-    function loadBuilding() {
+  useEffect(() => {
+    loadBuilding(1);
+  }, [searchTerm, minFloors, maxFloors]);
+
+  const loadBuilding = async (page = 1) => {
+    try {
       setLoading(true);
-      setTimeout(() => {
-        setBuilding(mockBuilding);
-        setLoading(false);
-      }, 300);
-    }
-  
-    function handleSearch() {
-      setLoading(true);
-      setTimeout(() => {
-        const filtered = mockBuilding.filter((n) =>
-          n.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setBuilding(filtered);
-        setCurrentPage(1);
-        setLoading(false);
-      }, 200);
-    }
-  
-    function handleView(building_id: number) {
-      navigate(`/admin/building/${building_id}`);
-    }
-  
-    function handleEdit(building_id: number) {
-      navigate(`/admin/building/edit/${building_id}`);
-    }
-  
-    function handleAdd() {
-      navigate("/admin/buildings/add");
-    }
-  
-    function handleDelete(building_id: number) {
-      setBuildingToDelete(building_id);
-      setModalOpen(true);
-    }
-  
-    function handleConfirmDelete() {
-      if (!buildingToDelete) return;
-      setBuilding((prev) => prev.filter((n) => n.building_id !== buildingToDelete));
-      setModalOpen(false);
-    }
 
-    const totalItems = building.length;
-    const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+      const params: GetAllBuildingParams = {
+        page,
+        limit: PAGE_SIZE,
+        search: searchTerm || undefined,
+        minFloors,
+        maxFloors,
+      };
 
-    const paginatedData = building.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
-  );
+      const res = await buildingService.getAll(params);
+
+      setBuilding(res.buildings);
+      setPagination(res.pagination);
+      setCurrentPage(page);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  function handleSearch() {
+    setLoading(true);
+    setTimeout(() => {
+      const filtered = mockBuilding.filter((n) =>
+        n.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setBuilding(filtered);
+      setCurrentPage(1);
+      setLoading(false);
+    }, 200);
+  }
+
+  function handleView(buildingId: number) {
+    navigate(`/admin/building/${buildingId}`);
+  }
+
+  function handleEdit(buildingId: number) {
+    navigate(`/admin/building/edit/${buildingId}`);
+  }
+
+  function handleAdd() {
+    navigate("/admin/buildings/add");
+  }
+
+  function handleDelete(buildingId: number) {
+    setBuildingToDelete(buildingId);
+    setModalOpen(true);
+  }
+
+  function handleConfirmDelete() {
+    if (!buildingToDelete) return;
+    setBuilding((prev) =>
+      prev.filter((n) => n.buildingId !== buildingToDelete)
+    );
+    setModalOpen(false);
+  }
+
 
   const columns: ColumnsType<Building> = [
     {
       title: "ID",
-      dataIndex: "building_id",
-      key: "building_id",
+      dataIndex: "buildingId",
+      key: "buildingId",
       width: 60,
       align: "center",
     },
@@ -165,9 +183,22 @@ const Buildings: React.FC = () => {
       width: 200,
       render: (record: Building) => (
         <Space size="middle">
-          <Button onClick={() => handleView(record.building_id)} type="text" icon={<EyeOutlined />} />
-          <Button onClick={() => handleEdit(record.building_id)} type="text" icon={<EditOutlined />} />
-          <Button onClick={() => handleDelete(record.building_id)} type="text" danger icon={<DeleteOutlined />} />
+          <Button
+            onClick={() => handleView(record.buildingId)}
+            type="text"
+            icon={<EyeOutlined />}
+          />
+          <Button
+            onClick={() => handleEdit(record.buildingId)}
+            type="text"
+            icon={<EditOutlined />}
+          />
+          <Button
+            onClick={() => handleDelete(record.buildingId)}
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+          />
         </Space>
       ),
       align: "center",
@@ -176,7 +207,7 @@ const Buildings: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-       <PageMeta
+      <PageMeta
         title="Buildings | Admin Dashboard"
         description="This is Buildings Dashboard"
       />
@@ -187,7 +218,7 @@ const Buildings: React.FC = () => {
             <div className="flex items-center gap-3">
               <h2 className="text-lg font-semibold">Danh sách tòa nhà</h2>
               <span className="text-sm bg-[#D1F2FF] text-[#2F73F2] py-1 px-4 rounded-full font-medium">
-                {totalItems} tòa nhà
+                {pagination.totalItems} tòa nhà
               </span>
             </div>
             <div className="flex flex-row items-center gap-3">
@@ -202,10 +233,46 @@ const Buildings: React.FC = () => {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     handleSearch();
-              }
-            }}
+                  }
+                }}
                 style={{ width: 300 }}
               />
+              <Input
+                type="number"
+                placeholder="Số tầng tối thiểu"
+                size="large"
+                min={0}
+                value={minFloors}
+                onChange={(e) =>
+                  setMinFloors(
+                    e.target.value ? Number(e.target.value) : undefined
+                  )
+                }
+                style={{ width: 160 }}
+              />
+
+              <Input
+                type="number"
+                placeholder="Số tầng tối đa"
+                size="large"
+                min={0}
+                value={maxFloors}
+                onChange={(e) =>
+                  setMaxFloors(
+                    e.target.value ? Number(e.target.value) : undefined
+                  )
+                }
+                style={{ width: 160 }}
+              />
+
+              <Button
+                size="large"
+                type="primary"
+                onClick={() => loadBuilding(1)}
+              >
+                Lọc
+              </Button>
+
               <Select
                 defaultValue="all"
                 style={{ width: 150 }}
@@ -218,7 +285,10 @@ const Buildings: React.FC = () => {
                 ]}
               />
 
-              <button onClick={handleAdd} className="flex items-center gap-2 bg-primary hover:bg-primary-light hover:cursor-pointer text-white font-medium p-2 rounded-md transition">
+              <button
+                onClick={handleAdd}
+                className="flex items-center gap-2 bg-primary hover:bg-primary-light hover:cursor-pointer text-white font-medium p-2 rounded-md transition"
+              >
                 <Plus size={18} />
                 <span>Tạo tòa nhà</span>
               </button>
@@ -226,14 +296,17 @@ const Buildings: React.FC = () => {
           </div>
 
           <Table
+            rowKey="buildingId"
+            loading={loading}
             columns={columns}
             dataSource={building}
             pagination={{
               current: currentPage,
               pageSize: PAGE_SIZE,
-              total: totalPages,
+              total: pagination.totalItems,
               showSizeChanger: false,
               placement: ["bottomCenter"],
+              onChange: (page) => loadBuilding(page),
             }}
           />
         </div>

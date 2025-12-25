@@ -1,20 +1,18 @@
 import type React from "react";
 import { useState, useEffect } from "react";
-import { Button, Input, InputNumber, Modal } from "antd";
+import { Button, Input, InputNumber, Modal, message } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import leftClickIcon from "../../../../../assets/icons/left-click.png";
 import rightClickIcon from "../../../../../assets/icons/right-click.png";
-import type { Place } from "../../../types/place";
+import type { PlaceCreateRequest } from "../../../types/place";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
 import L from "leaflet";
 import icon from "leaflet/dist/images/marker-icon.png";
-import iconShadow from "leaflet/dist/images/marker-shadow.png";
 
 const DefaultIcon = L.icon({
   iconUrl: icon,
-  shadowUrl: iconShadow,
   iconSize: [25, 41],
   iconAnchor: [12, 41],
 });
@@ -22,8 +20,8 @@ const DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 interface Step2Props {
-  data: Partial<Place>;
-  onNext: (data: Partial<Place>) => void;
+  data: Partial<PlaceCreateRequest>;
+  onNext: (data: Partial<PlaceCreateRequest>) => void;
   onBack: () => void;
 }
 
@@ -46,8 +44,15 @@ function MapClickHandler({
 }
 
 const Step2: React.FC<Step2Props> = ({ data, onNext, onBack }) => {
-  const [coordinates, setCoordinates] = useState<string>("");
-  const [selectedPoints, setSelectedPoints] = useState<[number, number][]>([]);
+  // Khởi tạo từ data.boundaryGeom nếu có
+  const initialPoints = data.boundaryGeom?.coordinates?.[0] || [];
+  
+  const [coordinates, setCoordinates] = useState<string>(
+    initialPoints
+      .map((coord: number[]) => coord[0].toFixed(6) + "," + coord[1].toFixed(6))
+      .join("\n")
+  );
+  const [selectedPoints, setSelectedPoints] = useState<number[][]>(initialPoints);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [manualLng, setManualLng] = useState<number | null>(null);
   const [manualLat, setManualLat] = useState<number | null>(null);
@@ -61,7 +66,7 @@ const Step2: React.FC<Step2Props> = ({ data, onNext, onBack }) => {
   const handleCoordinateInput = (value: string) => {
     setCoordinates(value);
     const lines = value.split("\n").filter((line) => line.trim());
-    const points: [number, number][] = [];
+    const points: number[][] = [];
 
     lines.forEach((line) => {
       const parts = line.split(",").map((p) => Number.parseFloat(p.trim()));
@@ -74,7 +79,7 @@ const Step2: React.FC<Step2Props> = ({ data, onNext, onBack }) => {
   };
 
   const handleMapDoubleClick = (lat: number, lng: number) => {
-    const newPoints = [...selectedPoints, [lng, lat] as [number, number]];
+    const newPoints = [...selectedPoints, [lng, lat]];
     setSelectedPoints(newPoints);
     setCoordinates(
       newPoints
@@ -118,10 +123,7 @@ const Step2: React.FC<Step2Props> = ({ data, onNext, onBack }) => {
 
   const handleModalOk = () => {
     if (manualLng !== null && manualLat !== null) {
-      const newPoints = [
-        ...selectedPoints,
-        [manualLng, manualLat] as [number, number],
-      ];
+      const newPoints = [...selectedPoints, [manualLng, manualLat]];
       setSelectedPoints(newPoints);
       setCoordinates(
         newPoints
@@ -153,14 +155,15 @@ const Step2: React.FC<Step2Props> = ({ data, onNext, onBack }) => {
   };
 
   const handleNext = () => {
-    const geojsonPolygon = {
-      type: "Polygon",
-      coordinates: [selectedPoints],
-    };
+    if (selectedPoints.length < 3) {
+      message.error("Vui lòng chọn tối thiểu 3 điểm tọa độ");
+      return;
+    }
 
     onNext({
-      boundary: {
-        geom: JSON.stringify(geojsonPolygon),
+      boundaryGeom: {
+        type: "Polygon",
+        coordinates: [selectedPoints],
       },
     });
   };
@@ -168,6 +171,9 @@ const Step2: React.FC<Step2Props> = ({ data, onNext, onBack }) => {
   const latLngPoints = selectedPoints.map(
     (point) => [point[1], point[0]] as [number, number]
   );
+
+  // Tính center từ các điểm đã chọn, nếu không có thì dùng mặc định
+  const mapCenter: [number, number] = [10.874352, 106.802682];
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
@@ -215,10 +221,11 @@ const Step2: React.FC<Step2Props> = ({ data, onNext, onBack }) => {
         <div>
           <div className="w-full h-full bg-gray-200 rounded-lg border border-gray-300 overflow-hidden">
             <MapContainer
-              center={[10.874352, 106.802682]}
+              center={mapCenter}
               zoom={16}
               style={{ height: "100%", width: "100%" }}
               doubleClickZoom={false}
+              key={mapCenter.join(',')} // Force re-render khi center thay đổi
             >
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -292,7 +299,7 @@ const Step2: React.FC<Step2Props> = ({ data, onNext, onBack }) => {
         <button
           onClick={handleNext}
           disabled={selectedPoints.length < 3}
-          className="flex items-center gap-2 bg-primary hover:bg-primary-light hover:cursor-pointer text-white font-medium px-5 py-2 rounded-md transition"
+          className="flex items-center gap-2 bg-primary hover:bg-primary-light hover:cursor-pointer text-white font-medium px-5 py-2 rounded-md transition disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
           <span>Bước tiếp theo</span>
         </button>

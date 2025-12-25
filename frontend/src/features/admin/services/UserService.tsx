@@ -2,10 +2,18 @@ import api from "./api";
 import type { GetUsersResponse, User } from "../types/user";
 
 export const userService = {
-  getAll(page = 1, limit = 10): Promise<GetUsersResponse> {
+  getAll(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  }): Promise<GetUsersResponse> {
     return api
       .get("/users", {
-        params: { page, limit },
+        params: {
+          page: params?.page ?? 1,
+          limit: params?.limit ?? 10,
+          search: params?.search,
+        },
       })
       .then((res) => res.data);
   },

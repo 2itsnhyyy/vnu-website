@@ -1,6 +1,6 @@
 // User types
 export interface UserData {
-  user_id: number;
+  userId: number;  // Changed from user_id to userId
   name: string;
   avatar?: string;
   email: string;
