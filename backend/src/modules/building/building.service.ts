@@ -596,7 +596,6 @@ export class BuildingService {
           b.image,
           b.place_id,
           pl.name as place_name,
-          pl.boundary_geom,
           pt.geom as point_geom
         FROM building b
         INNER JOIN place pl ON b.place_id = pl.place_id
@@ -615,7 +614,6 @@ export class BuildingService {
           b.image,
           b.place_id,
           pl.name as place_name,
-          pl.boundary_geom,
           pt.geom as point_geom
         FROM building b
         INNER JOIN place pl ON b.place_id = pl.place_id
@@ -647,7 +645,6 @@ export class BuildingService {
           b.image,
           b.place_id,
           pl.name as place_name,
-          pl.boundary_geom,
           ST_Centroid(f.geom) as point_geom
         FROM building b
         INNER JOIN place pl ON b.place_id = pl.place_id
@@ -667,7 +664,6 @@ export class BuildingService {
           b.image,
           b.place_id,
           pl.name as place_name,
-          pl.boundary_geom,
           ST_Centroid(f.geom) as point_geom
         FROM building b
         INNER JOIN place pl ON b.place_id = pl.place_id
@@ -685,7 +681,6 @@ export class BuildingService {
           image,
           place_id as "placeId",
           place_name as "placeName",
-          ST_AsGeoJSON(boundary_geom) as "placeGeometry",
           MIN(
             ST_Distance(
               point_geom::geography,
@@ -698,7 +693,7 @@ export class BuildingService {
           ST_GeomFromText(${centerPoint}, 4326)::geography,
           ${Number(maxRadius)}
         )
-        GROUP BY building_id, name, description, floors, image, place_id, place_name, boundary_geom
+        GROUP BY building_id, name, description, floors, image, place_id, place_name
       )
       SELECT * FROM object_distances
       WHERE distance >= ${Number(minRadius)} AND distance <= ${Number(maxRadius)}
@@ -829,7 +824,6 @@ export class BuildingService {
 
     const buildingsWithGeometry = buildings.map((building) => ({
       ...building,
-      placeGeometry: JSON.parse(building.placeGeometry),
       distance: parseFloat(building.distance),
       objects3d: objects3d
         .filter((obj) => obj.buildingId === building.buildingId)

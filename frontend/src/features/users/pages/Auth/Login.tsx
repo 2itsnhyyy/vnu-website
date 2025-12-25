@@ -8,6 +8,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import LogoKhongChu from "../../../../assets/logos/LogoKhongChu.svg";
 import { authService } from "../../api/services/authService";
 import { userService } from "../../api/services/userService";
+import { STORAGE_KEYS } from "../../api/config";
 
 interface LoginErrors {
   email?: string;
@@ -39,10 +40,15 @@ const Login: React.FC = () => {
     setErrorMessage("");
 
     try {
+      // Login and get token
       await authService.login({ email, password });
 
+      // Fetch and save user data to localStorage
       const me = await userService.getMe();
+      
+      console.log('User logged in:', me); // Debug log
 
+      // Navigate based on role
       if (me.role === 1) {
         navigate("/admin", { replace: true });
       } else {
@@ -61,7 +67,8 @@ const Login: React.FC = () => {
 
       try {
         const me = await userService.getMe();
-        localStorage.setItem("user", JSON.stringify(me));
+        
+        console.log('User data loaded:', me); // Debug log
 
         if (me.role === 1) {
           navigate("/admin", { replace: true });
@@ -174,15 +181,15 @@ const Login: React.FC = () => {
               Đăng ký ngay
             </NavLink>
 
-                      <div className="mt-6 text-center text-sm text-gray-600">
-            Quên mật khẩu?{" "}
-            <NavLink
-              to="/users/forgot-password"
-              className="text-primary font-bold hover:underline"
-            >
-              Đặt lại mật khẩu
-            </NavLink>
-          </div>
+            <div className="mt-6 text-center text-sm text-gray-600">
+              Quên mật khẩu?{" "}
+              <NavLink
+                to="/users/forgot-password"
+                className="text-primary font-bold hover:underline"
+              >
+                Đặt lại mật khẩu
+              </NavLink>
+            </div>
           </div>
         </div>
       </div>

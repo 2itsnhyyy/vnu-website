@@ -1,150 +1,160 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
-import { ImageIcon, Send } from "lucide-react"
+import { useState, useEffect } from "react"
+import { useNavigate, useParams } from "react-router-dom"
+import { Send, ArrowLeft } from "lucide-react"
 import { AuthenticatedSidebar } from "./AuthenticatedSidebar"
 import { RightSidebar } from "./RightSidebar"
+import MDEditor from "@uiw/react-md-editor"
+import forumService from "../../api/services/forumService"
 
-// Create Post Form Component
-const CreatePostForm: React.FC = () => {
-    const [selectedTag, setSelectedTag] = useState("")
+const CreatePostPage: React.FC = () => {
+    const navigate = useNavigate()
+    const { postId } = useParams<{ postId: string }>()
     const [title, setTitle] = useState("")
-    const [content, setContent] = useState("")
-    const [images, setImages] = useState<string[]>([])
+    const [contentMarkdown, setContentMarkdown] = useState("")
+    const [loading, setLoading] = useState(false)
+    const [fetchingPost, setFetchingPost] = useState(false)
+    const isEditMode = !!postId
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files
-        if (files) {
-            const newImages = Array.from(files).map((file) => URL.createObjectURL(file))
-            setImages([...images, ...newImages])
+    useEffect(() => {
+        if (isEditMode && postId) {
+            fetchPost()
+        }
+    }, [postId])
+
+    const fetchPost = async () => {
+        setFetchingPost(true)
+        try {
+            const response = await forumService.getPostDetail(Number(postId))
+            setTitle(response.post.title)
+            setContentMarkdown(response.post.contentMarkdown)
+        } catch (error: any) {
+            alert(error.message || "Không thể tải bài đăng")
+            navigate("/users/forum")
+        } finally {
+            setFetchingPost(false)
         }
     }
 
-    const handleSubmit = () => {
-        console.log({ selectedTag, title, content, images })
-        // Handle form submission
+    const handleSubmit = async () => {
+        if (!title.trim() || !contentMarkdown.trim()) {
+            alert("Vui lòng nhập đầy đủ tiêu đề và nội dung")
+            return
+        }
+
+        try {
+            setLoading(true)
+            if (isEditMode && postId) {
+                await forumService.updatePost(Number(postId), { title, contentMarkdown })
+                alert("Cập nhật bài đăng thành công!")
+            } else {
+                await forumService.createPost({ title, contentMarkdown })
+                alert("Đăng bài thành công!")
+            }
+            navigate("/users/forum")
+        } catch (error: any) {
+            alert(error.message || "Có lỗi xảy ra")
+            console.error("Error saving post:", error)
+        } finally {
+            setLoading(false)
+        }
     }
 
-    const handleSaveDraft = () => {
-        console.log("Saving draft...")
-        // Handle save draft
+    const handleCancel = () => {
+        if (title || contentMarkdown) {
+            if (confirm("Bạn có chắc muốn hủy? Các thay đổi sẽ không được lưu.")) {
+                navigate("/users/forum")
+            }
+        } else {
+            navigate("/users/forum")
+        }
     }
 
-    return (
-        <div className="bg-white rounded-xl shadow-sm">
-            {/* Tag Selection */}
-            <div className="p-6 border-b border-gray-200">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Chọn tag</label>
-                <div className="relative">
-                    <select
-                        value={selectedTag}
-                        onChange={(e) => setSelectedTag(e.target.value)}
-                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
-                    >
-                        <option value="">Chọn tag</option>
-                        <option value="golang">Golang</option>
-                        <option value="linux">Linux</option>
-                        <option value="javascript">JavaScript</option>
-                        <option value="python">Python</option>
-                        <option value="react">React</option>
-                        <option value="ktx">KTX</option>
-                        <option value="hoc-tap">Học tập</option>
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                        <svg width="12" height="8" viewBox="0 0 12 8" fill="currentColor">
-                            <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="2" fill="none" />
-                        </svg>
+    if (fetchingPost) {
+        return (
+            <div className="flex h-screen bg-white pt-8">
+                <AuthenticatedSidebar />
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center">
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                        <p className="mt-2 text-gray-600">Đang tải...</p>
                     </div>
                 </div>
+                <RightSidebar />
             </div>
+        )
+    }
 
-            {/* Title Input */}
-            <div className="p-6 border-b border-gray-200">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tiêu đề</label>
-                <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Tiêu đề"
-                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-            </div>
-
-            {/* Content Input */}
-            <div className="p-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Nội dung</label>
-                <textarea
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    placeholder="Nhập nội dung bài đăng"
-                    rows={12}
-                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-
-                {/* Image Preview */}
-                {images.length > 0 && (
-                    <div className="mt-4 grid grid-cols-3 gap-3">
-                        {images.map((img, index) => (
-                            <div key={index} className="relative group">
-                                <img
-                                    src={img || "/placeholder.svg"}
-                                    alt={`Upload ${index + 1}`}
-                                    className="w-full h-32 object-cover rounded-lg"
-                                />
-                                <button
-                                    onClick={() => setImages(images.filter((_, i) => i !== index))}
-                                    className="absolute top-2 right-2 bg-red-500 text-white w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs"
-                                >
-                                    ×
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="p-6 border-t border-gray-200 flex items-center justify-between">
-                <div>
-                    <label className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg cursor-pointer hover:bg-blue-600 transition-colors">
-                        <ImageIcon size={18} />
-                        <span className="text-sm font-medium">Thêm ảnh</span>
-                        <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
-                    </label>
-                </div>
-
-                <div className="flex gap-3">
-                    <button
-                        onClick={handleSaveDraft}
-                        className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors"
-                    >
-                        Lưu bản nhập
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        className="px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
-                    >
-                        <Send size={18} />
-                        Đăng
-                    </button>
-                </div>
-            </div>
-        </div>
-    )
-}
-
-// Main Create Post Page Component
-const CreatePostPage: React.FC = () => {
     return (
         <div className="flex h-screen bg-white pt-8">
             <AuthenticatedSidebar />
 
             <div className="flex-1 overflow-auto bg-white">
                 <div className="max-w-4xl mx-auto px-12 pt-8 pb-10">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-8">Tạo bài đăng mới</h1>
+                    <button
+                        onClick={() => navigate("/users/forum")}
+                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+                    >
+                        <ArrowLeft size={20} />
+                        <span className="text-sm font-medium">Quay lại</span>
+                    </button>
 
-                    <CreatePostForm />
+                    <h1 className="text-3xl font-bold text-gray-900 mb-8">
+                        {isEditMode ? "Chỉnh sửa bài đăng" : "Tạo bài đăng mới"}
+                    </h1>
+
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                        {/* Title Input */}
+                        <div className="p-6 border-b border-gray-200">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Tiêu đề <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                placeholder="Nhập tiêu đề bài đăng"
+                                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+
+                        {/* Content Input with MDEditor */}
+                        <div className="p-6">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Nội dung <span className="text-red-500">*</span>
+                            </label>
+                            <div className="border border-gray-300 rounded-lg overflow-hidden">
+                                <MDEditor
+                                    value={contentMarkdown}
+                                    onChange={(value) => setContentMarkdown(value || "")}
+                                    preview="edit"
+                                    height={500}
+                                    data-color-mode="light"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="p-6 border-t border-gray-200 flex items-center justify-end gap-3">
+                            <button
+                                onClick={handleCancel}
+                                disabled={loading}
+                                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={handleSubmit}
+                                disabled={loading}
+                                className="px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <Send size={18} />
+                                {loading ? "Đang xử lý..." : isEditMode ? "Cập nhật" : "Đăng bài"}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 

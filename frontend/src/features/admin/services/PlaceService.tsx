@@ -6,16 +6,16 @@ import type {
 } from "../types/place";
 
 export const placeService = {
-  getAll(page = 1, limit = 10): Promise<GetPlaceResponse> {
+  getAll(page = 1, limit = 10, search?: string): Promise<GetPlaceResponse> {
     return api
       .get("/places", {
-        params: { page, limit },
+        params: { page, limit, search },
       })
       .then((res) => res.data);
   },
 
   getById(id: number): Promise<Place> {
-    return api.get(`/places/${id}`).then((res) => res.data.place);
+    return api.get(`/places/${id}`).then((res) => res.data);
   },
 
   create(data: Place): Promise<Place> {
@@ -26,7 +26,7 @@ export const placeService = {
     return api.patch(`/places/${id}`, data).then((res) => res.data.place);
   },
 
-  delete(id: number): Promise<{ success: boolean; message: string }> {
-    return api.delete(`/places/${id}`).then((res) => res.data.place);
+  delete(id: number): Promise<{ message: string }> {
+    return api.delete(`/places/${id}`).then((res) => res.data);
   },
 };

@@ -60,10 +60,28 @@ export interface CreateCommentResponse {
     comment: Comment;
 }
 
+export interface UpdateCommentResponse {
+    message: string;
+    comment: Comment;
+}
+
+export interface CreatePostResponse {
+    post: Post;
+}
+
+export interface UpdatePostResponse {
+    post: Post;
+}
+
+export interface DeletePostResponse {
+    message: string;
+    post: Post;
+}
+
 export interface GetPostsParams {
     limit?: number;
     page?: number;
-    sort?: "newest" | "top" | "unanswered" | "answered";
+    sort?: "newest" | "answered" | "unanswered";
 }
 
 export interface GetCommentsParams {
@@ -76,4 +94,18 @@ export interface GetCommentsParams {
 export interface CreateCommentParams {
     content: string;
     parent?: number | null;
+}
+
+export interface UpdateCommentParams {
+    content: string;
+}
+
+export interface CreatePostParams {
+    title: string;
+    contentMarkdown: string;
+}
+
+export interface UpdatePostParams {
+    title?: string;
+    contentMarkdown?: string;
 }

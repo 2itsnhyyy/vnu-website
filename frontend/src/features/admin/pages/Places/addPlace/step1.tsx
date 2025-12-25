@@ -1,6 +1,7 @@
 import type React from "react";
 import { useState } from "react";
 import { Form, Input, Button, Upload, Select, TimePicker, message } from "antd";
+import { provinces, districtsByProvince, wardsByDistrict } from "../../../../../assets/data/location";
 import {
   SmileOutlined,
   BoldOutlined,
@@ -9,83 +10,25 @@ import {
   OrderedListOutlined,
   LinkOutlined,
   InboxOutlined,
+  CloseOutlined
 } from "@ant-design/icons";
 import type { UploadFile } from "antd/es/upload/interface";
-import type { Place } from "../../../types/place";
-import type { UploadProps } from "antd";
-import type { UploadedImageResponse } from "../../../types/image";
-import { imageService } from "../../../services/ImageService";
+import type { PlaceCreateRequestWithFile, PlaceDraft } from "../../../types/place";
 import type { RcFile } from "antd/es/upload";
 
 const { TextArea } = Input;
 const { Dragger } = Upload;
 
-const props: UploadProps = {
-  name: "file",
-  multiple: true,
-  action: "https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload",
-  onChange(info) {
-    const { status } = info.file;
-    if (status !== "uploading") {
-      console.log(info.file, info.fileList);
-    }
-    if (status === "done") {
-      message.success(`${info.file.name} file uploaded successfully.`);
-    } else if (status === "error") {
-      message.error(`${info.file.name} file upload failed.`);
-    }
-  },
-  onDrop(e) {
-    console.log("Dropped files", e.dataTransfer.files);
-  },
-};
-
 interface Step1Props {
-  initialData: Partial<Place>;
-  onNext: (data: Partial<Place>) => void;
+  initialData: Partial<PlaceDraft>;
+  onNext: (data: Partial<PlaceCreateRequestWithFile>) => void;
 }
-
-const provinces = [
-  { value: "tp-hcm", label: "TP. Hồ Chí Minh" },
-  { value: "ha-noi", label: "Hà Nội" },
-  { value: "da-nang", label: "Đà Nẵng" },
-];
-
-const districtsByProvince: Record<string, { value: string; label: string }[]> =
-  {
-    "tp-hcm": [
-      { value: "thu-duc", label: "Thủ Đức" },
-      { value: "quan-1", label: "Quận 1" },
-      { value: "quan-10", label: "Quận 10" },
-      { value: "binh-thanh", label: "Bình Thạnh" },
-    ],
-    "ha-noi": [
-      { value: "hoan-kiem", label: "Hoàn Kiếm" },
-      { value: "ba-dinh", label: "Ba Đình" },
-    ],
-    "da-nang": [
-      { value: "hai-chau", label: "Hải Châu" },
-      { value: "thanh-khe", label: "Thanh Khê" },
-    ],
-  };
-
-const wardsByDistrict: Record<string, { value: string; label: string }[]> = {
-  "thu-duc": [
-    { value: "linh-trung", label: "Linh Trung" },
-    { value: "linh-xuan", label: "Linh Xuân" },
-    { value: "dong-hoa", label: "Đông Hòa" },
-  ],
-  "quan-1": [
-    { value: "ben-nghe", label: "Bến Nghé" },
-    { value: "ben-thanh", label: "Bến Thành" },
-  ],
-};
 
 const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
-  const [uploadedImage, setUploadedImage] =
-    useState<UploadedImageResponse | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>(initialData.image || "");
   const [description, setDescription] = useState(initialData.description || "");
   const [selectedProvince, setSelectedProvince] = useState<string | undefined>(
     initialData.province
@@ -100,39 +43,43 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
     selectedDistrict ? wardsByDistrict[selectedDistrict] || [] : []
   );
 
-  const handleUploadImage = async (options: any) => {
-    const { file, onSuccess, onError } = options;
-
-    try {
-      const res = await imageService.uploadImages([file as File]);
-
-      const image = res[0];
-
-      setUploadedImage(image);
-
-      setFileList([
-        {
-          uid: file.uid,
-          name: file.name,
-          status: "done",
-          url: image.url,
-        },
-      ]);
-
-      onSuccess(image);
-      message.success("Upload ảnh thành công");
-    } catch (error) {
-      console.error(error);
-      onError(error);
-      message.error("Upload ảnh thất bại");
+  const handleBeforeUpload = (file: RcFile) => {
+    // Validate file type
+    const isImage = file.type.startsWith("image/");
+    if (!isImage) {
+      message.error("Chỉ được tải lên file ảnh!");
+      return Upload.LIST_IGNORE;
     }
-  };
 
-  const handleUploadChange = (info: any) => {
-    setFileList(info.fileList.slice(-1));
-    if (info.file.status === "done") {
-      message.success("Upload thành công");
+    // Validate file size (e.g., max 5MB)
+    const isLt5M = file.size / 1024 / 1024 < 5;
+    if (!isLt5M) {
+      message.error("Ảnh phải nhỏ hơn 5MB!");
+      return Upload.LIST_IGNORE;
     }
+
+    // Save file to state
+    setImageFile(file);
+
+    // Create preview URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPreviewUrl(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Update file list for display
+    setFileList([
+      {
+        uid: file.uid,
+        name: file.name,
+        status: "done",
+        originFileObj: file,
+      },
+    ]);
+
+    // Prevent auto upload
+    return false;
   };
 
   const handleProvinceChange = (value: string) => {
@@ -151,10 +98,7 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
 
   const handleSubmit = () => {
     form.validateFields().then((values) => {
-      if (!uploadedImage) {
-        message.error("Vui lòng upload hình ảnh");
-        return;
-      }
+
 
       const addressParts = [
         values.address_detail,
@@ -167,48 +111,70 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
         name: values.name,
         address: addressParts.join(", "),
         description,
-        image: uploadedImage.url, 
+        imageFile: imageFile, 
+        image: previewUrl, 
         openTime: values.open_time?.format("HH:mm"),
         closeTime: values.close_time?.format("HH:mm"),
-        phone: "0961565563"
+        phone: values.phone,
       });
     });
+  };
+
+  const handleRemoveImage = () => {
+    setFileList([]);
+    setImageFile(null);
+    setPreviewUrl("");
   };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
       <Form form={form} layout="vertical" initialValues={initialData}>
         {/* Image Upload */}
-        <div className="flex flex-row mb-6 justify-between">
-          <div>
+        <div className="flex flex-row mb-6 justify-between gap-6">
+          <div className="flex-1">
             <label className="block text-lg font-medium mb-2">
               Hình ảnh địa điểm
             </label>
-            <p className="text-md w-50 text-justify text-gray-500 mb-4">
+            <p className="text-md text-justify text-gray-500 mb-4">
               Hình ảnh này sẽ được hiển thị công khai. Chỉ được tải lên 1 ảnh.
             </p>
+
+            {/* Preview Image */}
+            {previewUrl && (
+              <div className="mt-4 border border-gray-300 rounded-lg overflow-hidden relative">
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  className="w-full h-64 object-cover"
+                />
+                <CloseOutlined
+                  onClick={handleRemoveImage}
+                  className="absolute top-2 right-2 text-white bg-white bg-opacity-50 rounded-full p-1 cursor-pointer hover:bg-gray-300"
+                  style={{ fontSize: 16 }}
+                />
+              </div>
+            )}
           </div>
 
-          <Dragger
-            multiple={false}
-            accept="image/*"
-            customRequest={handleUploadImage}
-            fileList={fileList}
-            onRemove={() => {
-              setFileList([]);
-              setUploadedImage(null);
-            }}
-          >
-            <p className="ant-upload-drag-icon">
-              <InboxOutlined />
-            </p>
-            <p className="ant-upload-text">
-              Nhấp hoặc kéo thả ảnh vào khu vực này
-            </p>
-            <p className="ant-upload-hint">
-              Hỗ trợ tải một ảnh (PNG, JPG, SVG)
-            </p>
-          </Dragger>
+          <div className="flex-1">
+            <Dragger
+              multiple={false}
+              accept="image/*"
+              beforeUpload={handleBeforeUpload}
+              fileList={[]}
+              showUploadList={false}
+            >
+              <p className="ant-upload-drag-icon">
+                <InboxOutlined />
+              </p>
+              <p className="ant-upload-text">
+                Nhấp hoặc kéo thả ảnh vào khu vực này
+              </p>
+              <p className="ant-upload-hint">
+                Hỗ trợ tải một ảnh (PNG, JPG, SVG) - tối đa 5MB
+              </p>
+            </Dragger>
+          </div>
         </div>
 
         <hr className="col-span-2 my-6 border-gray-300" />
@@ -244,9 +210,6 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
             <Form.Item
               name="province"
               label="Tỉnh/Thành phố"
-              rules={[
-                { required: true, message: "Vui lòng chọn tỉnh/thành phố" },
-              ]}
             >
               <Select
                 placeholder="Chọn tỉnh/thành phố"
@@ -260,7 +223,6 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
             <Form.Item
               name="district"
               label="Quận/Huyện"
-              rules={[{ required: true, message: "Vui lòng chọn quận/huyện" }]}
             >
               <Select
                 placeholder="Chọn quận/huyện"
@@ -275,7 +237,6 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
             <Form.Item
               name="ward"
               label="Phường/Xã"
-              rules={[{ required: true, message: "Vui lòng chọn phường/xã" }]}
             >
               <Select
                 placeholder="Chọn phường/xã"
@@ -289,11 +250,21 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
             <Form.Item
               name="address_detail"
               label="Địa chỉ chi tiết"
-              rules={[
-                { required: true, message: "Vui lòng nhập địa chỉ chi tiết" },
-              ]}
             >
               <Input placeholder="Số nhà, tên đường" size="large" />
+            </Form.Item>
+            {/* Address Detail */}
+            <Form.Item
+              name="phone"
+              label="Số điện thoại"
+              rules={[
+                {
+                  pattern: /^\d{10,11}$/, 
+                  message: "Số điện thoại không hợp lệ",
+                },
+              ]}
+            >
+              <Input placeholder="Nhập số điện thoại" size="large" />
             </Form.Item>
 
             {/* Opening and Closing Hours */}
