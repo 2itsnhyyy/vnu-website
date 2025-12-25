@@ -2,11 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { Post, PostEditRequest } from "../../types/post";
 import PageMeta from "../../components/Common/PageMeta";
-import { Save } from "lucide-react";
+import { Save, UploadCloudIcon } from "lucide-react";
 import { GrFormPrevious } from "react-icons/gr";
 import { Link } from "react-router-dom";
 import { forumService } from "../../services/ForumService";
-import MDEditor from "@uiw/react-md-editor";
+import MDEditor, { type ICommand } from "@uiw/react-md-editor";
+import apiClient from "../../../users/api/apiClient";
 
 export default function EditPost() {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export default function EditPost() {
   const [loading, setLoading] = useState(false);
   const [post, setPost] = useState<Post | null>(null);
   const [formData, setFormData] = useState<PostEditRequest>({});
+  const [files, setFiles] = useState<File[]>([]);
   const editorRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -37,44 +39,77 @@ export default function EditPost() {
     }
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const uploadImages = async (files: File[]) => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
+    const response = await apiClient.post("/cloudinary/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id) return;
+    if (!formData.title || !formData.contentMarkdown) {
+      alert("Vui lòng nhập đầy đủ tiêu đề và nội dung");
+      return;
+    }
 
     try {
       setLoading(true);
-      const updated = await forumService.update(Number(id), {
+
+      if (files.length > 0) {
+        const uploadedImages = await uploadImages(files);
+        const imagesMarkdown = uploadedImages
+          .map((img: { url: any }) => `![image](${img.url})`)
+          .join("\n");
+        formData.contentMarkdown += `\n${imagesMarkdown}`;
+      }
+
+      await forumService.update(Number(id), {
         title: formData.title,
         contentMarkdown: formData.contentMarkdown,
       });
-      console.log("Updated post:", updated);
+
       navigate("/admin/forum");
-    } catch (error: any) {
-      if (error.response) {
-        console.error("Error response data:", error.response.data);
-        console.error("Error status:", error.response.status);
-        console.error("Error headers:", error.response.headers);
-        alert(`Có lỗi xảy ra: ${JSON.stringify(error.response.data)}`);
-      } else if (error.request) {
-        console.error("No response received:", error.request);
-        alert("Không nhận được phản hồi từ server");
-      } else {
-        console.error("Error message:", error.message);
-        alert(`Lỗi: ${error.message}`);
-      }
+    } catch (err) {
+      console.error(err);
+      alert("Có lỗi xảy ra khi cập nhật bài đăng");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const insertImageCommand: ICommand = {
+    name: "insert-image",
+    keyCommand: "insert-image",
+    buttonProps: { "aria-label": "Insert image" },
+    icon: <UploadCloudIcon className="w-4 h-4" />,
+    execute: async (state, api) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+
+      input.onchange = async () => {
+        if (!input.files?.length) return;
+        const file = input.files[0];
+        try {
+          const response = await uploadImages([file]);
+          const url = response[0].url;
+          api.replaceSelection(`![image](${url})`);
+        } catch (err) {
+          console.error(err);
+          alert("Upload ảnh thất bại");
+        }
+      };
+
+      input.click();
+    },
   };
 
   if (loading && !post) {
@@ -113,10 +148,7 @@ export default function EditPost() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tiêu đề
-              <span className="text-red-500">
-                <span className="text-red-500">*</span>
-              </span>
+              Tiêu đề <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -130,12 +162,8 @@ export default function EditPost() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nội dung chi tiết
-              <span className="text-red-500">
-                <span className="text-red-500">*</span>
-              </span>
+              Nội dung chi tiết <span className="text-red-500">*</span>
             </label>
-
             <div
               ref={editorRef}
               className="border border-gray-300 rounded-lg p-2"
@@ -148,6 +176,32 @@ export default function EditPost() {
                     contentMarkdown: value || "",
                   }))
                 }
+                extraCommands={[insertImageCommand]}
+                textareaProps={{
+                  onPaste: async (
+                    e: React.ClipboardEvent<HTMLTextAreaElement>
+                  ) => {
+                    const items = e.clipboardData.items;
+                    for (let i = 0; i < items.length; i++) {
+                      const item = items[i];
+                      if (!item.type.startsWith("image/")) continue;
+                      const file = item.getAsFile();
+                      if (!file) continue;
+                      try {
+                        const response = await uploadImages([file]);
+                        const url = response[0].url;
+                        setFormData((prev) => ({
+                          ...prev,
+                          contentMarkdown:
+                            prev.contentMarkdown + `\n![image](${url})\n`,
+                        }));
+                      } catch (err) {
+                        console.error(err);
+                        alert("Upload ảnh từ clipboard thất bại");
+                      }
+                    }
+                  },
+                }}
               />
             </div>
           </div>
@@ -162,7 +216,6 @@ export default function EditPost() {
             </button>
             <button
               type="submit"
-              onClick={handleSubmit}
               className="flex items-center gap-2 px-6 py-2 bg-[#1D4ED8] text-white rounded-lg hover:bg-blue-500 cursor-pointer"
             >
               <Save className="h-4 w-4" />
