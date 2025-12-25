@@ -7,6 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { CommentResponseDto } from './dto/comment-response.dto';
 import { User } from '@prisma/client';
+import { Role } from 'src/common/constants/role.constant';
 import { GetCommentsParamsDto } from './dto/get-comments-params.dto';
 import { PostSortOptions } from 'src/common/constants/post.constant';
 import { UpdateCommentDto } from './dto/update-comment.dto';
@@ -162,7 +163,7 @@ export class CommentService {
     };
   }
 
-  async deleteComment(commentId: number, userId: number) {
+  async deleteComment(commentId: number, userId: number, role: Role) {
     const comment = await this.prisma.comment.findUnique({
       where: { commentId: Number(commentId) },
     });
@@ -171,7 +172,7 @@ export class CommentService {
       throw new NotFoundException('Comment not found');
     }
 
-    if (comment.author !== Number(userId)) {
+    if (comment.author !== Number(userId) && role !== Role.ADMIN) {
       throw new ForbiddenException('You can only delete your own comments');
     }
 
