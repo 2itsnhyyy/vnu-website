@@ -19,8 +19,10 @@ const MyRepliesPage: React.FC = () => {
     const navigate = useNavigate()
     const [currentPage, setCurrentPage] = useState(1)
     const [comments, setComments] = useState<CommentWithPost[]>([])
+    const [allComments, setAllComments] = useState<CommentWithPost[]>([])
     const [totalPages, setTotalPages] = useState(1)
     const [loading, setLoading] = useState(false)
+    const [loadingProgress, setLoadingProgress] = useState(0)
     const [error, setError] = useState<string | null>(null)
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [currentUserId, setCurrentUserId] = useState<number | null>(null)
@@ -40,49 +42,90 @@ const MyRepliesPage: React.FC = () => {
 
         setLoading(true)
         setError(null)
+        setLoadingProgress(0)
+        
         try {
-            // Get all posts first
+            const myComments: CommentWithPost[] = []
+
+            // Fetch posts (optimized: only 50 most recent)
+            setLoadingProgress(10)
             const postsResponse = await forumService.getPosts({
-                limit: 100,
+                limit: 50,
                 page: 1,
                 sort: "newest",
             })
 
-            const allComments: CommentWithPost[] = []
+            setLoadingProgress(30)
 
-            // Fetch comments for each post
-            for (const post of postsResponse.posts) {
+            // Only process posts with comments
+            const postsWithComments = postsResponse.posts.filter(p => p.commentsCount > 0)
+            const totalPosts = postsWithComments.length
+
+            for (let i = 0; i < totalPosts; i++) {
+                const post = postsWithComments[i]
+                
                 try {
+                    // Fetch only first 50 comments per post
                     const commentsResponse = await forumService.getComments(post.postId, {
-                        limit: 100,
+                        limit: 50,
                         page: 1,
                         sort: "newest",
                     })
 
-                    // Filter only current user's comments
+                    // Filter user's root comments
                     const userComments = commentsResponse.comments
                         .filter(comment => comment.author.userId === currentUserId)
                         .map(comment => ({ ...comment, post }))
 
-                    allComments.push(...userComments)
+                    myComments.push(...userComments)
+
+                    // Fetch replies only for comments that have them
+                    const commentsWithReplies = commentsResponse.comments.filter(c => c.commentsCount > 0)
+                    
+                    for (const comment of commentsWithReplies) {
+                        try {
+                            const repliesResponse = await forumService.getComments(post.postId, {
+                                limit: 30,
+                                page: 1,
+                                parent: comment.commentId,
+                                sort: "newest",
+                            })
+
+                            const userReplies = repliesResponse.comments
+                                .filter(reply => reply.author.userId === currentUserId)
+                                .map(reply => ({ ...reply, post }))
+
+                            myComments.push(...userReplies)
+                        } catch (err) {
+                            console.error(`Error fetching replies for comment ${comment.commentId}:`, err)
+                        }
+                    }
+
+                    // Update progress
+                    setLoadingProgress(30 + Math.floor((i + 1) / totalPosts * 60))
                 } catch (err) {
                     console.error(`Error fetching comments for post ${post.postId}:`, err)
                 }
             }
 
+            setLoadingProgress(95)
+
             // Sort by newest
-            allComments.sort((a, b) => 
+            myComments.sort((a, b) => 
                 new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
             )
 
-            // Paginate
-            const itemsPerPage = 10
-            const startIndex = (currentPage - 1) * itemsPerPage
-            const endIndex = startIndex + itemsPerPage
-            const paginatedComments = allComments.slice(startIndex, endIndex)
+            setAllComments(myComments)
 
+            // Calculate pagination
+            const itemsPerPage = 10
+            setTotalPages(Math.ceil(myComments.length / itemsPerPage))
+            
+            // Set first page
+            const paginatedComments = myComments.slice(0, itemsPerPage)
             setComments(paginatedComments)
-            setTotalPages(Math.ceil(allComments.length / itemsPerPage))
+            
+            setLoadingProgress(100)
         } catch (err: any) {
             setError(err.message || 'Có lỗi xảy ra khi tải câu trả lời')
         } finally {
@@ -90,12 +133,78 @@ const MyRepliesPage: React.FC = () => {
         }
     }
 
+    // Pagination from cached data
     useEffect(() => {
-        fetchMyComments()
-    }, [currentPage, currentUserId])
+        if (allComments.length > 0) {
+            const itemsPerPage = 10
+            const startIndex = (currentPage - 1) * itemsPerPage
+            const endIndex = startIndex + itemsPerPage
+            const paginatedComments = allComments.slice(startIndex, endIndex)
+            setComments(paginatedComments)
+        }
+    }, [currentPage, allComments])
+
+    useEffect(() => {
+        if (currentUserId) {
+            fetchMyComments()
+        }
+    }, [currentUserId])
 
     const handleCommentClick = (postId: number, commentId: number) => {
         navigate(`/users/forum/posts/${postId}#comment-${commentId}`)
+    }
+
+    const handleLikeComment = async (commentId: number, isCurrentlyLiked: boolean) => {
+        // Optimistic update in current page
+        setComments(comments.map(comment =>
+            comment.commentId === commentId
+                ? {
+                    ...comment,
+                    liked: !isCurrentlyLiked,
+                    likesCount: isCurrentlyLiked ? comment.likesCount - 1 : comment.likesCount + 1
+                }
+                : comment
+        ))
+
+        // Update in all cached comments
+        setAllComments(allComments.map(comment =>
+            comment.commentId === commentId
+                ? {
+                    ...comment,
+                    liked: !isCurrentlyLiked,
+                    likesCount: isCurrentlyLiked ? comment.likesCount - 1 : comment.likesCount + 1
+                }
+                : comment
+        ))
+
+        try {
+            if (isCurrentlyLiked) {
+                await forumService.unlikeComment(commentId)
+            } else {
+                await forumService.likeComment(commentId)
+            }
+        } catch (err: any) {
+            // Revert on error
+            setComments(comments.map(comment =>
+                comment.commentId === commentId
+                    ? {
+                        ...comment,
+                        liked: isCurrentlyLiked,
+                        likesCount: isCurrentlyLiked ? comment.likesCount + 1 : comment.likesCount - 1
+                    }
+                    : comment
+            ))
+            setAllComments(allComments.map(comment =>
+                comment.commentId === commentId
+                    ? {
+                        ...comment,
+                        liked: isCurrentlyLiked,
+                        likesCount: isCurrentlyLiked ? comment.likesCount + 1 : comment.likesCount - 1
+                    }
+                    : comment
+            ))
+            alert(err.message || 'Có lỗi xảy ra')
+        }
     }
 
     return (
@@ -110,8 +219,15 @@ const MyRepliesPage: React.FC = () => {
 
                     {loading && (
                         <div className="text-center py-8">
-                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                            <p className="mt-2 text-gray-600">Đang tải...</p>
+                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-3"></div>
+                            <p className="text-gray-600 mb-2">Đang tải...</p>
+                            <div className="w-64 mx-auto bg-gray-200 rounded-full h-2">
+                                <div 
+                                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                                    style={{ width: `${loadingProgress}%` }}
+                                ></div>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">{loadingProgress}%</p>
                         </div>
                     )}
 
@@ -138,7 +254,9 @@ const MyRepliesPage: React.FC = () => {
                                     {comment.post && (
                                         <div className="mb-3 pb-3 border-b border-gray-100">
                                             <p className="text-sm text-gray-500">Bình luận trong bài:</p>
-                                            <h3 className="font-semibold text-gray-900 mt-1">{comment.post.title}</h3>
+                                            <h3 className="font-semibold text-gray-900 mt-1 hover:text-blue-600 transition-colors">
+                                                {comment.post.title}
+                                            </h3>
                                         </div>
                                     )}
                                     
@@ -153,16 +271,24 @@ const MyRepliesPage: React.FC = () => {
                                                 <h4 className="font-semibold text-gray-900">{comment.author.name}</h4>
                                                 <span className="text-xs text-gray-500">{formatTimeAgo(comment.createdAt)}</span>
                                             </div>
-                                            <div className="text-gray-700 mb-3">
+                                            <div className="text-gray-700 mb-3 leading-relaxed">
                                                 {renderCommentContent(comment.content)}
                                             </div>
-                                            <div className="flex items-center gap-4 text-sm text-gray-500">
-                                                <span className="flex items-center gap-1">
-                                                    <ThumbsUp size={16} />
+                                            <div className="flex items-center gap-4 text-sm">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        handleLikeComment(comment.commentId, comment.liked)
+                                                    }}
+                                                    className={`flex items-center gap-1 ${
+                                                        comment.liked ? 'text-blue-600' : 'text-gray-500 hover:text-blue-600'
+                                                    }`}
+                                                >
+                                                    <ThumbsUp size={16} fill={comment.liked ? "currentColor" : "none"} />
                                                     {comment.likesCount}
-                                                </span>
+                                                </button>
                                                 {comment.commentsCount > 0 && (
-                                                    <span className="flex items-center gap-1">
+                                                    <span className="flex items-center gap-1 text-gray-500">
                                                         <MessageSquare size={16} />
                                                         {comment.commentsCount}
                                                     </span>
@@ -175,7 +301,7 @@ const MyRepliesPage: React.FC = () => {
                         </div>
                     )}
 
-                    {totalPages > 1 && (
+                    {!loading && totalPages > 1 && (
                         <Pagination 
                             currentPage={currentPage} 
                             totalPages={totalPages} 

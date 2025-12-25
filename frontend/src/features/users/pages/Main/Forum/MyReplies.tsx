@@ -1,5 +1,5 @@
 import React from 'react'
-import MyRepliesPage from '../../../components/Forum/CreatePost'
+import MyRepliesPage from '../../../components/Forum/MyReplies'
 
 const MyReplies = () => {
     return (
