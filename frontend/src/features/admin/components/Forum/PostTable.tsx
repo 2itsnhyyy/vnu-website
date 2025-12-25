@@ -54,7 +54,7 @@ export default function PostTable() {
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
-  }, [currentPage, searchTerm]);
+  }, [currentPage]);
 
   function handleSearch() {
     setLoading(true);
