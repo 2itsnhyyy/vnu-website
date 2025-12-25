@@ -7,6 +7,7 @@ import { forumService } from "../../services/ForumService";
 import dayjs from "dayjs";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import CommentTable from "../../components/Comment/CommentTable";
 
 export default function ViewPost() {
   const { id } = useParams<{ id: string }>();
@@ -150,6 +151,9 @@ export default function ViewPost() {
             </div>
           </div>
         </form>
+        <div>
+          <CommentTable postId={Number(id)} />
+        </div>
       </div>
     </div>
   );
