@@ -16,6 +16,7 @@ import type {
   GetAllBuildingResponse,
 } from "../../types/building";
 import { buildingService } from "../../services/BuildingService";
+import DeleteConfirmModal from "../../components/Common/DeleteConfirmModal";
 
 const PAGE_SIZE = 10;
 
@@ -36,6 +37,7 @@ const Buildings: React.FC = () => {
 
   const [isModalOpen, setModalOpen] = useState(false);
   const [buildingToDelete, setBuildingToDelete] = useState<number | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -68,7 +70,7 @@ const Buildings: React.FC = () => {
   function handleSearch() {
     setLoading(true);
     setTimeout(() => {
-      const filtered = mockBuilding.filter((n) =>
+      const filtered = res.data.filter((n) =>
         n.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setBuilding(filtered);
@@ -90,17 +92,28 @@ const Buildings: React.FC = () => {
   }
 
   function handleDelete(buildingId: number) {
-    setBuildingToDelete(buildingId);
-    setModalOpen(true);
-  }
-
-  function handleConfirmDelete() {
-    if (!buildingToDelete) return;
-    setBuilding((prev) =>
-      prev.filter((n) => n.buildingId !== buildingToDelete)
-    );
-    setModalOpen(false);
-  }
+      setBuildingToDelete(buildingId);
+      setModalOpen(true);
+    }
+  
+    async function handleConfirmDelete() {
+      if (!buildingToDelete) return;
+      
+      setDeleteLoading(true);
+      try {
+        await buildingService.delete(buildingToDelete);
+        setBuilding((prev) => prev.filter((n) => n.buildingId !== buildingToDelete));
+        setModalOpen(false);
+        setBuildingToDelete(null);
+      } finally {
+        setDeleteLoading(false);
+      }
+    }
+  
+    function handleCancelDelete() {
+      setModalOpen(false);
+      setBuildingToDelete(null);
+    }
 
 
   const columns: ColumnsType<Building> = [
@@ -225,8 +238,8 @@ const Buildings: React.FC = () => {
               {/* Search and Filters */}
 
               <Input
-                placeholder="Tìm tòa nhà..."
-                prefix={<SearchOutlined />}
+                placeholder="Tìm kiếm tòa nhà..."
+                prefix={<SearchOutlined style={{ color: '#99a1af' }}/>}
                 value={searchTerm}
                 size="large"
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -292,6 +305,17 @@ const Buildings: React.FC = () => {
           />
         </div>
       </div>
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        open={isModalOpen}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        loading={deleteLoading}
+        title="Xóa tòa nhà này?"
+        description="Hành động này sẽ xóa vĩnh viễn tòa nhà này ra khỏi hệ thống và không thể khôi phục lại được."
+        successMessage="Xóa tòa nhà thành công!"
+        errorMessage="Xóa tòa nhà thất bại. Vui lòng thử lại!"
+      />
     </div>
   );
 };

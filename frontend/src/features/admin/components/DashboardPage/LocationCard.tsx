@@ -7,7 +7,7 @@ interface LocationCardProps {
 
  export const LocationCard: React.FC<LocationCardProps> = ({ image, name, address, deadline }) => {
   return (
-    <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col">
+    <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col hover:scale-105 transition-transform duration-200">
       <img src={image} alt={name} className="w-full h-40 object-cover" />
       <div className="p-4 flex flex-col flex-grow">
         <h3 className="font-semibold text-gray-800 mb-1">{name}</h3>

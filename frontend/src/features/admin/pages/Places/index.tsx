@@ -246,8 +246,8 @@ const Places: React.FC = () => {
               {/* Search and Filters */}
 
               <Input
-                placeholder="Tìm địa điểm..."
-                prefix={<SearchOutlined />}
+                placeholder="Tìm kiếm địa điểm..."
+                prefix={<SearchOutlined style={{ color: '#99a1af' }}/>}
                 value={searchTerm}
                 size="large"
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -258,18 +258,6 @@ const Places: React.FC = () => {
                 }}
                 style={{ width: 300 }}
               />
-              <Select
-                defaultValue="all"
-                style={{ width: 150 }}
-                size="large"
-                onChange={setFilter}
-                options={[
-                  { value: "all", label: "Sắp xếp theo" },
-                  { value: "new-to-old", label: "Ngày tạo gần nhất" },
-                  { value: "old-to-new", label: "Ngày tạo xa nhất" },
-                ]}
-              />
-
               <button
                 onClick={handleAdd}
                 className="flex items-center gap-2 bg-primary hover:bg-primary-light hover:cursor-pointer text-white font-medium px-5 py-2 rounded-md transition"

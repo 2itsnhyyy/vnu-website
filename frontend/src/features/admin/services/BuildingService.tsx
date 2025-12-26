@@ -3,7 +3,8 @@ import type {
   Building,
   GetAllBuildingResponse,
   GetAllBuildingParams, 
-  CreateBuildingRequest  
+  CreateBuildingRequest,
+  UpdateBuildingRequest  
 } from "../types/building";
 
 export const buildingService = {
@@ -21,7 +22,7 @@ export const buildingService = {
     return api.post("/building", data).then((res) => res.data);
   },
 
-  update(id: number, data: PlaceUpdateRequest): Promise<any> {
+  update(id: number, data: UpdateBuildingRequest): Promise<any> {
     return api.patch(`/building/${id}`, data).then((res) => res.data);
   },
 
