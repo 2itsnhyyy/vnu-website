@@ -12,12 +12,11 @@ import {
   TableHeader,
   TableRow,
 } from "../UI/Table";
-import { DeleteConfirmModal} from "../Common/DeleteConfirmModal";
+import { DeleteConfirmationModal } from "../Common/DeleteConfirmationModal";
 import Pagination from "../Common/Pagination";
 import SearchInput from "../Common/SearchInput";
 import { userService } from "../../services/UserService";
 import dayjs from "dayjs";
-import { DeleteConfirmationModal } from "../Common/DeleteConfirmationModal";
 
 export default function UserTable() {
   const [users, setUsers] = useState<User[]>([]);
