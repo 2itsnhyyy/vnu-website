@@ -1,9 +1,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, ChevronRight } from "lucide-react";
-import type { Dayjs } from 'dayjs';
-import dayjs from 'dayjs';
-import { DatePicker } from 'antd';
+import type { Dayjs } from "dayjs";
+import dayjs from "dayjs";
+import { DatePicker } from "antd";
 import { LocationCard } from "../../components/DashboardPage/LocationCard";
 import { dashboardService } from "../../services/DashboardService";
 import { placeService } from "../../services/PlaceService";
@@ -19,15 +19,17 @@ interface LocationCardProps {
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  
+
   // Get Monday of current week and today
   const getDefaultDateRange = (): [Dayjs, Dayjs] => {
     const today = dayjs();
-    const monday = today.startOf('week').add(1, 'day'); 
+    const monday = today.startOf("week").add(1, "day");
     return [monday, today];
   };
 
-  const [dateRange, setDateRange] = React.useState<[Dayjs, Dayjs]>(getDefaultDateRange());
+  const [dateRange, setDateRange] = React.useState<[Dayjs, Dayjs]>(
+    getDefaultDateRange()
+  );
 
   const [overviewData, setOverviewData] = React.useState({
     totalPlaces: 0,
@@ -66,8 +68,8 @@ const Dashboard: React.FC = () => {
     const fetchNewItems = async () => {
       try {
         const response = await dashboardService.getNewItems({
-          startDate: dateRange[0].format('YYYY-MM-DD'),
-          endDate: dateRange[1].format('YYYY-MM-DD'),
+          startDate: dateRange[0].format("YYYY-MM-DD"),
+          endDate: dateRange[1].format("YYYY-MM-DD"),
         });
         setNewItemsData({
           newPosts: response.data.newPosts,
@@ -88,10 +90,12 @@ const Dashboard: React.FC = () => {
         setLoading(true);
         const response = await placeService.getAll(1, 4);
         const mappedLocations = response.data.map((place: any) => ({
-          image: place.image || "https://images.unsplash.com/photo-1562774053-701939374585?w=400&h=300&fit=crop",
+          image:
+            place.image ||
+            "https://images.unsplash.com/photo-1562774053-701939374585?w=400&h=300&fit=crop",
           name: place.name,
           address: place.address,
-          deadline: place.deadline || dayjs().format('DD/MM/YYYY'),
+          deadline: place.deadline || dayjs().format("DD/MM/YYYY"),
         }));
         setLocations(mappedLocations);
       } catch (error) {
@@ -115,12 +119,17 @@ const Dashboard: React.FC = () => {
       <main className="max-w-7xl mx-auto">
         {/* Welcome Section */}
         <div className="mb-6 flex flex-col-2 justify-between">
-            <div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Xin chào Quản trị viên !</h2>
-          <p className="text-sm text-gray-600 mb-3">Đây là bảng của trường đề điều hành và thư của Đại học Quốc gia Thành phố Hồ Chí Minh trong tuần vừa qua</p>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              Xin chào Quản trị viên !
+            </h2>
+            <p className="text-sm text-gray-600 mb-3">
+              Đây là bảng của trường đề điều hành và thư của Đại học Quốc gia
+              Thành phố Hồ Chí Minh trong tuần vừa qua
+            </p>
           </div>
           <div className="flex items-center gap-2">
-            <RangePicker 
+            <RangePicker
               value={dateRange}
               onChange={handleDateChange}
               format="DD/MM/YYYY"
@@ -132,30 +141,45 @@ const Dashboard: React.FC = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div onClick={() => navigate("places")} className="bg-linear-to-br from-blue-600 to-blue-700 rounded-xl p-6 text-white cursor-pointer hover:scale-105 transition-transform duration-200">
+          <div
+            onClick={() => navigate("places")}
+            className="bg-linear-to-br from-blue-600 to-blue-700 rounded-xl p-6 text-white cursor-pointer hover:scale-105 transition-transform duration-200"
+          >
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-4xl font-bold mb-1">{overviewData.totalPlaces}</div>
+                <div className="text-4xl font-bold mb-1">
+                  {overviewData.totalPlaces}
+                </div>
                 <div className="text-white text-lg">Tổng số địa điểm</div>
               </div>
               <ChevronRight className="w-6 h-6" />
             </div>
           </div>
 
-          <div  onClick={() => navigate("buildings")} className="bg-linear-to-br from-teal-400 to-teal-500 rounded-xl p-6 text-white cursor-pointer hover:scale-105 transition-transform duration-200">
+          <div
+            onClick={() => navigate("buildings")}
+            className="bg-linear-to-br from-teal-400 to-teal-500 rounded-xl p-6 text-white cursor-pointer hover:scale-105 transition-transform duration-200"
+          >
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-4xl font-bold mb-1">{overviewData.totalBuildings}</div>
+                <div className="text-4xl font-bold mb-1">
+                  {overviewData.totalBuildings}
+                </div>
                 <div className="text-white text-lg">Tổng số tòa nhà</div>
               </div>
               <ChevronRight className="w-6 h-6" />
             </div>
           </div>
 
-          <div  onClick={() => navigate("users")} className="bg-linear-to-br from-cyan-400 to-cyan-500 rounded-xl p-6 text-white cursor-pointer hover:scale-105 transition-transform duration-200">
+          <div
+            onClick={() => navigate("users")}
+            className="bg-linear-to-br from-cyan-400 to-cyan-500 rounded-xl p-6 text-white cursor-pointer hover:scale-105 transition-transform duration-200"
+          >
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-4xl font-bold mb-1">{overviewData.totalUsers}</div>
+                <div className="text-4xl font-bold mb-1">
+                  {overviewData.totalUsers}
+                </div>
                 <div className="text-white text-lg">Tổng số người dùng</div>
               </div>
               <ChevronRight className="w-6 h-6" />
@@ -192,19 +216,21 @@ const Dashboard: React.FC = () => {
               <h3 className="text-lg font-semibold text-primary mb-2">
                 Bài đăng
               </h3>
-               <div className="flex flex-row gap-2 items-end">
-                <p className="text-5xl font-bold text-gray-800">{newItemsData.newPosts}</p>
+              <div className="flex flex-row gap-2 items-end">
+                <p className="text-5xl font-bold text-gray-800">
+                  {newItemsData.newPosts}
+                </p>
                 <p className="text-md text-gray-500">bài đăng mới</p>
               </div>
             </div>
 
             <div className="bg-white p-6 shadow-sm">
-              <h3 className="text-md font-semibold text-primary mb-2">
-                Người dùng
-              </h3>
-               <div className="flex flex-row gap-2 items-end">
-                <p className="text-5xl font-bold text-gray-800">{newItemsData.newUsers}</p>
-                <p className="text-md text-gray-500">người dùng mới</p>
+              <h3 className="text-md font-semibold text-primary mb-2">Sự cố</h3>
+              <div className="flex flex-row gap-2 items-end">
+                <p className="text-5xl font-bold text-gray-800">
+                  {newItemsData.newUsers}
+                </p>
+                <p className="text-md text-gray-500">sự cố mới</p>
               </div>
             </div>
 
@@ -213,7 +239,9 @@ const Dashboard: React.FC = () => {
                 Tin tức
               </h3>
               <div className="flex flex-row gap-2 items-end">
-                <p className="text-5xl font-bold text-gray-800">{newItemsData.newNews}</p>
+                <p className="text-5xl font-bold text-gray-800">
+                  {newItemsData.newNews}
+                </p>
                 <p className="text-md text-gray-500">tin tức mới</p>
               </div>
             </div>
@@ -221,7 +249,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Location Cards */}
-        <div className="bg-white rounded-xl p-6 shadow-sm ">
+        {/* <div className="bg-white rounded-xl p-6 shadow-sm ">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-semibold text-gray-800">
               Các địa điểm mới được cập nhật
@@ -236,7 +264,7 @@ const Dashboard: React.FC = () => {
               <LocationCard key={index} {...location} />
             ))}
           </div>
-        </div>
+        </div> */}
       </main>
     </div>
   );

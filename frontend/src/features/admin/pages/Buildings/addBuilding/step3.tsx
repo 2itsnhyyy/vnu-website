@@ -2443,7 +2443,10 @@ const Step3: React.FC<Step3Props> = ({ initialData, onNext, onBack }) => {
                   Vị trí trên bản đồ
                 </h3>
               </div>
-              <div ref={mapRef} style={{ height: "400px", width: "100%" }} />
+              <div
+                ref={mapRef}
+                style={{ height: "400px", width: "100%", zIndex: 1 }}
+              />
             </div>
 
             {/* 3D Preview */}
@@ -2495,8 +2498,7 @@ const Step3: React.FC<Step3Props> = ({ initialData, onNext, onBack }) => {
 
               <div className="mb-3 text-sm space-y-3">
                 {(drawShapeType === "prism" ||
-                  drawShapeType === "cylinder" ||
-                  drawShapeType === "pyramid") && (
+                  drawShapeType === "cylinder") && (
                   <div className="flex flex-row items-center justify-between gap-2">
                     <label className="text-sm font-medium">Chiều cao (m)</label>
                     <InputNumber
@@ -2549,7 +2551,7 @@ const Step3: React.FC<Step3Props> = ({ initialData, onNext, onBack }) => {
                 )}
 
                 <div className="flex flex-row items-center justify-between gap-2">
-                  <label className="text-sm font-medium">Độ cao Y (m)</label>
+                  <label className="text-sm font-medium">Độ cao Z (m)</label>
                   <InputNumber
                     size="large"
                     value={drawYOffset}
@@ -2618,6 +2620,25 @@ const Step3: React.FC<Step3Props> = ({ initialData, onNext, onBack }) => {
                         ) {
                           setDrawRadius(shape.radius);
                         }
+                        if (
+                          shape.type === "pyramid" ||
+                          shape.type === "cone" ||
+                          shape.type === "frustum"
+                        ) {
+                          if (shape.type === "pyramid") {
+                            setApexHeight(
+                              (shape as PyramidShape).apexHeight || 10
+                            );
+                          } else if (shape.type === "cone") {
+                            setApexHeight(
+                              (shape as ConeShape).apexHeight || 10
+                            );
+                          } else if (shape.type === "frustum") {
+                            setApexHeight(
+                              (shape as FrustumShape).topHeight || 10
+                            );
+                          }
+                        }
                         setDrawYOffset(shape.position.y || 0);
                       }}
                     >
@@ -2658,9 +2679,18 @@ const Step3: React.FC<Step3Props> = ({ initialData, onNext, onBack }) => {
                           `Chiều cao: ${shape.height}m`}
                         {shape.type === "cylinder" &&
                           `Chiều cao: ${shape.height}m, Bán kính: ${shape.radius}m`}
-                        {shape.type === "pyramid" && "Hình chóp"}
-                        {shape.type === "cone" && `Bán kính: ${shape.radius}m`}
-                        {shape.type === "frustum" && "Hình cụt"}
+                        {shape.type === "pyramid" &&
+                          `Độ cao đỉnh: ${
+                            (shape as PyramidShape).apexHeight || 10
+                          }m`}
+                        {shape.type === "cone" &&
+                          `Bán kính: ${shape.radius}m, Độ cao đỉnh: ${
+                            (shape as ConeShape).apexHeight || 10
+                          }m`}
+                        {shape.type === "frustum" &&
+                          `Độ cao top: ${
+                            (shape as FrustumShape).topHeight || 10
+                          }m`}
                       </div>
                     </div>
                   ))}

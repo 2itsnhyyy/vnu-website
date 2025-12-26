@@ -652,7 +652,10 @@ export const useCreateBuilding = () => {
         key: "create-building",
       });
       console.log("buildingData", buildingData);
-      const createdBuilding = await buildingService.create(buildingData);
+      const response = await buildingService.create(buildingData);
+
+      // Backend returns { message, building }, extract building from response
+      const createdBuilding = response?.building || response;
 
       message.success({
         content: "Tạo tòa nhà thành công!",
@@ -662,8 +665,23 @@ export const useCreateBuilding = () => {
 
       return createdBuilding;
     } catch (err: any) {
-      const errorMessage =
+      // Check if it's a timeout error
+      const isTimeout =
+        err.code === "ECONNABORTED" || err.message?.includes("timeout");
+      const isNetworkError = !err.response && err.request;
+
+      let errorMessage =
         err.response?.data?.message || err.message || "Có lỗi xảy ra";
+
+      // If timeout or network error, provide more helpful message
+      if (isTimeout) {
+        errorMessage =
+          "Request quá thời gian chờ. Dữ liệu có thể đã được lưu, vui lòng kiểm tra lại.";
+      } else if (isNetworkError) {
+        errorMessage =
+          "Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.";
+      }
+
       setError(errorMessage);
 
       message.error({

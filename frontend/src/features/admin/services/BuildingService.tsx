@@ -2,16 +2,14 @@ import api from "./api";
 import type {
   Building,
   GetAllBuildingResponse,
-  GetAllBuildingParams, 
+  GetAllBuildingParams,
   CreateBuildingRequest,
-  UpdateBuildingRequest  
+  UpdateBuildingRequest,
 } from "../types/building";
 
 export const buildingService = {
   getAll(params: GetAllBuildingParams = {}): Promise<GetAllBuildingResponse> {
-    return api
-      .get("/building", { params })
-      .then(res => res.data);
+    return api.get("/building", { params }).then((res) => res.data);
   },
 
   getById(id: number): Promise<Building> {
@@ -19,7 +17,9 @@ export const buildingService = {
   },
 
   create(data: CreateBuildingRequest): Promise<any> {
-    return api.post("/building", data).then((res) => res.data);
+    return api
+      .post("/building", data, { timeout: 60000 })
+      .then((res) => res.data);
   },
 
   update(id: number, data: UpdateBuildingRequest): Promise<any> {
