@@ -5,16 +5,14 @@ import { MapContainer, TileLayer, Polygon, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
 import L from "leaflet";
-import icon from "leaflet/dist/images/marker-icon.png";
-import iconShadow from "leaflet/dist/images/marker-shadow.png";
+
 
 const DefaultIcon = L.icon({
-  iconUrl: icon,
-  shadowUrl: iconShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+  iconUrl:
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18'><circle cx='9' cy='9' r='7' fill='%23007bff' stroke='%230066d6' stroke-width='2'/></svg>",
+  iconSize: [18, 18],
+  iconAnchor: [9, 9],
 });
-
 L.Marker.prototype.options.icon = DefaultIcon;
 
 interface Step3Props {

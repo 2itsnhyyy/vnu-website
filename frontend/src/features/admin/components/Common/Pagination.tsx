@@ -44,8 +44,8 @@ const Pagination: React.FC<PaginationProps> = ({
           Next
         </button>
       </div>
-      <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-        <div>
+      <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-center">
+        {/* <div>
           <p className="text-sm">
             Hiển thị
             <span className="font-medium mx-1">{start}</span>
@@ -55,7 +55,7 @@ const Pagination: React.FC<PaginationProps> = ({
             <span className="font-medium mx-1">{totalItems}</span>
             kết quả
           </p>
-        </div>
+        </div> */}
         <div>
           <nav
             className="isolate inline-flex -space-x-px rounded-md shadow-xs"
@@ -64,7 +64,7 @@ const Pagination: React.FC<PaginationProps> = ({
             <button
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+              className="relative inline-flex items-center rounded-md px-2 py-2 text-gray-400  ring-gray-100 ring-inset hover:bg-gray-300  hover:cursor-pointer focus:z-20 focus:outline-offset-0 disabled:opacity-50"
             >
               <span className="sr-only">Previous</span>
               <svg
@@ -85,19 +85,21 @@ const Pagination: React.FC<PaginationProps> = ({
                 key={page}
                 onClick={() => onPageChange(page)}
                 aria-current={page === currentPage ? "page" : undefined}
-                className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ring-1 ring-inset ring-gray-300 focus:z-20 focus:outline-offset-0 ${
-                  page === currentPage
-                    ? "z-10 bg-base-600 bg-[#1D4ED8] text-white"
-                    : "text-gray-400 hover:bg-gray-50"
-                }`}
+                className={`relative ml-1 mr-1 rounded-lg inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 focus:outline-offset-0  hover:cursor-pointer
+      ${
+        page === currentPage
+          ? "z-10 text-primary ring-1 ring-inset ring-primary"
+          : "text-gray-400 hover:bg-gray-100"
+      }`}
               >
                 {page}
               </button>
             ))}
+
             <button
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+              className="relative inline-flex items-center rounded-md px-2 py-2 text-gray-400 ring-gray-100 ring-inset hover:cursor-pointer hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
             >
               <span className="sr-only">Next</span>
               <svg

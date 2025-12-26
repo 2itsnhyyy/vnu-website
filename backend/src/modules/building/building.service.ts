@@ -360,6 +360,9 @@ export class BuildingService {
 
     const buildingList = await this.prisma.building.findMany({
       where,
+      include: {
+        place: true,
+      },
       orderBy: { buildingId: 'asc' },
       skip,
       take,
@@ -375,7 +378,7 @@ export class BuildingService {
         limit: take,
       },
       buildings: buildingList.map(
-        (building) => new BuildingResponseDto(building),
+        (building) => new BuildingResponseDto(building, building.place),
       ),
     };
   }

@@ -1,6 +1,8 @@
+"use client"
+
 import type React from "react"
 import { useState } from "react"
-import { Upload, message } from "antd"
+import { Upload, message, Checkbox } from "antd"
 import { InboxOutlined } from "@ant-design/icons"
 import type { UploadFile, UploadProps } from "antd"
 import type { BuildingFormData } from "../../../types/building"
@@ -14,6 +16,8 @@ interface Step2Props {
 }
 
 const Step2: React.FC<Step2Props> = ({ initialData, onNext, onBack }) => {
+  const [enableDraw, setEnableDraw] = useState(true)
+  const [enableUpload, setEnableUpload] = useState(false)
   const [fileList, setFileList] = useState<UploadFile[]>([])
 
   const uploadProps: UploadProps = {
@@ -31,99 +35,137 @@ const Step2: React.FC<Step2Props> = ({ initialData, onNext, onBack }) => {
         message.error("File phải nhỏ hơn 50MB!")
         return false
       }
+      
+      // Do not store in localStorage; keep file in uploader state and upload on submit
+      message.success("Đã chọn file .glb")
+      
       return false // Prevent auto upload
     },
     onChange(info) {
-      const newFileList = info.fileList.slice(-1) // Only keep the last file
+      const newFileList = info.fileList.slice(-1)
       setFileList(newFileList)
-
-      if (info.file.status === "done") {
-        message.success(`${info.file.name} tải lên thành công.`)
-      } else if (info.file.status === "error") {
-        message.error(`${info.file.name} tải lên thất bại.`)
-      }
     },
-    onRemove: () => {
+    onRemove: (file) => {
       setFileList([])
-    },
-    onDrop(e) {
-      console.log("Dropped files", e.dataTransfer.files)
+      message.info("Đã xóa file")
     },
     fileList: fileList,
   }
 
   const handleSubmit = () => {
-    if (fileList.length === 0) {
-      message.warning("Vui lòng tải lên file mô hình 3D (.glb hoặc .gltf)")
+    if (!enableDraw && !enableUpload) {
+      message.warning("Vui lòng chọn ít nhất 1 phương thức")
       return
     }
 
-    const modelFile = fileList[0]
+    if (enableUpload && fileList.length === 0) {
+      message.warning("Vui lòng tải lên file mô hình 3D")
+      return
+    }
+
+    const modelFile = fileList.length > 0 ? fileList[0] : undefined
     
     onNext({
       ...initialData,
-      modelFile: modelFile.originFileObj, // Save File object
-      modelFileName: modelFile.name,
+      enableDraw: enableDraw,
+      enableUpload: enableUpload,
+      modelFile: modelFile?.originFileObj,
+      modelFileName: modelFile?.name,
+      useLocalStorage: true,
     })
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+    <div className="bg-white rounded-lg border border-gray-200  p-8">
       <div className="max-w-3xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold mb-2">Tải lên mô hình 3D</h2>
-          <p className="text-gray-500">Tải lên file mô hình 3D (.glb) của tòa nhà để hiển thị trên bản đồ</p>
-        </div>
-
-        {/* Upload Area */}
-        <div className="mb-6">
-          <label className="block text-lg font-medium mb-4">File mô hình 3D</label>
-          <Dragger {...uploadProps} className="mb-4">
-            <p className="ant-upload-drag-icon">
-              <InboxOutlined style={{ fontSize: 48, color: "#1890ff" }} />
-            </p>
-            <p className="ant-upload-text text-lg">Nhấp hoặc kéo thả file vào khu vực này</p>
-            <p className="ant-upload-hint">Hỗ trợ: .glb, .gltf (tối đa 50MB)</p>
-          </Dragger>
-
-          {/* Show selected file info */}
-          {fileList.length > 0 && (
-            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-green-800 font-medium">File đã chọn: {fileList[0].name}</span>
+        {/* Method Selection */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          {/* Draw Option */}
+          <div 
+            className={`border-2 rounded-lg p-4 cursor-pointer transition ${
+              enableDraw 
+                ? 'border-primary bg-blue-50' 
+                : 'border-gray-300 hover:border-blue-400'
+            }`}
+            onClick={() => { setEnableDraw(!enableDraw); if (!enableDraw) setEnableUpload(false) }}
+          >
+            <div className="flex items-start gap-3">
+                <Checkbox 
+                checked={enableDraw} 
+                onChange={(e) => { setEnableDraw(e.target.checked); if (e.target.checked) setEnableUpload(false) }}
+                onClick={(e) => e.stopPropagation()}
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="font-semibold text-lg text-primary">Vẽ khối hình 3D</span>
+                </div>
+                <p className="text-sm text-gray-600 mb-2">
+                  Vẽ đa giác trên bản đồ bằng cách <br />chấm tọa độ
+                </p>
               </div>
-              <p className="text-sm text-green-600 mt-1">
-                Kích thước: {((fileList[0].size || 0) / 1024 / 1024).toFixed(2)} MB
-              </p>
             </div>
-          )}
+          </div>
+
+          {/* Upload Option */}
+          <div 
+            className={`border-2 rounded-lg p-4 cursor-pointer transition ${
+              enableUpload 
+                ? 'border-primary bg-blue-50' 
+                : 'border-gray-300 hover:border-blue-400'
+            }`}
+            onClick={() => { setEnableUpload(!enableUpload); if (!enableUpload) setEnableDraw(false) }}
+          >
+            <div className="flex items-start gap-3">
+              <Checkbox 
+                checked={enableUpload} 
+                onChange={(e) => { setEnableUpload(e.target.checked); if (e.target.checked) setEnableDraw(false) }}
+                onClick={(e) => e.stopPropagation()}
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="font-semibold text-lg text-primary">Upload file .glb</span>
+                </div>
+                <p className="text-sm text-gray-600 mb-2">
+                  Tải lên file mô hình 3D có sẵn để sử dụng
+                </p>
+                <ul className="text-sm text-gray-500 space-y-1 ml-4">
+                  <li>• File .glb có kích thước tối đa 10MB</li>
+                  <li>• Phù hợp cho model phức tạp</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Info Box */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <h3 className="font-medium text-blue-900 mb-2">📌 Lưu ý quan trọng:</h3>
-          <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-            <li>File phải ở định dạng .glb (GL Transmission Format Binary) hoặc .gltf</li>
-            <li>Kích thước file tối đa: 50MB</li>
-            <li>Mô hình sẽ được hiển thị trên bản đồ 3D</li>
-            <li>Đảm bảo mô hình đã được tối ưu để tải nhanh</li>
-            <li>Hệ tọa độ: Y-up (hướng lên trên)</li>
-          </ul>
-        </div>
+        {/* Upload Area - Show if upload enabled */}
+        {enableUpload && (
+          <>
+            <div className="mb-6">
+              <Dragger {...uploadProps} showUploadList={false} className="mb-4">
+                <p className="ant-upload-drag-icon">
+                  <InboxOutlined style={{ fontSize: 48, color: "#1890ff" }} />
+                </p>
+                <p className="ant-upload-text text-lg">Nhấp hoặc kéo thả file vào khu vực này để tải lên</p>
+                <p className="ant-upload-hint">Hỗ trợ: .glb (tối đa 10MB)</p>
+              </Dragger>
 
-        {/* Tips Box */}
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-          <h3 className="font-medium text-gray-900 mb-2">💡 Mẹo:</h3>
-          <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
-            <li>Sử dụng Blender để tạo và export file .glb</li>
-            <li>Nên scale mô hình về kích thước thực tế (đơn vị: mét)</li>
-            <li>Bạn sẽ điều chỉnh vị trí và góc xoay ở bước tiếp theo</li>
-          </ul>
-        </div>
+              {fileList.length > 0 && (
+                <div className="mt-4 p-4 bg-blue-50 border border-primary rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-primary font-medium">File đã tải lên: {fileList[0].name}</span>
+                  </div>
+                  <p className="text-sm text-primary mt-1 ml-7">
+                    Kích thước: {((fileList[0].size || 0) / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
 
         {/* Action Buttons */}
         <div className="flex justify-between">
@@ -138,12 +180,7 @@ const Step2: React.FC<Step2Props> = ({ initialData, onNext, onBack }) => {
           </button>
           <button
             onClick={handleSubmit}
-            disabled={fileList.length === 0}
-            className={`flex items-center gap-2 font-medium px-5 py-2 rounded-md transition ${
-              fileList.length === 0
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-primary hover:bg-primary-light hover:cursor-pointer text-white"
-            }`}
+            className="flex items-center gap-2 bg-primary hover:bg-primary-light hover:cursor-pointer text-white font-medium px-5 py-2 rounded-md transition"
           >
             <span>Bước tiếp theo</span>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

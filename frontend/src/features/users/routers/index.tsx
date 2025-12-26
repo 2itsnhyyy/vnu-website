@@ -4,7 +4,6 @@ import MainLayout from "../layouts/MainLayout";
 import MainRouters from "./Main/index";
 import AuthRouters from "./Auth/index";
 
-
 const userRoutes = [
   {
     path: "/",

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { MapPin, Smile, Clock, AlertCircle, Building2 } from 'lucide-react';
 import { useParams } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 import issuesService from '../../api/services/issuesService';
 import { INCIDENT_STATUS } from '../../api/types/issues.types';
 import type { Incident, Place } from '../../api/types/issues.types';
@@ -119,7 +120,6 @@ const LocationCard: React.FC<LocationCardProps> = ({ incident, place }) => {
 };
 
 const MapSection: React.FC<MapSectionProps> = ({ address, title = "Vị trí trên bản đồ:" }) => {
-    // Encode địa chỉ để sử dụng trong Google Maps
     const encodedAddress = encodeURIComponent(address);
 
     return (
@@ -146,7 +146,48 @@ const MapSection: React.FC<MapSectionProps> = ({ address, title = "Vị trí tr�
 const AddressSection: React.FC<AddressSectionProps> = ({ content }) => (
     <div className="bg-gray-50 rounded-2xl p-6">
         <h3 className="text-lg font-semibold mb-3">Nội dung chi tiết:</h3>
-        <p className="text-base leading-relaxed whitespace-pre-line">{content}</p>
+        <div className="prose max-w-none text-gray-700 leading-relaxed">
+            <ReactMarkdown
+                components={{
+                    h1: ({ node, ...props }) => <h1 className="text-3xl font-bold mt-6 mb-4" {...props} />,
+                    h2: ({ node, ...props }) => <h2 className="text-2xl font-bold mt-5 mb-3" {...props} />,
+                    h3: ({ node, ...props }) => <h3 className="text-xl font-bold mt-4 mb-2" {...props} />,
+                    h4: ({ node, ...props }) => <h4 className="text-lg font-semibold mt-3 mb-2" {...props} />,
+                    p: ({ node, ...props }) => <p className="mb-4" {...props} />,
+                    ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-4 space-y-2" {...props} />,
+                    ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />,
+                    li: ({ node, ...props }) => <li className="ml-4" {...props} />,
+                    strong: ({ node, ...props }) => <strong className="font-bold" {...props} />,
+                    em: ({ node, ...props }) => <em className="italic" {...props} />,
+                    code: ({ node, inline, ...props }: any) =>
+                        inline ? (
+                            <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono" {...props} />
+                        ) : (
+                            <code className="block bg-gray-100 p-4 rounded-lg text-sm font-mono overflow-x-auto mb-4" {...props} />
+                        ),
+                    blockquote: ({ node, ...props }) => (
+                        <blockquote className="border-l-4 border-gray-300 pl-4 italic my-4" {...props} />
+                    ),
+                    img: ({ node, ...props }) => (
+                        <img
+                            className="max-w-full h-auto rounded-lg my-4 shadow-md"
+                            loading="lazy"
+                            {...props}
+                        />
+                    ),
+                    a: ({ node, ...props }) => (
+                        <a
+                            className="text-blue-600 hover:text-blue-800 underline"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            {...props}
+                        />
+                    ),
+                }}
+            >
+                {content}
+            </ReactMarkdown>
+        </div>
     </div>
 );
 
@@ -168,18 +209,15 @@ const Details: React.FC = () => {
             try {
                 setLoading(true);
 
-                // Fetch incident detail
                 const incidentResponse = await issuesService.getIncidentById(Number(incidentId));
                 setIncident(incidentResponse.incident);
 
-                // Fetch place detail if placeId exists
                 if (incidentResponse.incident.placeId) {
                     try {
                         const placeResponse = await issuesService.getPlaceById(incidentResponse.incident.placeId);
                         setPlace(placeResponse);
                     } catch (placeError) {
                         console.error('Error fetching place:', placeError);
-                        // Continue without place data if it fails
                     }
                 }
             } catch (err: any) {
@@ -197,111 +235,110 @@ const Details: React.FC = () => {
         return (
             <div className="min-h-screen bg-blue-50 p-6">
                 <div className="max-w-7xl mx-auto">
+                    <button
+                        onClick={() => window.history.back()}
+                        className="mb-5 flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors w-fit"
+                    >
+                        <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                            />
+                        </svg>
+                        Quay lại
+                    </button>
+                    <h1 className="text-4xl font-bold text-blue-700 mb-8">Chi tiết thông báo</h1>
+                    <div className="flex justify-center items-center py-20">
+                        <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (error || !incident) {
+        return (
+            <div className="min-h-screen bg-blue-50 p-6">
+                <div className="max-w-7xl mx-auto">
+                    <h1 className="text-4xl font-bold text-blue-700 mb-8">Chi tiết thông báo</h1>
+                    <div className="bg-white rounded-2xl p-8 shadow-lg text-center">
+                        <AlertCircle className="mx-auto mb-4 text-red-500" size={48} />
+                        <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+                            Không thể tải chi tiết sự cố
+                        </h2>
+                        <p className="text-gray-600">{error || 'Vui lòng thử lại sau'}</p>
                         <button
                             onClick={() => window.history.back()}
-                            className="mb-5 flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors w-fit"
+                            className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                         >
-                            <svg
-                                className="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                                />
-                            </svg>
                             Quay lại
                         </button>
-                        <h1 className="text-4xl font-bold text-blue-700 mb-8">Chi tiết thông báo</h1>
-                        <div className="flex justify-center items-center py-20">
-                            <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
-                        </div>
                     </div>
                 </div>
-                );
+            </div>
+        );
     }
 
-                if (error || !incident) {
-        return (
-                <div className="min-h-screen bg-blue-50 p-6">
-                    <div className="max-w-7xl mx-auto">
-                        <h1 className="text-4xl font-bold text-blue-700 mb-8">Chi tiết thông báo</h1>
-                        <div className="bg-white rounded-2xl p-8 shadow-lg text-center">
-                            <AlertCircle className="mx-auto mb-4 text-red-500" size={48} />
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-                                Không thể tải chi tiết sự cố
-                            </h2>
-                            <p className="text-gray-600">{error || 'Vui lòng thử lại sau'}</p>
-                            <button
-                                onClick={() => window.history.back()}
-                                className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                            >
-                                Quay lại
-                            </button>
-                        </div>
+    return (
+        <div className="min-h-screen bg-blue-50 p-6">
+            <div className="max-w-7xl mx-auto">
+                <div className="mb-8">
+                    <button
+                        onClick={() => window.history.back()}
+                        className="mb-5 flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors w-fit"
+                    >
+                        <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                            />
+                        </svg>
+                        Quay lại
+                    </button>
+
+                    <h1 className="text-4xl font-bold text-blue-700">
+                        Chi tiết thông báo
+                    </h1>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-6">
+                        <LocationCard incident={incident} place={place} />
+                    </div>
+
+                    <div className="space-y-6">
+                        {place && place.address ? (
+                            <MapSection address={place.address} title="Vị trí trên bản đồ:" />
+                        ) : (
+                            <div className="bg-white rounded-2xl p-6 shadow-sm">
+                                <h3 className="text-xl font-semibold mb-4">Vị trí trên bản đồ:</h3>
+                                <div className="bg-gray-100 rounded-xl p-8 text-center">
+                                    <MapPin className="mx-auto mb-2 text-gray-400" size={48} />
+                                    <p className="text-gray-500">Không có thông tin địa chỉ</p>
+                                </div>
+                            </div>
+                        )}
+
+                        <AddressSection content={incident.content} />
                     </div>
                 </div>
-                );
-    }
-
-                return (
-                <div className="min-h-screen bg-blue-50 p-6">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="mb-8">
-                            <button
-                                onClick={() => window.history.back()}
-                                className="mb-5 flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors w-fit"
-                            >
-                                <svg
-                                    className="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                                    />
-                                </svg>
-                                Quay lại
-                            </button>
-
-                            <h1 className="text-4xl font-bold text-blue-700">
-                                Chi tiết thông báo
-                            </h1>
-                        </div>
-
-
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div className="space-y-6">
-                                <LocationCard incident={incident} place={place} />
-                            </div>
-
-                            <div className="space-y-6">
-                                {place && place.address ? (
-                                    <MapSection address={place.address} title="Vị trí trên bản đồ:" />
-                                ) : (
-                                    <div className="bg-white rounded-2xl p-6 shadow-sm">
-                                        <h3 className="text-xl font-semibold mb-4">Vị trí trên bản đồ:</h3>
-                                        <div className="bg-gray-100 rounded-xl p-8 text-center">
-                                            <MapPin className="mx-auto mb-2 text-gray-400" size={48} />
-                                            <p className="text-gray-500">Không có thông tin địa chỉ</p>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <AddressSection content={incident.content} />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                );
+            </div>
+        </div>
+    );
 };
 
-                export default Details;
+export default Details;

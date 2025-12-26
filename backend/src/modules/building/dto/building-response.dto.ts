@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Place } from '@prisma/client';
 
 export class BuildingResponseDto {
   @ApiProperty({
@@ -37,12 +38,19 @@ export class BuildingResponseDto {
   })
   placeId: number;
 
-  constructor(building: any) {
+  @ApiProperty({
+    description: 'The name of the place where the building is located',
+    example: 'Trường Đại học Bách Khoa',
+  })
+  placeName?: string;
+
+  constructor(building: any, place?: Place) {
     this.buildingId = building.buildingId;
     this.name = building.name;
     this.description = building.description ?? undefined;
     this.floors = building.floors ?? undefined;
     this.image = building.image ?? undefined;
     this.placeId = building.placeId;
+    this.placeName = place?.name ?? undefined;
   }
 }

@@ -33,19 +33,20 @@ const { Dragger } = Upload;
 interface Step1Props {
   initialData: Partial<BuildingFormData>;
   onNext: (data: Partial<BuildingFormData>) => void;
+  onBack?: () => void;
 }
 
-const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
+const Step1: React.FC<Step1Props> = ({ initialData, onNext, onBack }) => {
   const [form] = Form.useForm();
-  const [searchValue, setSearchValue] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string>(initialData.image || "");
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>("");
   const [description, setDescription] = useState(initialData.description || "");
   const [belongToPlaceOption, setBelongToPlaceOption] = useState<
     BelongToPlaceOption[]
   >([]);
   const [fetching, setFetching] = useState(false);
+  const [initializing, setInitializing] = useState(true);
 
   const fetchBelongToPlaceOption = async (search?: string) => {
     setFetching(true);
@@ -62,10 +63,46 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
     []
   );
 
-  // Fetch initial place options on mount
+  // Initialize component: fetch places and load initial place
   useEffect(() => {
-    fetchBelongToPlaceOption();
-  }, []);
+    const initialize = async () => {
+      try {
+        // First, fetch general place list
+        await fetchBelongToPlaceOption();
+
+        // If there's a selected place_id, ensure it's in the options
+        if (initialData.place_id) {
+          try {
+            const place = await placeService.getById(initialData.place_id);
+            setBelongToPlaceOption((prev) => {
+              const exists = prev.some((p) => p.placeId === place.placeId);
+              if (exists) return prev;
+              return [{ placeId: place.placeId, name: place.name }, ...prev];
+            });
+          } catch (error) {
+            console.error("Failed to load selected place:", error);
+          }
+        }
+
+        // Set form values after ensuring place is in options
+        form.setFieldsValue({
+          name: initialData.name,
+          floors: initialData.floors,
+          place_id: initialData.place_id,
+        });
+      } finally {
+        setInitializing(false);
+      }
+    };
+
+    initialize();
+  }, [initialData.place_id, initialData.name, initialData.floors, form]);
+
+  // Sync description and preview when initialData changes
+  useEffect(() => {
+    setDescription(initialData.description || "");
+    setPreviewUrl(initialData.image || "");
+  }, [initialData.description, initialData.image]);
 
   // Cleanup debounce on unmount
   useEffect(() => {
@@ -73,6 +110,35 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
       debouncedFetchPlace.cancel();
     };
   }, [debouncedFetchPlace]);
+
+  // Sync form fields and ensure the current place is in options when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      form.setFieldsValue({
+        name: initialData.name,
+        floors: initialData.floors,
+        place_id: initialData.place_id,
+      });
+      setDescription(initialData.description || "");
+      setPreviewUrl(initialData.image || "");
+
+      if (initialData.place_id) {
+        // Ensure the selected place is present in the options list
+        placeService
+          .getById(initialData.place_id)
+          .then((place) => {
+            setBelongToPlaceOption((prev) => {
+              const exists = prev.some((p) => p.placeId === place.placeId);
+              if (exists) return prev;
+              return [{ placeId: place.placeId, name: place.name }, ...prev];
+            });
+          })
+          .catch(() => {
+            // ignore if fetch fails; user can search to refetch
+          });
+      }
+    }
+  }, [initialData, form]);
 
   const handleBeforeUpload = (file: RcFile) => {
     // Validate file type
@@ -130,14 +196,14 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
         description: description,
         floors: values.floors,
         place_id: values.place_id,
-        imageFile: imageFile,
+        imageFile: imageFile, // Use the imageFile state
       });
     });
   };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-      <Form form={form} layout="vertical" initialValues={initialData}>
+      <Form form={form} layout="vertical">
         {/* Image Upload */}
         <div className="flex flex-row mb-6 justify-between gap-8">
           <div className="flex-1">
@@ -191,8 +257,7 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
                 Chi tiết tòa nhà
               </label>
               <p className="text-md text-gray-500 mb-4 text-justify">
-                Giới thiệu về tòa nhà của bạn đến người dùng bằng cách điền vào
-                những ô bên cạnh
+                Cập nhật thông tin về tòa nhà của bạn
               </p>
             </div>
           </div>
@@ -224,6 +289,7 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
                 showSearch
                 placeholder="Tìm địa điểm..."
                 filterOption={false}
+                loading={initializing || fetching}
                 onSearch={(value) => {
                   debouncedFetchPlace(value);
                 }}
@@ -307,13 +373,22 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
         </div>
       </Form>
 
-      {/* Next Button */}
-      <div className="flex justify-end">
+      {/* Action Buttons */}
+      <div className="flex justify-between mt-8">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium px-5 py-2 rounded-md transition"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          <span>Quay lại</span>
+        </button>
         <button
           onClick={handleSubmit}
           className="flex items-center gap-2 bg-primary hover:bg-primary-light hover:cursor-pointer text-white font-medium px-5 py-2 rounded-md transition"
         >
-          <span>Bước tiếp theo</span>
+          <span>Lưu thay đổi</span>
         </button>
       </div>
     </div>
