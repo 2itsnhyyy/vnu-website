@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import type { News } from "../../types/news";
-import { MdDeleteOutline } from "react-icons/md";
-import { MdEdit } from "react-icons/md";
-import { MdRemoveRedEye } from "react-icons/md";
 import {
   Table,
   TableBody,
@@ -11,6 +8,11 @@ import {
   TableHeader,
   TableRow,
 } from "../UI/Table";
+import {
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import Pagination from "../Common/Pagination";
 import SearchInput from "../Common/SearchInput";
 import { FaPlus } from "react-icons/fa6";
@@ -151,7 +153,7 @@ export default function NewsTable() {
                 isHeader
                 className="py-3 px-4 font-medium text-gray-800 text-center text-theme-sm"
               >
-                Mã
+                ID
               </TableCell>
               <TableCell
                 isHeader
@@ -186,30 +188,30 @@ export default function NewsTable() {
                 key={news.newsId}
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                <TableCell className="py-5 px-4 text-center text-black text-theme-sm">
+                <TableCell className="py-5 px-4 text-center text-gray-500 text-theme-sm">
                   {news.newsId}
                 </TableCell>
-                <TableCell className="py-5 px-3 text-black text-theme-sm">
+                <TableCell className="py-5 px-3 text-gray-500 text-theme-sm">
                   <div className="truncate">{news.title}</div>
                 </TableCell>
-                <TableCell className="py-5 text-black text-theme-sm">
+                <TableCell className="py-5 text-gray-500 text-theme-sm">
                   <div className="max-w-[400px] truncate mx-auto">
                     {markdownToPlainText(news.contentMarkdown)}
                   </div>
                 </TableCell>
-                <TableCell className="py-5 text-black text-theme-sm text-center px-2">
+                <TableCell className="py-5 text-gray-500 text-theme-sm text-center px-2">
                   {dayjs(news.createdAt).format("DD/MM/YYYY")}
                 </TableCell>
-                <TableCell className="py-5 text-black text-theme-sm px-4">
+                <TableCell className="py-5 text-gray-500 text-theme-sm px-4">
                   <div className="flex gap-2 justify-center">
                     <button onClick={() => handleView(news.newsId)}>
-                      <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />
+                      <EyeOutlined className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleEdit(news.newsId)}>
-                      <MdEdit className="w-5 h-5 cursor-pointer" />
+                      <EditOutlined className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleDelete(news.newsId)}>
-                      <MdDeleteOutline className="w-5 h-5 cursor-pointer" />
+                      <DeleteOutlined style={{ color: '#ff4d4f' }} className="w-5 h-5 cursor-pointer" />
                     </button>
                   </div>
                 </TableCell>

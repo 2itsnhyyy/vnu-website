@@ -141,7 +141,7 @@ const Places: React.FC = () => {
             )}
 
             <Tooltip title={displayText}>
-              <Text ellipsis>{displayText}</Text>
+              <Text ellipsis style={{ color: "#6a7282" }}>{displayText}</Text>
             </Tooltip>
           </div>
         );
@@ -183,7 +183,7 @@ const Places: React.FC = () => {
       dataIndex: "closeTime",
       key: "close_time",
       align: "center",
-      width: 120,
+      width: 130,
       render: (value) => (
         <span className={!value ? "text-gray-400" : ""}>
           {displayValue(value)}

@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import type { Incident } from "../../types/incident";
-import { MdDeleteOutline } from "react-icons/md";
-import { MdEdit } from "react-icons/md";
-import { MdRemoveRedEye } from "react-icons/md";
+import {
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import {
   Table,
   TableBody,
@@ -152,7 +154,7 @@ export default function IncidentTable() {
                 isHeader
                 className="py-3 font-medium text-gray-800 text-center px-3 text-theme-sm"
               >
-                Mã
+                ID
               </TableCell>
               <TableCell
                 isHeader
@@ -193,18 +195,18 @@ export default function IncidentTable() {
                 key={incident.incidentId}
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                <TableCell className="py-6 text-black text-theme-sm px-3">
+                <TableCell className="py-6 text-gray-500 text-theme-sm px-3">
                   {incident.incidentId}
                 </TableCell>
-                <TableCell className="py-6 text-black text-theme-sm px-3">
+                <TableCell className="py-6 text-gray-500 text-theme-sm px-3">
                   <div className="max-w-[200px] truncate mx-auto">
                     {markdownToPlainText(incident.title).slice(0, 100)}...
                   </div>
                 </TableCell>
-                <TableCell className="py-6 text-black text-theme-sm px-3">
+                <TableCell className="py-6 text-gray-500 text-theme-sm px-3">
                   {markdownToPlainText(incident.content).slice(0, 240)}...
                 </TableCell>
-                <TableCell className="py-6 text-black text-theme-sm px-3 text-center">
+                <TableCell className="py-6 text-gray-500 text-theme-sm px-3 text-center">
                   {dayjs(incident.createdAt).format("DD/MM/YYYY")}
                 </TableCell>
                 <TableCell className="text-center px-3">
@@ -220,16 +222,16 @@ export default function IncidentTable() {
                     {incident.status === 0 ? "Mới" : "Đã giải quyết"}
                   </span>
                 </TableCell>
-                <TableCell className="py-6 text-black text-theme-sm px-3">
+                <TableCell className="py-6 text-gray-500 text-theme-sm px-3">
                   <div className="flex gap-2 justify-center">
                     <button onClick={() => handleView(incident.incidentId)}>
-                      <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />
+                      <EyeOutlined className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleEdit(incident.incidentId)}>
-                      <MdEdit className="w-5 h-5 cursor-pointer" />
+                      <EditOutlined className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleDelete(incident.incidentId)}>
-                      <MdDeleteOutline className="w-5 h-5 cursor-pointer" />
+                      <DeleteOutlined style={{ color: '#ff4d4f' }} className="w-5 h-5 cursor-pointer" />
                     </button>
                   </div>
                 </TableCell>
