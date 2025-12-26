@@ -58,7 +58,7 @@ const Pagination: React.FC<PaginationProps> = ({
         </div> */}
         <div>
           <nav
-            className="isolate inline-flex -space-x-px rounded-md shadow-xs"
+            className="isolate inline-flex -space-x-px rounded-md"
             aria-label="Pagination"
           >
             <button

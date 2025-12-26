@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import type { Post } from "../../types/post";
-import { MdDeleteOutline } from "react-icons/md";
-import { MdEdit } from "react-icons/md";
-import { MdRemoveRedEye } from "react-icons/md";
+import {
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import {
   Table,
   TableBody,
@@ -191,35 +193,35 @@ export default function PostTable() {
                 key={post.postId}
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                <TableCell className="py-6 px-3 text-center text-black text-theme-sm mx-2">
+                <TableCell className="py-6 px-3 text-center text-gray-500 text-theme-sm mx-2">
                   {post.postId}
                 </TableCell>
-                <TableCell className="py-6 text-black text-theme-sm mx-2">
+                <TableCell className="py-6 text-gray-500 text-theme-sm mx-2">
                   <div className="">{post.title.slice(0, 60)}...</div>
                 </TableCell>
-                <TableCell className="py-6 text-center text-black text-theme-sm mx-2">
+                <TableCell className="py-6 text-center text-gray-500 text-theme-sm mx-2">
                   {post.author.name}
                 </TableCell>
-                <TableCell className="py-6 text-center text-black text-theme-sm mx-2">
+                <TableCell className="py-6 text-center text-gray-500 text-theme-sm mx-2">
                   {dayjs(post.createdAt).format("DD/MM/YYYY")}
                 </TableCell>
 
-                <TableCell className="py-6 text-black text-theme-sm mx-2">
+                <TableCell className="py-6 text-gray-500 text-theme-sm mx-2">
                   <div className="max-w-[200px] truncate mx-auto">
                     {markdownToPlainText(post.contentMarkdown).slice(0, 24)}...
                   </div>
                 </TableCell>
 
-                <TableCell className="py-6 text-center text-black text-theme-sm mx-2">
+                <TableCell className="py-6 text-center text-gray-500 text-theme-sm mx-2">
                   <div className="flex gap-2 justify-center">
                     <button onClick={() => handleView(post.postId)}>
-                      <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />
+                      <EyeOutlined className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleEdit(post.postId)}>
-                      <MdEdit className="w-5 h-5 cursor-pointer" />
+                      <EditOutlined className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleDelete(post.postId)}>
-                      <MdDeleteOutline className="w-5 h-5 cursor-pointer" />
+                      <DeleteOutlined style={{ color: '#ff4d4f' }} className="w-5 h-5 cursor-pointer" />
                     </button>
                   </div>
                 </TableCell>

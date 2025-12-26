@@ -72,8 +72,13 @@ export default function MapView() {
       container: mapDiv.current,
       map,
       camera: {
-        position: { longitude: 106.8023, latitude: 10.8709, z: 300 },
-        tilt: 65,
+        position: {
+          longitude: 106.79871406343166,
+          latitude: 10.870287365256974,
+          z: 150,
+        },
+        tilt: 80,
+        heading: 80,
       },
       environment: {
         lighting: {

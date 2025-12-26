@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import type { User } from "../../types/user";
-import { MdDeleteOutline } from "react-icons/md";
-import { MdRemoveRedEye } from "react-icons/md";
+import {
+  EyeOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import {
   Table,
   TableBody,
@@ -10,12 +12,11 @@ import {
   TableHeader,
   TableRow,
 } from "../UI/Table";
-
+import { DeleteConfirmationModal } from "../Common/DeleteConfirmationModal";
 import Pagination from "../Common/Pagination";
 import SearchInput from "../Common/SearchInput";
 import { userService } from "../../services/UserService";
 import dayjs from "dayjs";
-import { DeleteConfirmationModal } from "../Common/DeleteConfirmationModal";
 
 export default function UserTable() {
   const [users, setUsers] = useState<User[]>([]);
@@ -121,7 +122,7 @@ export default function UserTable() {
                 isHeader
                 className="py-3 px-4 font-medium text-gray-800 text-center text-theme-sm"
               >
-                Mã
+                ID
               </TableCell>
               <TableCell
                 isHeader
@@ -162,10 +163,10 @@ export default function UserTable() {
                 key={user.userId}
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                <TableCell className="py-4 px-4 text-center text-black text-theme-sm">
+                <TableCell className="py-4 px-4 text-center text-gray-500 text-theme-sm">
                   {user.userId}
                 </TableCell>
-                <TableCell className="py-4 text-center px-3 text-black text-theme-sm">
+                <TableCell className="py-4 text-center px-3 text-gray-500 text-theme-sm">
                   <div className="flex gap-2">
                     <img
                       src={user.avatar || "/default-avatar.png"}
@@ -175,10 +176,10 @@ export default function UserTable() {
                     <div className="my-auto ml-2">{user.name}</div>
                   </div>
                 </TableCell>
-                <TableCell className="py-4 px-3 text-black text-theme-sm">
+                <TableCell className="py-4 px-3 text-gray-500 text-theme-sm">
                   {user.email}
                 </TableCell>
-                <TableCell className="py-4 text-black text-theme-sm text-center">
+                <TableCell className="py-4 text-gray-500 text-theme-sm text-center">
                   {dayjs(user.birthday).format("DD/MM/YYYY")}
                 </TableCell>
                 <TableCell className="text-center px-6">
@@ -194,13 +195,13 @@ export default function UserTable() {
                     {user.role === 1 ? "Quản trị viên" : "Người dùng"}
                   </span>
                 </TableCell>
-                <TableCell className="py-4 text-black text-theme-sm px-3 text-center">
+                <TableCell className="py-4 text-gray-500 text-theme-sm px-3 text-center">
                   <div className="flex gap-6 justify-center">
                     <button onClick={() => handleView(user.userId)}>
-                      <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />
+                      <EyeOutlined className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleDelete(user.userId)}>
-                      <MdDeleteOutline className="w-5 h-5 cursor-pointer" />
+                      <DeleteOutlined style={{ color: '#ff4d4f' }} className="w-5 h-5 cursor-pointer" />
                     </button>
                   </div>
                 </TableCell>

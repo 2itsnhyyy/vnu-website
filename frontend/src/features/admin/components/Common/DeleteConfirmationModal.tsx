@@ -16,8 +16,8 @@ export const DeleteConfirmationModal: React.FC<
   isOpen,
   onClose,
   onConfirm,
-  title = "Confirm Deletion",
-  message = "Are you sure you want to delete this item? This action cannot be undone.",
+  title = "Xác nhận xóa",
+  message = "Bạn có chắc chắn muốn xóa mục này? Hành động này không thể hoàn tác.",
   confirmButtonText = "Xóa",
   cancelButtonText = "Hủy",
 }) => {
@@ -42,58 +42,60 @@ export const DeleteConfirmationModal: React.FC<
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center overflow-y-auto modal z-99999">
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
       <div
-        className="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]"
+        className="absolute inset-0 bg-black opacity-50"
         onClick={onClose}
-      ></div>
+      />
+
+      {/* Modal */}
       <div
         ref={modalRef}
-        className="relative w-full max-w-[500px] rounded-3xl bg-white p-6 lg:p-10"
         onClick={(e) => e.stopPropagation()}
+        className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 p-6"
       >
-        <button
-          onClick={onClose}
-          className="absolute right-3 top-3 z-999 flex h-9.5 w-9.5 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-700 sm:right-6 sm:top-6 sm:h-11 sm:w-11 cursor-pointer"
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M6.04289 16.5413C5.65237 16.9318 5.65237 17.565 6.04289 17.9555C6.43342 18.346 7.06658 18.346 7.45711 17.9555L11.9987 13.4139L16.5408 17.956C16.9313 18.3466 17.5645 18.3466 17.955 17.956C18.3455 17.5655 18.3455 16.9323 17.955 16.5418L13.4129 11.9997L17.955 7.4576C18.3455 7.06707 18.3455 6.43391 17.955 6.04338C17.5645 5.65286 16.9313 5.65286 16.5408 6.04338L11.9987 10.5855L7.45711 6.0439C7.06658 5.65338 6.43342 5.65338 6.04289 6.0439C5.65237 6.43442 5.65237 7.06759 6.04289 7.45811L10.5845 11.9997L6.04289 16.5413Z"
-              fill="currentColor"
-            />
-          </svg>
-        </button>
-
-        <div className="flex flex-col px-2 overflow-y-auto custom-scrollbar">
-          <div>
-            <h5 className="mb-2 font-semibold modal-title text-theme-xl lg:text-2xl">
-              {title}
-            </h5>
-            <p className="leading-6">{message}</p>
+        <div className="text-center">
+          {/* Warning Icon */}
+          <div className="mb-6 flex justify-center">
+            <div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center">
+              <svg
+                className="w-10 h-10 text-red-500"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3 mt-8 modal-footer sm:justify-end">
-            <button
-              onClick={onClose}
-              type="button"
-              className="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-6 py-2 font-medium text-gray-700 hover:bg-gray-50 sm:w-auto cursor-pointer"
-            >
-              {cancelButtonText}
-            </button>
+          {/* Title */}
+          <h3 className="text-xl font-semibold mb-4 text-gray-900">
+            {title}
+          </h3>
+
+          {/* Message */}
+          <p className="text-sm text-gray-600 leading-relaxed mb-8">
+            {message}
+          </p>
+
+          {/* Buttons */}
+          <div className="flex gap-3">
             <button
               onClick={onConfirm}
-              type="button"
-              className="flex w-full justify-center rounded-lg bg-[#FF383C] px-6 py-2 font-medium text-white hover:bg-red-600 sm:w-auto cursor-pointer"
+              className="flex-1 bg-red-500 hover:bg-red-600 text-white font-medium py-3 px-6 rounded-lg transition-colors cursor-pointer"
             >
               {confirmButtonText}
+            </button>
+            <button
+              onClick={onClose}
+              className="flex-1 bg-white hover:bg-gray-50 text-gray-700 font-medium py-3 px-6 rounded-lg border border-gray-300 transition-colors cursor-pointer"
+            >
+              {cancelButtonText}
             </button>
           </div>
         </div>
