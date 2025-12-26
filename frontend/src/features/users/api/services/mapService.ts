@@ -39,6 +39,19 @@ export const mapService = {
     });
     return res.data.data; // Trả về mảng places từ PlaceService
   },
+
+  getPlace: async (placeId: number): Promise<any> => {
+    const res = await axios.get(`${API_BASE}/places/${placeId}`);
+    return res.data;
+  },
+
+  // Lấy tất cả places với geometry để render trên map
+  getAllPlaces: async (): Promise<any[]> => {
+    const res = await axios.get(`${API_BASE}/places`, {
+      params: { page: 1, limit: 50, includeGeometry: true },
+    });
+    return res.data.data;
+  },
 };
 
 export default mapService;
