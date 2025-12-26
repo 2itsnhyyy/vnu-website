@@ -8,11 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "../UI/Table";
-import {
-  EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-} from "@ant-design/icons";
+import { EyeOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import Pagination from "../Common/Pagination";
 import SearchInput from "../Common/SearchInput";
 import { FaPlus } from "react-icons/fa6";
@@ -139,12 +135,12 @@ export default function NewsTable() {
         </div>
       </div>
       {loading ? (
-      <div className=" bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Đang tải dữ liệu...</p>
+        <div className=" bg-white flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-gray-600">Đang tải dữ liệu...</p>
+          </div>
         </div>
-      </div>
       ) : (
         <Table>
           <TableHeader className="border-gray-100 border-y">
@@ -192,10 +188,12 @@ export default function NewsTable() {
                   {news.newsId}
                 </TableCell>
                 <TableCell className="py-5 px-3 text-gray-500 text-theme-sm">
-                  <div className="truncate">{news.title}</div>
+                  <div className="truncate max-w-[300px] mx-auto">
+                    {news.title.slice(0, 200)}
+                  </div>
                 </TableCell>
                 <TableCell className="py-5 text-gray-500 text-theme-sm">
-                  <div className="max-w-[400px] truncate mx-auto">
+                  <div className="max-w-[350px] truncate mx-auto">
                     {markdownToPlainText(news.contentMarkdown)}
                   </div>
                 </TableCell>
@@ -211,7 +209,10 @@ export default function NewsTable() {
                       <EditOutlined className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleDelete(news.newsId)}>
-                      <DeleteOutlined style={{ color: '#ff4d4f' }} className="w-5 h-5 cursor-pointer" />
+                      <DeleteOutlined
+                        style={{ color: "#ff4d4f" }}
+                        className="w-5 h-5 cursor-pointer"
+                      />
                     </button>
                   </div>
                 </TableCell>
