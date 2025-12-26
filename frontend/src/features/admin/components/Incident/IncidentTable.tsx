@@ -1,11 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import type { Incident } from "../../types/incident";
-import {
-  EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-} from "@ant-design/icons";
+import { EyeOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import {
   Table,
   TableBody,
@@ -140,12 +136,12 @@ export default function IncidentTable() {
         </div>
       </div>
       {loading ? (
-      <div className=" bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Đang tải dữ liệu...</p>
+        <div className=" bg-white flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-gray-600">Đang tải dữ liệu...</p>
+          </div>
         </div>
-      </div>
       ) : (
         <Table>
           <TableHeader className="border-gray-100 border-y">
@@ -204,7 +200,9 @@ export default function IncidentTable() {
                   </div>
                 </TableCell>
                 <TableCell className="py-6 text-gray-500 text-theme-sm px-3">
-                  {markdownToPlainText(incident.content).slice(0, 240)}...
+                  <div className="max-w-[350px] truncate mx-auto">
+                    {markdownToPlainText(incident.content)}...
+                  </div>
                 </TableCell>
                 <TableCell className="py-6 text-gray-500 text-theme-sm px-3 text-center">
                   {dayjs(incident.createdAt).format("DD/MM/YYYY")}
@@ -231,7 +229,10 @@ export default function IncidentTable() {
                       <EditOutlined className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleDelete(incident.incidentId)}>
-                      <DeleteOutlined style={{ color: '#ff4d4f' }} className="w-5 h-5 cursor-pointer" />
+                      <DeleteOutlined
+                        style={{ color: "#ff4d4f" }}
+                        className="w-5 h-5 cursor-pointer"
+                      />
                     </button>
                   </div>
                 </TableCell>
