@@ -6,7 +6,7 @@ export type Building = {
   image?: string;
   place_id: number;
   created_at: string;
-}
+};
 
 export interface BuildingFormData {
   name: string;
@@ -14,8 +14,8 @@ export interface BuildingFormData {
   floors: number;
   place_id: number;
   image?: string;
-   enableDraw?: boolean; 
-  enableUpload?: boolean; 
+  enableDraw?: boolean;
+  enableUpload?: boolean;
   modelFile?: File;
   modelFileName?: string;
   modelUrl?: string;
@@ -23,10 +23,9 @@ export interface BuildingFormData {
   longitude?: number;
   modelScale?: number;
   modelRotation?: number;
-  shapes?: any[]; 
-  glbAssets?: any[]; 
+  shapes?: any[];
+  glbAssets?: any[];
 }
-
 
 export interface Pagination {
   totalItems: number;
@@ -48,7 +47,7 @@ export interface GetAllBuildingParams {
 
 export interface GetAllBuildingResponse {
   pagination: Pagination;
-  buildings: Building[]; 
+  buildings: Building[];
 }
 
 export interface UpdateBuildingRequest {
@@ -81,16 +80,13 @@ export const Object3DType = {
   Geometry: 1,
 } as const;
 
-export type Object3DType =
-  (typeof Object3DType)[keyof typeof Object3DType];
+export type Object3DType = (typeof Object3DType)[keyof typeof Object3DType];
 
 /* =======================
    UNION OBJECT
 ======================= */
 
-export type Building3DObject =
-  | Mesh3DObject
-  | Geometry3DObject;
+export type Building3DObject = Mesh3DObject | Geometry3DObject;
 
 /* =======================
    MESH OBJECT (objectType = 0)
@@ -119,12 +115,46 @@ export interface Geometry3DObject {
 
 export interface GeometryBody {
   name: string;
-  prisms: Prism[];
+  prisms?: Prism[];
+  cylinders?: Cylinder[];
+  pyramids?: Pyramid[];
+  cones?: Cone[];
+  frustums?: Frustum[];
 }
 
 export interface Prism {
   baseFace: GeoJSONPolygon;
   height: number;
+}
+
+export interface Cylinder {
+  center: {
+    point: GeoJSONPoint;
+  };
+  radius: number;
+  height: number;
+}
+
+export interface Pyramid {
+  baseFace: GeoJSONPolygon;
+  apex: {
+    point: GeoJSONPoint;
+  };
+}
+
+export interface Cone {
+  center: {
+    point: GeoJSONPoint;
+  };
+  radius: number;
+  apex: {
+    point: GeoJSONPoint;
+  };
+}
+
+export interface Frustum {
+  baseFace: GeoJSONPolygon;
+  topFace: GeoJSONPolygon;
 }
 
 /* =======================
@@ -140,6 +170,3 @@ export interface GeoJSONPolygon {
   type: "Polygon";
   coordinates: number[][][][];
 }
-
-
-
