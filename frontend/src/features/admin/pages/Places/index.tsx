@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import PageMeta from "../../components/Common/PageMeta";
-import { Table, Button, Input, Select, Space, Tooltip } from "antd";
+import { Table, Button, Input, Typography, Space, Tooltip } from "antd";
 import {
   SearchOutlined,
   EditOutlined,
   DeleteOutlined,
-  EyeOutlined,
 } from "@ant-design/icons";
 import { Plus } from "lucide-react";
 import type { ColumnsType } from "antd/es/table";
@@ -15,10 +14,9 @@ import { placeService } from "../../services/PlaceService";
 import DeleteConfirmModal from "../../components/Common/DeleteConfirmModal";
 
 const PAGE_SIZE = 10;
+const { Text } = Typography;
 
 const Places: React.FC = () => {
-  const [filter, setFilter] = useState<string>("all");
-
   const [place, setPlace] = useState<Place[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -59,10 +57,6 @@ const Places: React.FC = () => {
       .finally(() => setLoading(false));
   }
 
-  function handleView(placeId: number) {
-    navigate(`/admin/places/${placeId}`);
-  }
-
   function handleEdit(placeId: number) {
     navigate(`/admin/places/edit/${placeId}`);
   }
@@ -78,7 +72,7 @@ const Places: React.FC = () => {
 
   async function handleConfirmDelete() {
     if (!placeToDelete) return;
-    
+
     setDeleteLoading(true);
     try {
       await placeService.delete(placeToDelete);
@@ -124,33 +118,31 @@ const Places: React.FC = () => {
       title: "Tên địa điểm",
       dataIndex: "name",
       key: "name",
-      width: 250,
-      ellipsis: {
-        showTitle: false,
-      },
+      width: 350,
       render: (text: string, record: Place) => {
         const displayText = displayValue(text);
+
         if (displayText === "./") {
           return <span className="text-gray-400">./</span>;
         }
+
         return (
           <div className="flex items-center gap-3">
             {record.image ? (
               <img
                 src={record.image}
                 alt={text}
-                className="w-12 h-12 rounded object-cover"
+                className="w-12 h-12 rounded object-cover flex-shrink-0"
               />
             ) : (
-              <div className="w-12 h-12 rounded bg-gray-200 flex items-center justify-center">
+              <div className="w-12 h-12 rounded bg-gray-200 flex items-center justify-center flex-shrink-0">
                 <span className="text-gray-400 text-xs">N/A</span>
               </div>
             )}
-            <div>
-              <Tooltip placement="topLeft" title={displayText}>
-                {displayText}
-              </Tooltip>
-            </div>
+
+            <Tooltip title={displayText}>
+              <Text ellipsis>{displayText}</Text>
+            </Tooltip>
           </div>
         );
       },
@@ -205,11 +197,6 @@ const Places: React.FC = () => {
       render: (record: Place) => (
         <Space size="middle">
           <Button
-            onClick={() => handleView(record.placeId)}
-            type="text"
-            icon={<EyeOutlined />}
-          />
-          <Button
             onClick={() => handleEdit(record.placeId)}
             type="text"
             icon={<EditOutlined />}
@@ -247,7 +234,7 @@ const Places: React.FC = () => {
 
               <Input
                 placeholder="Tìm kiếm địa điểm..."
-                prefix={<SearchOutlined style={{ color: '#99a1af' }}/>}
+                prefix={<SearchOutlined style={{ color: "#99a1af" }} />}
                 value={searchTerm}
                 size="large"
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -267,23 +254,32 @@ const Places: React.FC = () => {
               </button>
             </div>
           </div>
-          
 
-          <Table
-            columns={columns}
-            dataSource={paginatedData}
-            loading={loading}
-            rowKey="place_id"
-            pagination={{
-              current: currentPage,
-              pageSize: PAGE_SIZE,
-              total: totalItems,
-              showLessItems: true,
-              showSizeChanger: false,
-              placement: ["bottomCenter"],
-              onChange: (page) => setCurrentPage(page),
-            }}
-          />
+          <div className="relative">
+            <Table
+              columns={columns}
+              dataSource={paginatedData}
+              rowKey="place_id"
+              pagination={{
+                current: currentPage,
+                pageSize: PAGE_SIZE,
+                total: totalItems,
+                showLessItems: true,
+                showSizeChanger: false,
+                placement: ["bottomCenter"],
+                onChange: (page) => setCurrentPage(page),
+              }}
+            />
+
+            {loading && (
+              <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-gray-600">Đang tải dữ liệu...</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

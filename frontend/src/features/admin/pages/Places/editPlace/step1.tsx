@@ -128,10 +128,10 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
       return Upload.LIST_IGNORE;
     }
 
-    // Validate file size (e.g., max 5MB)
-    const isLt5M = file.size / 1024 / 1024 < 5;
-    if (!isLt5M) {
-      message.error("Ảnh phải nhỏ hơn 5MB!");
+    // Validate file size (max 10MB)
+    const isLt10M = file.size / 1024 / 1024 < 10;
+    if (!isLt10M) {
+      message.error("Ảnh phải nhỏ hơn 10MB!");
       return Upload.LIST_IGNORE;
     }
 
@@ -145,17 +145,7 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
     };
     reader.readAsDataURL(file);
 
-    // Update file list for display
-    setFileList([
-      {
-        uid: file.uid,
-        name: file.name,
-        status: "done",
-        originFileObj: file,
-      },
-    ]);
-
-    // Prevent auto upload
+    // Return false to prevent auto upload
     return false;
   };
 
@@ -246,7 +236,7 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
                 Nhấp hoặc kéo thả ảnh vào khu vực này
               </p>
               <p className="ant-upload-hint">
-                Hỗ trợ tải một ảnh (PNG, JPG, SVG) - tối đa 5MB
+                Hỗ trợ tải một ảnh (PNG, JPG, SVG) - tối đa 10MB
               </p>
             </Dragger>
           </div>

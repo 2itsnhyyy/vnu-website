@@ -32,6 +32,7 @@ const Buildings: React.FC = () => {
 
   const [building, setBuilding] = useState<Building[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -67,22 +68,6 @@ const Buildings: React.FC = () => {
     }
   };
 
-  function handleSearch() {
-    setLoading(true);
-    setTimeout(() => {
-      const filtered = res.data.filter((n) =>
-        n.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setBuilding(filtered);
-      setCurrentPage(1);
-      setLoading(false);
-    }, 200);
-  }
-
-  function handleView(buildingId: number) {
-    navigate(`/admin/buildings/${buildingId}`);
-  }
-
   function handleEdit(buildingId: number) {
     navigate(`/admin/buildings/edit/${buildingId}`);
   }
@@ -92,29 +77,30 @@ const Buildings: React.FC = () => {
   }
 
   function handleDelete(buildingId: number) {
-      setBuildingToDelete(buildingId);
-      setModalOpen(true);
-    }
-  
-    async function handleConfirmDelete() {
-      if (!buildingToDelete) return;
-      
-      setDeleteLoading(true);
-      try {
-        await buildingService.delete(buildingToDelete);
-        setBuilding((prev) => prev.filter((n) => n.buildingId !== buildingToDelete));
-        setModalOpen(false);
-        setBuildingToDelete(null);
-      } finally {
-        setDeleteLoading(false);
-      }
-    }
-  
-    function handleCancelDelete() {
+    setBuildingToDelete(buildingId);
+    setModalOpen(true);
+  }
+
+  async function handleConfirmDelete() {
+    if (!buildingToDelete) return;
+
+    setDeleteLoading(true);
+    try {
+      await buildingService.delete(buildingToDelete);
+      setBuilding((prev) =>
+        prev.filter((n) => n.buildingId !== buildingToDelete)
+      );
       setModalOpen(false);
       setBuildingToDelete(null);
+    } finally {
+      setDeleteLoading(false);
     }
+  }
 
+  function handleCancelDelete() {
+    setModalOpen(false);
+    setBuildingToDelete(null);
+  }
 
   const columns: ColumnsType<Building> = [
     {
@@ -128,7 +114,7 @@ const Buildings: React.FC = () => {
       title: "Tên tòa nhà",
       dataIndex: "name",
       key: "name",
-      width: 250,
+      width: 200,
       ellipsis: {
         showTitle: false,
       },
@@ -148,33 +134,26 @@ const Buildings: React.FC = () => {
       ),
     },
     {
-      title: "Ngày tạo",
-      dataIndex: "created_at",
-      key: "created_at",
-      align: "center",
-      width: 110,
-    },
-    {
       title: "Số tầng",
       dataIndex: "floors",
       key: "floors",
       align: "center",
       width: 110,
-      ellipsis: {
-        showTitle: false,
-      },
-      render: (floors) => (
-        <Tooltip placement="topLeft" title={floors}>
-          {floors}
-        </Tooltip>
-      ),
     },
     {
       title: "Trực thuộc địa điểm",
-      dataIndex: "place_belong_to",
-      key: "place_belong_to",
-      align: "center",
-      width: 200,
+      dataIndex: "placeName",
+      key: "placeName",
+      align: "left",
+      width: 300,
+      ellipsis: {
+        showTitle: false,
+      },
+      render: (placeName) => (
+        <Tooltip placement="topLeft" title={placeName}>
+          {placeName}
+        </Tooltip>
+      ),
     },
     {
       title: "Mô tả",
@@ -196,11 +175,6 @@ const Buildings: React.FC = () => {
       width: 200,
       render: (record: Building) => (
         <Space size="middle">
-          <Button
-            onClick={() => handleView(record.buildingId)}
-            type="text"
-            icon={<EyeOutlined />}
-          />
           <Button
             onClick={() => handleEdit(record.buildingId)}
             type="text"
@@ -239,13 +213,13 @@ const Buildings: React.FC = () => {
 
               <Input
                 placeholder="Tìm kiếm tòa nhà..."
-                prefix={<SearchOutlined style={{ color: '#99a1af' }}/>}
-                value={searchTerm}
+                prefix={<SearchOutlined style={{ color: "#99a1af" }} />}
+                value={searchInput}
                 size="large"
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    handleSearch();
+                    setSearchTerm(searchInput);
                   }
                 }}
                 style={{ width: 300 }}
@@ -288,21 +262,31 @@ const Buildings: React.FC = () => {
             </div>
           </div>
 
-          <Table
-            rowKey="buildingId"
-            loading={loading}
-            columns={columns}
-            dataSource={building}
-            pagination={{
-              current: currentPage,
-              pageSize: PAGE_SIZE,
-              total: pagination.totalItems,
-              showSizeChanger: false,
-              placement: ["bottomCenter"],
-              showLessItems: true,
-              onChange: (page) => loadBuilding(page),
-            }}
-          />
+          <div className="relative">
+            <Table
+              rowKey="buildingId"
+              columns={columns}
+              dataSource={building}
+              pagination={{
+                current: currentPage,
+                pageSize: PAGE_SIZE,
+                total: pagination.totalItems,
+                showSizeChanger: false,
+                placement: ["bottomCenter"],
+                showLessItems: true,
+                onChange: (page) => loadBuilding(page),
+              }}
+            />
+
+            {loading && (
+              <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-gray-600">Đang tải dữ liệu...</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
       {/* Delete Confirmation Modal */}

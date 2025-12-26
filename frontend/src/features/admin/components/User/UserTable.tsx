@@ -85,8 +85,8 @@ export default function UserTable() {
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 sm:px-6">
       <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex justify-start items-center pt-5">
-          <h2 className="text-xl font-semibold text-gray-800">
+        <div className="flex justify-start items-center">
+          <h2 className="text-lg font-semibold text-gray-800">
             Danh sách người dùng
           </h2>
           <span className="ml-5 text-sm bg-[#D1F2FF] text-[#2F73F2] py-1 px-4 rounded-full font-medium">
@@ -107,7 +107,12 @@ export default function UserTable() {
         </div>
       </div>
       {loading ? (
-        <p>Đang tải...</p>
+      <div className=" bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang tải dữ liệu...</p>
+        </div>
+      </div>
       ) : (
         <Table>
           <TableHeader className="border-gray-100 border-y">
@@ -157,10 +162,10 @@ export default function UserTable() {
                 key={user.userId}
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                <TableCell className="py-4 px-4 text-center text-gray-500 text-theme-sm">
+                <TableCell className="py-4 px-4 text-center text-black text-theme-sm">
                   {user.userId}
                 </TableCell>
-                <TableCell className="py-4 text-center px-3 text-gray-500 text-theme-sm">
+                <TableCell className="py-4 text-center px-3 text-black text-theme-sm">
                   <div className="flex gap-2">
                     <img
                       src={user.avatar || "/default-avatar.png"}
@@ -170,10 +175,10 @@ export default function UserTable() {
                     <div className="my-auto ml-2">{user.name}</div>
                   </div>
                 </TableCell>
-                <TableCell className="py-4 px-3 text-gray-500 text-theme-sm">
+                <TableCell className="py-4 px-3 text-black text-theme-sm">
                   {user.email}
                 </TableCell>
-                <TableCell className="py-4 text-gray-500 text-theme-sm text-center">
+                <TableCell className="py-4 text-black text-theme-sm text-center">
                   {dayjs(user.birthday).format("DD/MM/YYYY")}
                 </TableCell>
                 <TableCell className="text-center px-6">
@@ -189,7 +194,7 @@ export default function UserTable() {
                     {user.role === 1 ? "Quản trị viên" : "Người dùng"}
                   </span>
                 </TableCell>
-                <TableCell className="py-4 text-gray-500 text-theme-sm px-3 text-center">
+                <TableCell className="py-4 text-black text-theme-sm px-3 text-center">
                   <div className="flex gap-6 justify-center">
                     <button onClick={() => handleView(user.userId)}>
                       <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />

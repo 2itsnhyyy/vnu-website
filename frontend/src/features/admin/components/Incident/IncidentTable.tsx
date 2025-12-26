@@ -108,8 +108,8 @@ export default function IncidentTable() {
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 sm:px-6">
       <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex justify-start items-center pt-5">
-          <h2 className="text-xl font-semibold text-gray-800">
+        <div className="flex justify-start items-center">
+          <h2 className="text-lg font-semibold text-gray-800">
             Danh sách sự cố
           </h2>
           <span className="ml-5 text-sm bg-[#D1F2FF] text-[#2F73F2] py-1 px-4 rounded-full font-medium">
@@ -138,7 +138,12 @@ export default function IncidentTable() {
         </div>
       </div>
       {loading ? (
-        <p>Đang tải...</p>
+      <div className=" bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang tải dữ liệu...</p>
+        </div>
+      </div>
       ) : (
         <Table>
           <TableHeader className="border-gray-100 border-y">
@@ -188,18 +193,18 @@ export default function IncidentTable() {
                 key={incident.incidentId}
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                <TableCell className="py-6 text-gray-500 text-theme-sm px-3">
+                <TableCell className="py-6 text-black text-theme-sm px-3">
                   {incident.incidentId}
                 </TableCell>
-                <TableCell className="py-6 text-gray-500 text-theme-sm px-3">
+                <TableCell className="py-6 text-black text-theme-sm px-3">
                   <div className="max-w-[200px] truncate mx-auto">
                     {markdownToPlainText(incident.title).slice(0, 100)}...
                   </div>
                 </TableCell>
-                <TableCell className="py-6 text-gray-500 text-theme-sm px-3">
+                <TableCell className="py-6 text-black text-theme-sm px-3">
                   {markdownToPlainText(incident.content).slice(0, 240)}...
                 </TableCell>
-                <TableCell className="py-6 text-gray-500 text-theme-sm px-3 text-center">
+                <TableCell className="py-6 text-black text-theme-sm px-3 text-center">
                   {dayjs(incident.createdAt).format("DD/MM/YYYY")}
                 </TableCell>
                 <TableCell className="text-center px-3">
@@ -215,7 +220,7 @@ export default function IncidentTable() {
                     {incident.status === 0 ? "Mới" : "Đã giải quyết"}
                   </span>
                 </TableCell>
-                <TableCell className="py-6 text-gray-500 text-theme-sm px-3">
+                <TableCell className="py-6 text-black text-theme-sm px-3">
                   <div className="flex gap-2 justify-center">
                     <button onClick={() => handleView(incident.incidentId)}>
                       <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />

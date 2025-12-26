@@ -107,8 +107,8 @@ export default function NewsTable() {
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 sm:px-6">
       <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex justify-start items-center pt-5">
-          <h2 className="text-xl font-semibold text-gray-800">
+        <div className="flex justify-start items-center">
+          <h2 className="text-lg font-semibold text-gray-800">
             Danh sách tin tức
           </h2>
           <span className="ml-5 text-sm bg-[#D1F2FF] text-[#2F73F2] py-1 px-4 rounded-full font-medium">
@@ -137,7 +137,12 @@ export default function NewsTable() {
         </div>
       </div>
       {loading ? (
-        <p>Đang tải...</p>
+      <div className=" bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang tải dữ liệu...</p>
+        </div>
+      </div>
       ) : (
         <Table>
           <TableHeader className="border-gray-100 border-y">
@@ -181,21 +186,21 @@ export default function NewsTable() {
                 key={news.newsId}
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                <TableCell className="py-5 px-4 text-center text-gray-500 text-theme-sm">
+                <TableCell className="py-5 px-4 text-center text-black text-theme-sm">
                   {news.newsId}
                 </TableCell>
-                <TableCell className="py-5 px-3 text-gray-500 text-theme-sm">
+                <TableCell className="py-5 px-3 text-black text-theme-sm">
                   <div className="truncate">{news.title}</div>
                 </TableCell>
-                <TableCell className="py-5 text-gray-500 text-theme-sm">
+                <TableCell className="py-5 text-black text-theme-sm">
                   <div className="max-w-[400px] truncate mx-auto">
                     {markdownToPlainText(news.contentMarkdown)}
                   </div>
                 </TableCell>
-                <TableCell className="py-5 text-gray-500 text-theme-sm text-center px-2">
+                <TableCell className="py-5 text-black text-theme-sm text-center px-2">
                   {dayjs(news.createdAt).format("DD/MM/YYYY")}
                 </TableCell>
-                <TableCell className="py-5 text-gray-500 text-theme-sm px-4">
+                <TableCell className="py-5 text-black text-theme-sm px-4">
                   <div className="flex gap-2 justify-center">
                     <button onClick={() => handleView(news.newsId)}>
                       <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />
